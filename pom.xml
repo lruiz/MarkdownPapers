@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.tautua.markdownpapers</groupId>
+    <artifactId>markdownpapers</artifactId>
+    <packaging>pom</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>Markdown Papers Project</name>
+    <url>http://markdown.tautua.org</url>
+    <inceptionYear>2009</inceptionYear>
+    <modules>
+        <module>core</module>
+    </modules>
+    <developers>
+        <developer>
+            <id>lruiz</id>
+            <name>Larry Ruiz</name>
+            <email>larry.b.ruiz@gmail.com</email>
+            <organization>tautua software</organization>
+            <organizationUrl>http://www.tautua.org</organizationUrl>
+            <timezone>-6</timezone>
+        </developer>
+    </developers>
+</project>

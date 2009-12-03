@@ -1,0 +1,74 @@
+		
+      
+    	
+	  
+
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
+
+---
+- - -
+-  -  -
+-   -   -
+- -   -
+  -  -  -
+
+___
+_ _ _
+_  _  _
+_   _   _
+_ _   _
+  _  _  _
+
+***
+* * *
+*  *  *
+*   *   *
+* *   *
+  *  *  *
+
+Lorem ipsum
+
+1. item 1
+2. item 2
+
+- item 1
+
++ item 2
+
+* item 3
+
+[id]: http://markdown.tautua.org "Tautua"
+[ref1]: ref1.html
+
+  [ref2]: /ref2.html
+
+    code text 1
+    code text 2 block 1 continues here
+	code text 3 with tab
+	 code text 4 with tab and space
+      code
+      
+
+>1. item 1
+> 2. item 2
+> - item 3
+> + item 4
+> * item 5
+> ---
+> ___
+> ***
+> * * *
+> Lorem ipsum
+>
+> 
+>    
+>		
+>   
+>	   
+>    Lorem ipsum
+>     Lorem ipsum

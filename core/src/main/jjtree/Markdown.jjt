@@ -1,0 +1,139 @@
+options {
+	LOOKAHEAD = 1;
+	STATIC = false;
+	
+	/*
+	DEBUG_PARSER = false;
+	DEBUG_TOKEN_MANAGER = false;
+	DEBUG_LOOKAHEAD = false;
+	*/
+}
+
+PARSER_BEGIN(MarkdownParser)
+package org.tautua.markdownpapers.grammar;
+
+public class MarkdownParser {
+}
+PARSER_END(MarkdownParser)
+
+<*>
+TOKEN : {
+	< EOL : "\n" | "\r" | "\r\n" > : DEFAULT
+	| < #NOT_WHITESPACE : ~[" ", "\t"] >
+	| < #NOT_EOL : ~["\n", "\r"] >
+}
+
+<DEFAULT>
+TOKEN : {
+	< HASH : ("#"){1,6} > : TEXTCHUNKS_FOLLOWS
+	| < MINOR_IDENT : (" "){1,3} >
+	| < IDENT : (" "){4} | "\t" > : RAWTEXT_FOLLOWS
+	| < REFNAME : "[" ( ~[" ", "\t", "]"] )* "]" ":" > : ON_DOC_ELEMENT__LINKREF
+	| < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
+	| < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
+	| < ASTERISK_RULER : ( ( (" "){1,3} )? "*" ){2} ( ( (" "){1,3} )? "*" )+ >
+	| < LIST_PLUS : "+" " " > : TEXTCHUNKS_FOLLOWS
+	| < LIST_MINUS : "-" " " > : TEXTCHUNKS_FOLLOWS
+	| < LIST_ASTERISK : "*" " "> : TEXTCHUNKS_FOLLOWS
+	| < LIST_NUMBER : ( ["0"-"9"] )+ "." " "> : TEXTCHUNKS_FOLLOWS
+	| < GT : ">" ( " " )? >
+}
+
+<DEFAULT, TEXTCHUNKS_FOLLOWS>
+TOKEN : {
+	< ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")"
+						, "\\", "`", "_", ">", "#", ".", "!"
+						, "+", "-", "*"] > : TEXTCHUNKS_FOLLOWS
+	| < CODE_SPAN : "`" ( ~[] )+ "`" >
+	| < EMPHASIS : "*" <_EMP_> ( ~["*"] )+ <_EMP_> "*" 
+					| "_" <_EMP_> ( ~["_"] )+ <_EMP_> "_"> : TEXTCHUNKS_FOLLOWS
+	| < EMPHASIS_2 : "**" <_EMP_> ( ~["*"] )+ <_EMP_> "**" 
+					| "__" <_EMP_> ( ~["_"] )+ <_EMP_> "__"> : TEXTCHUNKS_FOLLOWS
+	| < EMPHASIS_3 : "***" <_EMP_> ( ~["*"] )+ <_EMP_> "***" 
+					| "___" <_EMP_> ( ~["_"] )+ <_EMP_> "___"> : TEXTCHUNKS_FOLLOWS
+	| < TEXT : <NOT_EOL> > : TEXTCHUNKS_FOLLOWS
+	| < #_EMP_ : ~[" ", "\t", "\n", "\r"] >
+}
+
+<RAWTEXT_FOLLOWS>
+TOKEN : {
+	< RAWTEXT : <NOT_EOL> >
+}
+
+
+<ON_DOC_ELEMENT__LINKREF>
+TOKEN : {
+	< URL : ( ~[" ", "\"", "\t", "\n", "\r"] )+ > /*<NOT_WHITESPACE>*/
+	| < QUOTED_TEXT : "\"" ( ~["\n", "\r"] )+ "\"" >
+}
+
+<ON_DOC_ELEMENT__LINKREF>
+SKIP : {
+	" " | "\t"
+}
+
+void parse() : {} {
+	line() ( <EOL> line() )*
+	<EOF>
+}
+
+void line() : {} {
+	Header() 
+	| Ruler()
+	| Quote()
+	| LOOKAHEAD(2) LinkRef() //TODO: review LOOKAHEADs
+	| LOOKAHEAD(2) List()
+	| LOOKAHEAD(2) Code()
+	| LOOKAHEAD(2) textchunks()
+	| emptyLine()
+}
+
+
+void Header() : {} {
+	<HASH> textchunks()
+}
+
+void LinkRef() : {} {
+	( <MINOR_IDENT> )? <REFNAME> <URL> ( <QUOTED_TEXT> )?
+}
+
+void Ruler() : {} {
+	<UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER>
+}
+
+void List() : {} {
+	( <MINOR_IDENT> )?
+	(
+		<LIST_PLUS> | <LIST_MINUS> | <LIST_ASTERISK> | <LIST_NUMBER>
+	)
+	textchunks()
+}
+
+void Quote() : {} {
+	<GT> line()
+}
+
+void Code() : {} {
+	<IDENT> ( <RAWTEXT> )+
+}
+
+void emptyLine() : {} {
+	( <IDENT> | <MINOR_IDENT> )*
+}
+
+void textchunks() : {} {
+	( <MINOR_IDENT> )? 
+	( 
+		<EMPHASIS> | <EMPHASIS_2> | <EMPHASIS_3>
+		| <TEXT>
+		| <ESCAPED_CHAR>
+		| <CODE_SPAN>
+	)+
+}
+
+/* extras
+void AbbreviationDef() : {} {
+}
+void FootnoteDef() : {}{
+}
+*/
