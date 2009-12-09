@@ -1,24 +1,46 @@
 options {
 	LOOKAHEAD = 1;
 	STATIC = false;
-	
+	UNICODE_INPUT = true;
+
+
+	MULTI = true;
 	/*
+	NODE_EXTENDS = "org.tautua.markdownpapers.Node";
+	*/
+	NODE_PREFIX = "";
+	NODE_DEFAULT_VOID = true;
+    NODE_USES_PARSER = false;
+
+
 	DEBUG_PARSER = false;
 	DEBUG_TOKEN_MANAGER = false;
 	DEBUG_LOOKAHEAD = false;
-	*/
 }
 
 PARSER_BEGIN(MarkdownParser)
 package org.tautua.markdownpapers.grammar;
 
 public class MarkdownParser {
+
+    public Object parse() throws ParseException {
+        Document();
+        return jjtree.rootNode();                
+    }
+
+    boolean isLastNodeAText() {
+        try {
+            return jjtree.peekNode() instanceof Text;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
 PARSER_END(MarkdownParser)
 
 <*>
 TOKEN : {
-	< EOL : "\n" | "\r" | "\r\n" > : DEFAULT
+    < EOL : "\n" | "\r" | "\r\n" > : DEFAULT
 	| < #NOT_WHITESPACE : ~[" ", "\t"] >
 	| < #NOT_EOL : ~["\n", "\r"] >
 }
@@ -26,8 +48,6 @@ TOKEN : {
 <DEFAULT>
 TOKEN : {
 	< HASH : ("#"){1,6} > : TEXTCHUNKS_FOLLOWS
-	| < MINOR_IDENT : (" "){1,3} >
-	| < IDENT : (" "){4} | "\t" > : RAWTEXT_FOLLOWS
 	| < REFNAME : "[" ( ~[" ", "\t", "]"] )* "]" ":" > : ON_DOC_ELEMENT__LINKREF
 	| < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
 	| < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
@@ -45,7 +65,7 @@ TOKEN : {
 						, "\\", "`", "_", ">", "#", ".", "!"
 						, "+", "-", "*"] > : TEXTCHUNKS_FOLLOWS
 	| < CODE_SPAN : "`" ( ~[] )+ "`" >
-	| < EMPHASIS : "*" <_EMP_> ( ~["*"] )+ <_EMP_> "*" 
+	| < EMPHASIS_1 : "*" <_EMP_> ( ~["*"] )+ <_EMP_> "*" 
 					| "_" <_EMP_> ( ~["_"] )+ <_EMP_> "_"> : TEXTCHUNKS_FOLLOWS
 	| < EMPHASIS_2 : "**" <_EMP_> ( ~["*"] )+ <_EMP_> "**" 
 					| "__" <_EMP_> ( ~["_"] )+ <_EMP_> "__"> : TEXTCHUNKS_FOLLOWS
@@ -55,11 +75,16 @@ TOKEN : {
 	| < #_EMP_ : ~[" ", "\t", "\n", "\r"] >
 }
 
-<RAWTEXT_FOLLOWS>
+<DEFAULT, EXPECT_RAWTEXT>
 TOKEN : {
-	< RAWTEXT : <NOT_EOL> >
+	< MINOR_IDENT : (" "){1,3} >
+	| < IDENT : (" "){4} | "\t" > : EXPECT_RAWTEXT
 }
 
+<EXPECT_RAWTEXT, RAWTEXT_FOLLOWS>
+TOKEN : {
+	< RAWTEXT : ~["\n", "\r"] > : RAWTEXT_FOLLOWS
+}
 
 <ON_DOC_ELEMENT__LINKREF>
 TOKEN : {
@@ -72,62 +97,63 @@ SKIP : {
 	" " | "\t"
 }
 
-void parse() : {} {
-	line() ( <EOL> line() )*
+void Document() #Document : {} {
+    content() ( <EOL> content() )*
 	<EOF>
 }
 
-void line() : {} {
-	Header() 
-	| Ruler()
-	| Quote()
-	| LOOKAHEAD(2) LinkRef() //TODO: review LOOKAHEADs
-	| LOOKAHEAD(2) List()
-	| LOOKAHEAD(2) Code()
-	| LOOKAHEAD(2) textchunks()
-	| emptyLine()
+void content() : {} {
+    Header()
+    | Ruler()
+    | Quote()
+	| LOOKAHEAD(2) ( <MINOR_IDENT> )?
+	    (
+	        LinkRef()
+    	    | List()
+            | textchunks()
+	    )
+    | LOOKAHEAD( ( <IDENT> | <MINOR_IDENT> )* ( <EOL> | <EOF> ) ) empty()
+    | Code()
 }
 
+void empty() #EmptyLine : {} {
+    ( <IDENT> | <MINOR_IDENT> )*
+}
 
-void Header() : {} {
+void Header() #Header : {} {
 	<HASH> textchunks()
 }
 
-void LinkRef() : {} {
-	( <MINOR_IDENT> )? <REFNAME> <URL> ( <QUOTED_TEXT> )?
-}
-
-void Ruler() : {} {
+void Ruler() #Ruler : {} {
 	<UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER>
 }
 
-void List() : {} {
-	( <MINOR_IDENT> )?
+void Quote() #Quote : {} {
+	<GT> content()
+}
+
+void Code() #Code : {} {
+	<IDENT> ( <IDENT> | <MINOR_IDENT> )* ( <RAWTEXT> )+
+}
+
+void LinkRef() #LinkRef : {} {
+	<REFNAME> <URL> ( <QUOTED_TEXT> )?
+}
+
+void List() #Item : {} {
 	(
 		<LIST_PLUS> | <LIST_MINUS> | <LIST_ASTERISK> | <LIST_NUMBER>
 	)
 	textchunks()
 }
 
-void Quote() : {} {
-	<GT> line()
-}
-
-void Code() : {} {
-	<IDENT> ( <RAWTEXT> )+
-}
-
-void emptyLine() : {} {
-	( <IDENT> | <MINOR_IDENT> )*
-}
-
-void textchunks() : {} {
-	( <MINOR_IDENT> )? 
-	( 
-		<EMPHASIS> | <EMPHASIS_2> | <EMPHASIS_3>
-		| <TEXT>
+void textchunks() #Line : {
+} {
+	(
+		<TEXT> #Text( !isLastNodeAText() ) //if true we just need to append to the previous Text node.
+		| ( <EMPHASIS_1> | <EMPHASIS_2>	| <EMPHASIS_3> ) #Emphasis 
 		| <ESCAPED_CHAR>
-		| <CODE_SPAN>
+		| <CODE_SPAN> #Codespan
 	)+
 }
 

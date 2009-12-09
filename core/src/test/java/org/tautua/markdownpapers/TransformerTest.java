@@ -25,7 +25,7 @@ public class TransformerTest {
 
         for (File test : tests) {
             try {
-                compile(test);
+                Object doc = parse(test);
                 System.out.println("\"" + test.getName() + "\" Ok");
             } catch (ParseException e) {
                 System.out.println("#------------------------#");
@@ -37,9 +37,9 @@ public class TransformerTest {
         }
     }
 
-    public void compile(File file) throws ParseException, FileNotFoundException {
+    public Object parse(File file) throws ParseException, FileNotFoundException {
         Reader reader = new FileReader(file);
         MarkdownParser parser = new MarkdownParser(reader);
-        parser.parse();
+        return parser.parse();
     }
 }

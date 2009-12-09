@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.tautua.markdownpapers.grammar.MarkdownParser;
 import org.tautua.markdownpapers.grammar.ParseException;
@@ -14,7 +15,9 @@ public class ParserTest {
         Reader reader = new InputStreamReader(getClass().getResourceAsStream(
                 "/snippets.text"));
         MarkdownParser parser = new MarkdownParser(reader);
-        parser.parse();
+        Object result = parser.parse();
+
+        Assert.assertNotNull(result);
     }
 
     @Test
