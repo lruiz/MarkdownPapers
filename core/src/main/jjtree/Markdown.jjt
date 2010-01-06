@@ -1,119 +1,122 @@
 options {
-	LOOKAHEAD = 1;
-	STATIC = false;
-	UNICODE_INPUT = true;
+    LOOKAHEAD = 1;
+    STATIC = false;
+    UNICODE_INPUT = true;
 
-
-	MULTI = true;
-	/*
-	NODE_EXTENDS = "org.tautua.markdownpapers.Node";
-	*/
-	NODE_PREFIX = "";
-	NODE_DEFAULT_VOID = true;
+    MULTI = true;
+    /*
+    NODE_EXTENDS = "org.tautua.markdownpapers.Node";
+    */
+    NODE_PREFIX = "";
+    NODE_DEFAULT_VOID = true;
     NODE_USES_PARSER = false;
 
-
-	DEBUG_PARSER = false;
-	DEBUG_TOKEN_MANAGER = false;
-	DEBUG_LOOKAHEAD = false;
+    DEBUG_PARSER = false;
+    DEBUG_TOKEN_MANAGER = false;
+    DEBUG_LOOKAHEAD = false;
 }
 
-PARSER_BEGIN(MarkdownParser)
+PARSER_BEGIN(Parser)
 package org.tautua.markdownpapers.grammar;
 
-public class MarkdownParser {
+public class Parser {
 
     public Object parse() throws ParseException {
         Document();
-        return jjtree.rootNode();                
+        return jjtree.rootNode();
     }
 
-    boolean isLastNodeAText() {
-        try {
-            return jjtree.peekNode() instanceof Text;
-        } catch (Exception e) {
-            return false;
-        }
+    char getEscapedChar(Token t) {
+        return t.image.charAt(1);
+    }
+
+    String removeCodespanMarks(Token t) {
+        return t.image.substring(1, t.image.length() - 1);
+    }
+
+    String removeEmphasisMarks(Token t, int type) {
+        return t.image.substring(type, t.image.length() - type);
     }
 }
-PARSER_END(MarkdownParser)
+PARSER_END(Parser)
 
 <*>
 TOKEN : {
     < EOL : "\n" | "\r" | "\r\n" > : DEFAULT
-	| < #NOT_WHITESPACE : ~[" ", "\t"] >
-	| < #NOT_EOL : ~["\n", "\r"] >
+    | < #NOT_WHITESPACE : ~[" ", "\t"] >
+    | < #WHITESPACE : [" ", "\t"] >
 }
 
 <DEFAULT>
 TOKEN : {
-	< HASH : ("#"){1,6} > : TEXTCHUNKS_FOLLOWS
-	| < REFNAME : "[" ( ~[" ", "\t", "]"] )* "]" ":" > : ON_DOC_ELEMENT__LINKREF
-	| < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
-	| < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
-	| < ASTERISK_RULER : ( ( (" "){1,3} )? "*" ){2} ( ( (" "){1,3} )? "*" )+ >
-	| < LIST_PLUS : "+" " " > : TEXTCHUNKS_FOLLOWS
-	| < LIST_MINUS : "-" " " > : TEXTCHUNKS_FOLLOWS
-	| < LIST_ASTERISK : "*" " "> : TEXTCHUNKS_FOLLOWS
-	| < LIST_NUMBER : ( ["0"-"9"] )+ "." " "> : TEXTCHUNKS_FOLLOWS
-	| < GT : ">" ( " " )? >
+    < HASH : ("#"){1,6} > : TEXTCHUNKS_FOLLOWS
+    | < REFNAME : "[" ( ~[" ", "\t", "]"] )* "]" ":" > : ON_DOC_ELEMENT__LINKREF
+    | < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
+    | < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
+    | < ASTERISK_RULER : ( ( (" "){1,3} )? "*" ){2} ( ( (" "){1,3} )? "*" )+ >
+    | < LIST_PLUS : "+" " " > : TEXTCHUNKS_FOLLOWS
+    | < LIST_MINUS : "-" " " > : TEXTCHUNKS_FOLLOWS
+    | < LIST_ASTERISK : "*" " "> : TEXTCHUNKS_FOLLOWS
+    | < LIST_NUMBER : ( ["0"-"9"] )+ "." " "> : TEXTCHUNKS_FOLLOWS
+    | < GT : ">" ( " " )? >
 }
 
 <DEFAULT, TEXTCHUNKS_FOLLOWS>
 TOKEN : {
-	< ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")"
-						, "\\", "`", "_", ">", "#", ".", "!"
-						, "+", "-", "*"] > : TEXTCHUNKS_FOLLOWS
-	| < CODE_SPAN : "`" ( ~[] )+ "`" >
-	| < EMPHASIS_1 : "*" <_EMP_> ( ~["*"] )+ <_EMP_> "*" 
-					| "_" <_EMP_> ( ~["_"] )+ <_EMP_> "_"> : TEXTCHUNKS_FOLLOWS
-	| < EMPHASIS_2 : "**" <_EMP_> ( ~["*"] )+ <_EMP_> "**" 
-					| "__" <_EMP_> ( ~["_"] )+ <_EMP_> "__"> : TEXTCHUNKS_FOLLOWS
-	| < EMPHASIS_3 : "***" <_EMP_> ( ~["*"] )+ <_EMP_> "***" 
-					| "___" <_EMP_> ( ~["_"] )+ <_EMP_> "___"> : TEXTCHUNKS_FOLLOWS
-	| < TEXT : <NOT_EOL> > : TEXTCHUNKS_FOLLOWS
-	| < #_EMP_ : ~[" ", "\t", "\n", "\r"] >
+    < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")"
+                        , "\\", "`", "_", ">", "#", ".", "!"
+                        , "+", "-", "*"] > : TEXTCHUNKS_FOLLOWS
+    | < CODE_SPAN : "`" ( ~[] )+ "`" >
+    | < EMPHASIS_ITALIC : "*" <EMP_A> ( ~["*"] )+ <EMP_A> "*"
+                    | "_" <EMP_U> ( ~["_"] )+ <EMP_U> "_"> : TEXTCHUNKS_FOLLOWS
+    | < EMPHASIS_BOLD : "**" <EMP_A> ( ~["*"] )+ <EMP_A> "**"
+                    | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> : TEXTCHUNKS_FOLLOWS
+    | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ~["*"] )+ <EMP_A> "***"
+                    | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> : TEXTCHUNKS_FOLLOWS
+    | < TEXT : ~["\n", "\r"] > : TEXTCHUNKS_FOLLOWS
+    | < #EMP_A : ~["*", " ", "\t", "\n", "\r"] >
+    | < #EMP_U : ~["_", " ", "\t", "\n", "\r"] >
 }
 
 <DEFAULT, EXPECT_RAWTEXT>
 TOKEN : {
-	< MINOR_IDENT : (" "){1,3} >
-	| < IDENT : (" "){4} | "\t" > : EXPECT_RAWTEXT
+    < MINOR_IDENT : (" "){1,3} >
+    | < IDENT : (" "){4} | "\t" > : EXPECT_RAWTEXT
 }
 
 <EXPECT_RAWTEXT, RAWTEXT_FOLLOWS>
 TOKEN : {
-	< RAWTEXT : ~["\n", "\r"] > : RAWTEXT_FOLLOWS
+    < RAWTEXT : ~["\n", "\r"] > : RAWTEXT_FOLLOWS
 }
 
 <ON_DOC_ELEMENT__LINKREF>
 TOKEN : {
-	< URL : ( ~[" ", "\"", "\t", "\n", "\r"] )+ > /*<NOT_WHITESPACE>*/
-	| < QUOTED_TEXT : "\"" ( ~["\n", "\r"] )+ "\"" >
+    < URL : ( ~[" ", "\"", "\t", "\n", "\r"] )+ > /*<NOT_WHITESPACE>*/
+    | < QUOTED_TEXT : "\"" ( ~["\n", "\r"] )+ "\"" >
 }
 
 <ON_DOC_ELEMENT__LINKREF>
 SKIP : {
-	" " | "\t"
+    " " | "\t"
 }
 
 void Document() #Document : {} {
     content() ( <EOL> content() )*
-	<EOF>
+    <EOF>
 }
 
 void content() : {} {
     Header()
     | Ruler()
     | Quote()
-	| LOOKAHEAD(2) ( <MINOR_IDENT> )?
-	    (
-	        LinkRef()
-    	    | List()
-            | textchunks()
-	    )
-    | LOOKAHEAD( ( <IDENT> | <MINOR_IDENT> )* ( <EOL> | <EOF> ) ) empty()
-    | Code()
+    | LOOKAHEAD(2) ( <MINOR_IDENT> )?
+        (
+            textchunks()
+            | LinkRef()
+            | List()
+        )
+    | LOOKAHEAD( <IDENT> ( <IDENT> | <MINOR_IDENT> )* <RAWTEXT> ) Code()
+    | empty()
 }
 
 void empty() #EmptyLine : {} {
@@ -121,40 +124,69 @@ void empty() #EmptyLine : {} {
 }
 
 void Header() #Header : {} {
-	<HASH> textchunks()
+    <HASH> textchunks()
 }
 
 void Ruler() #Ruler : {} {
-	<UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER>
+    <UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER>
 }
 
 void Quote() #Quote : {} {
-	<GT> content()
+    <GT> content()
 }
 
 void Code() #Code : {} {
-	<IDENT> ( <IDENT> | <MINOR_IDENT> )* ( <RAWTEXT> )+
+    <IDENT> ( <IDENT> | <MINOR_IDENT> )* ( <RAWTEXT> )+
 }
 
-void LinkRef() #LinkRef : {} {
-	<REFNAME> <URL> ( <QUOTED_TEXT> )?
+void LinkRef() #LinkRef : {
+    Token t;
+} {
+    t = <REFNAME> { jjtThis.setId(t.image); }
+    t = <URL> { jjtThis.setUrl(t.image); }
+    ( t = <QUOTED_TEXT> { jjtThis.setTitle(t.image); } )?
 }
 
 void List() #Item : {} {
-	(
-		<LIST_PLUS> | <LIST_MINUS> | <LIST_ASTERISK> | <LIST_NUMBER>
-	)
-	textchunks()
+    (
+        <LIST_PLUS> | <LIST_MINUS> | <LIST_ASTERISK> | <LIST_NUMBER>
+    )
+    textchunks()
 }
 
-void textchunks() #Line : {
+void textchunks() #Line : {} {
+    (
+        Emphasis()
+        | Codespan()
+        | Text()
+    )+
+}
+
+void Text() #Text : {
+    Token t;
 } {
-	(
-		<TEXT> #Text( !isLastNodeAText() ) //if true we just need to append to the previous Text node.
-		| ( <EMPHASIS_1> | <EMPHASIS_2>	| <EMPHASIS_3> ) #Emphasis 
-		| <ESCAPED_CHAR>
-		| <CODE_SPAN> #Codespan
-	)+
+    (
+        t = <ESCAPED_CHAR> { jjtThis.append(getEscapedChar(t)); }
+        | t = <TEXT> { jjtThis.append(t.image); }
+    )+
+}
+
+void Emphasis() #Emphasis : {
+    Token t;
+    int type = 1;
+} {
+    (
+        t = <EMPHASIS_ITALIC>
+        | t = <EMPHASIS_BOLD> { type = 2; jjtThis.makeBold(); }
+        | t = <EMPHASIS_ITALIC_BOLD> { type = 3; jjtThis.makeItalicAndBold();} 
+    )
+    { jjtThis.setText(removeEmphasisMarks(t, type)); }
+}
+
+void Codespan() #Codespan : {
+    Token t;
+} {
+    t = <CODE_SPAN> { jjtThis.setText(removeCodespanMarks(t)); }
 }
 
 /* extras

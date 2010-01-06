@@ -6,7 +6,8 @@ import java.io.StringReader;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tautua.markdownpapers.grammar.MarkdownParser;
+import org.tautua.markdownpapers.grammar.Node;
+import org.tautua.markdownpapers.grammar.Parser;
 import org.tautua.markdownpapers.grammar.ParseException;
 
 public class ParserTest {
@@ -14,7 +15,7 @@ public class ParserTest {
     public void test() throws ParseException {
         Reader reader = new InputStreamReader(getClass().getResourceAsStream(
                 "/snippets.text"));
-        MarkdownParser parser = new MarkdownParser(reader);
+        Parser parser = new Parser(reader);
         Object result = parser.parse();
 
         Assert.assertNotNull(result);
@@ -38,9 +39,9 @@ public class ParserTest {
         }
     }
 
-    public void compile(String part) throws ParseException {
+    public Node compile(String part) throws ParseException {
         Reader reader = new StringReader(part);
-        MarkdownParser parser = new MarkdownParser(reader);
-        parser.parse();
+        Parser parser = new Parser(reader);
+        return (Node)parser.parse();
     }
 }
