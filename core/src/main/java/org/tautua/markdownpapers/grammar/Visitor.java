@@ -1,29 +1,39 @@
 package org.tautua.markdownpapers.grammar;
 
 public interface Visitor {
-    public void visit(SimpleNode node);
+    void visit(CharRef node);
 
-    public void visit(Document node);
+    void visit(Code node);
 
-    public void visit(EmptyLine node);
+    void visit(Codespan node);
 
-    public void visit(Header node);
+    void visit(Document node);
 
-    public void visit(Ruler node);
+    void visit(Emphasis node);
 
-    public void visit(Quote node);
+    void visit(EmptyLine node);
 
-    public void visit(Code node);
+    void visit(Header node);
 
-    public void visit(LinkRef node);
+    void visit(InlineLink node);
 
-    public void visit(Item node);
+    void visit(InlineUrl node);
 
-    public void visit(Line node);
+    void visit(Item node);
 
-    public void visit(Text node);
+    void visit(Line node);
 
-    public void visit(Emphasis node);
+    void visit(LinkRef node);
 
-    public void visit(Codespan node);
+    void visit(List node);
+
+    void visit(Paragraph node);
+
+    void visit(Quote node);
+
+    void visit(Ruler node);
+
+    void visit(SimpleNode node);
+
+    void visit(Text node);
 }

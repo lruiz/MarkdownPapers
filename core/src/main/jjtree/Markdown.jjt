@@ -1,5 +1,5 @@
 options {
-    LOOKAHEAD = 1;
+    LOOKAHEAD = 2;
     STATIC = false;
     UNICODE_INPUT = true;
 
@@ -30,101 +30,119 @@ public class Parser {
         return t.image.charAt(1);
     }
 
-    String removeCodespanMarks(Token t) {
-        return t.image.substring(1, t.image.length() - 1);
+    String removeMarks(Token t) {
+        return removeMarks(t, 1);
     }
-
-    String removeEmphasisMarks(Token t, int type) {
-        return t.image.substring(type, t.image.length() - type);
+    String removeMarks(Token t, int markLength) {
+        return t.image.substring(markLength, t.image.length() - markLength);
     }
 }
 PARSER_END(Parser)
 
-<*>
-TOKEN : {
-    < EOL : "\n" | "\r" | "\r\n" > : DEFAULT
-    | < #NOT_WHITESPACE : ~[" ", "\t"] >
-    | < #WHITESPACE : [" ", "\t"] >
+<DEFAULT, LINKREF_FOLLOWS>
+SKIP : {
+    < " " >
+}
+
+<LINKREF_FOLLOWS>
+SKIP : {
+    < "\t" >
+}
+
+<DEFAULT, CODE_FOLLOWS, LINKREF_FOLLOWS>
+SKIP : {
+    < "\r" | "\n" | "\r\n" > : DEFAULT
 }
 
 <DEFAULT>
 TOKEN : {
-    < HASH : ("#"){1,6} > : TEXTCHUNKS_FOLLOWS
-    | < REFNAME : "[" ( ~[" ", "\t", "]"] )* "]" ":" > : ON_DOC_ELEMENT__LINKREF
+    < HASH : ("#"){1,6} > : TEXT_FOLLOWS
+    | < REFNAME : "[" ( ~["]", " ", "\t"] )* "]" ":" > : LINKREF_FOLLOWS
     | < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
     | < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
     | < ASTERISK_RULER : ( ( (" "){1,3} )? "*" ){2} ( ( (" "){1,3} )? "*" )+ >
-    | < LIST_PLUS : "+" " " > : TEXTCHUNKS_FOLLOWS
-    | < LIST_MINUS : "-" " " > : TEXTCHUNKS_FOLLOWS
-    | < LIST_ASTERISK : "*" " "> : TEXTCHUNKS_FOLLOWS
-    | < LIST_NUMBER : ( ["0"-"9"] )+ "." " "> : TEXTCHUNKS_FOLLOWS
     | < GT : ">" ( " " )? >
+    | < IDENT : (" "){4} | "\t" > : CODE_FOLLOWS
 }
 
-<DEFAULT, TEXTCHUNKS_FOLLOWS>
+<DEFAULT, LI_FOLLOWS>
+TOKEN : {
+    < LI_PLUS : "+" " " > : LI_FOLLOWS
+    | < LI_MINUS : "-" " " > : LI_FOLLOWS
+    | < LI_ASTERISK : "*" " "> : LI_FOLLOWS
+}
+
+<DEFAULT, INDEXED_LI_FOLLOWS>
+TOKEN : {
+    < LI_NUMBER : ( ["0"-"9"] )+ "." " "> : INDEXED_LI_FOLLOWS
+}
+
+<DEFAULT, TEXT_FOLLOWS, INDEXED_LI_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
     < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")"
                         , "\\", "`", "_", ">", "#", ".", "!"
-                        , "+", "-", "*"] > : TEXTCHUNKS_FOLLOWS
-    | < CODE_SPAN : "`" ( ~[] )+ "`" >
+                        , "+", "-", "*"] > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+    | < CODE_SPAN : "`" ( ~[] )+ "`" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
     | < EMPHASIS_ITALIC : "*" <EMP_A> ( ~["*"] )+ <EMP_A> "*"
-                    | "_" <EMP_U> ( ~["_"] )+ <EMP_U> "_"> : TEXTCHUNKS_FOLLOWS
+                    | "_" <EMP_U> ( ~["_"] )+ <EMP_U> "_"> { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
     | < EMPHASIS_BOLD : "**" <EMP_A> ( ~["*"] )+ <EMP_A> "**"
-                    | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> : TEXTCHUNKS_FOLLOWS
+                    | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
     | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ~["*"] )+ <EMP_A> "***"
-                    | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> : TEXTCHUNKS_FOLLOWS
-    | < TEXT : ~["\n", "\r"] > : TEXTCHUNKS_FOLLOWS
-    | < #EMP_A : ~["*", " ", "\t", "\n", "\r"] >
-    | < #EMP_U : ~["_", " ", "\t", "\n", "\r"] >
+                    | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+    | < TEXT : ~["\r", "\n"] > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS);}
+    | < INLINE_LINK : "[" ( ~["]", "\r", "\n"] )* "]" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS);}
+    | < INLINE_LINK_ATTR : "(" ~[")", "\r", "\n"] ")" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS);}
+    | < INLINE_URL : "<" ( ~[">", "\r", "\n"] )* ">" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+    | < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+    | < #EMP_A : ~["*", " ", "\t", "\r", "\n"] >
+    | < #EMP_U : ~["_", " ", "\t", "\r", "\n"] >
 }
 
-<DEFAULT, EXPECT_RAWTEXT>
+<TEXT_FOLLOWS, INDEXED_LI_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
-    < MINOR_IDENT : (" "){1,3} >
-    | < IDENT : (" "){4} | "\t" > : EXPECT_RAWTEXT
+    < TEXTCHUNK_BREAK : <EOL> ( " " | "\t" )* <EOL> > : DEFAULT 
 }
 
-<EXPECT_RAWTEXT, RAWTEXT_FOLLOWS>
+<TEXT_FOLLOWS, INDEXED_LI_FOLLOWS, LI_FOLLOWS, CODE_FOLLOWS>
 TOKEN : {
-    < RAWTEXT : ~["\n", "\r"] > : RAWTEXT_FOLLOWS
+    < EOL : "\r" | "\n" | "\r\n" > {if(curLexState == CODE_FOLLOWS)SwitchTo(DEFAULT);}
 }
 
-<ON_DOC_ELEMENT__LINKREF>
+<CODE_FOLLOWS>
 TOKEN : {
-    < URL : ( ~[" ", "\"", "\t", "\n", "\r"] )+ > /*<NOT_WHITESPACE>*/
-    | < QUOTED_TEXT : "\"" ( ~["\n", "\r"] )+ "\"" >
+    < CODE_TEXT : ~["\r", "\n"] > : CODE_FOLLOWS
 }
 
-<ON_DOC_ELEMENT__LINKREF>
-SKIP : {
-    " " | "\t"
+<LINKREF_FOLLOWS>
+TOKEN : {
+    < URL : ( ~[" ", "\"", "\t", "\r", "\n"] )+ >
+    | < QUOTED_TEXT : "\"" ( ~["\"", "\r", "\n"] )+ "\"" >
 }
 
 void Document() #Document : {} {
-    content() ( <EOL> content() )*
-    <EOF>
+    ( Element() )* <EOF>
 }
 
-void content() : {} {
+void Element() : {} {
+    BlockElement() | DocumentElement()
+}
+
+void DocumentElement() : {} {
+    LinkRef()
+}
+
+void BlockElement() : {} {
     Header()
     | Ruler()
+    | List()
     | Quote()
-    | LOOKAHEAD(2) ( <MINOR_IDENT> )?
-        (
-            textchunks()
-            | LinkRef()
-            | List()
-        )
-    | LOOKAHEAD( <IDENT> ( <IDENT> | <MINOR_IDENT> )* <RAWTEXT> ) Code()
-    | empty()
-}
-
-void empty() #EmptyLine : {} {
-    ( <IDENT> | <MINOR_IDENT> )*
+    | Paragraph()
+    | Code()
 }
 
 void Header() #Header : {} {
-    <HASH> textchunks()
+    <HASH> Line() ( <EOL> )?
 }
 
 void Ruler() #Ruler : {} {
@@ -132,33 +150,62 @@ void Ruler() #Ruler : {} {
 }
 
 void Quote() #Quote : {} {
-    <GT> content()
+    <GT> BlockElement()
 }
 
 void Code() #Code : {} {
-    <IDENT> ( <IDENT> | <MINOR_IDENT> )* ( <RAWTEXT> )+
+    CodeLine() ( <EOL> CodeLine() )* ( <EOL> )?
+}
+
+void CodeLine() #Line : {} {
+    <IDENT> CodeText()
+}
+
+void CodeText() #Text : {
+    Token t;
+} {
+    (
+        t = <CODE_TEXT> { jjtThis.append(t.image); } 
+    )+
+}
+
+void Link() #InlineLink : {
+    Token t;
+} {
+    t = <INLINE_LINK> { jjtThis.setText(removeMarks(t)); }
+    ( <INLINE_LINK_ATTR> | t = <INLINE_LINK> { jjtThis.setRefId(removeMarks(t)); } )?
 }
 
 void LinkRef() #LinkRef : {
-    Token t;
+    Token i, u, t = null;
 } {
-    t = <REFNAME> { jjtThis.setId(t.image); }
-    t = <URL> { jjtThis.setUrl(t.image); }
-    ( t = <QUOTED_TEXT> { jjtThis.setTitle(t.image); } )?
+    i = <REFNAME> { jjtThis.setId(i.image); }
+    u = <URL>
+    ( t = <QUOTED_TEXT> )?
+    { jjtThis.setAttr(new LinkAttr(u.image, t == null ? null : t.image)); }
 }
 
-void List() #Item : {} {
-    (
-        <LIST_PLUS> | <LIST_MINUS> | <LIST_ASTERISK> | <LIST_NUMBER>
-    )
-    textchunks()
+void List() #List : {} {
+    ( Item() )+
 }
 
-void textchunks() #Line : {} {
+void Item() #Item : {} {
+    ( <LI_PLUS> | <LI_MINUS> | <LI_ASTERISK> | <LI_NUMBER> )
+    Paragraph()
+}
+
+void Paragraph() #Paragraph : {} {
+    Line() ( <EOL> Line() )* ( <EOL> | <TEXTCHUNK_BREAK> )?
+}
+
+void Line() #Line : {} {
     (
         Emphasis()
         | Codespan()
+        | Link()
         | Text()
+        | InlineURL()
+        | CharRef()
     )+
 }
 
@@ -168,25 +215,38 @@ void Text() #Text : {
     (
         t = <ESCAPED_CHAR> { jjtThis.append(getEscapedChar(t)); }
         | t = <TEXT> { jjtThis.append(t.image); }
+        | t = <INLINE_LINK_ATTR> { jjtThis.append(t.image); }
     )+
 }
 
 void Emphasis() #Emphasis : {
     Token t;
-    int type = 1;
+    int markLength = 1;
 } {
     (
         t = <EMPHASIS_ITALIC>
-        | t = <EMPHASIS_BOLD> { type = 2; jjtThis.makeBold(); }
-        | t = <EMPHASIS_ITALIC_BOLD> { type = 3; jjtThis.makeItalicAndBold();} 
+        | t = <EMPHASIS_BOLD> { markLength = 2; jjtThis.makeBold(); }
+        | t = <EMPHASIS_ITALIC_BOLD> { markLength = 3; jjtThis.makeItalicAndBold();}
     )
-    { jjtThis.setText(removeEmphasisMarks(t, type)); }
+    { jjtThis.setText(removeMarks(t, markLength)); }
 }
 
 void Codespan() #Codespan : {
     Token t;
 } {
-    t = <CODE_SPAN> { jjtThis.setText(removeCodespanMarks(t)); }
+    t = <CODE_SPAN> { jjtThis.setText(removeMarks(t)); }
+}
+
+void InlineURL() #InlineUrl : {
+    Token t;
+} {
+    t = <INLINE_URL> { jjtThis.setUrl(removeMarks(t)); }
+}
+
+void CharRef() #CharRef : {
+    Token t;
+} {
+    ( t = <NUMERIC_CHAR_REF> | t = <CHAR_ENTITY_REF> ) { jjtThis.setValue(t.image); }
 }
 
 /* extras

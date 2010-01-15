@@ -1,9 +1,9 @@
 package org.tautua.markdownpapers.grammar;
 
 public class SimpleNode implements Node {
-
+    private static final Node[] EMPTY_ARRAY = new Node[0];
     protected Node parent;
-    protected Node[] children;
+    protected Node[] children = EMPTY_ARRAY;
     protected int id;
     protected Object value;
     protected Parser parser;

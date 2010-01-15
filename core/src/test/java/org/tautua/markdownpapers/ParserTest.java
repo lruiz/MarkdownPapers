@@ -1,42 +1,45 @@
 package org.tautua.markdownpapers;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.tautua.markdownpapers.grammar.Node;
 import org.tautua.markdownpapers.grammar.Parser;
 import org.tautua.markdownpapers.grammar.ParseException;
 
-public class ParserTest {
-    @Test
-    public void test() throws ParseException {
-        Reader reader = new InputStreamReader(getClass().getResourceAsStream(
-                "/snippets.text"));
-        Parser parser = new Parser(reader);
-        Object result = parser.parse();
+import static org.junit.Assert.assertNotNull;
 
-        Assert.assertNotNull(result);
+@RunWith(Parameterized.class)
+public class ParserTest {
+    private String fileName;
+    private static final File assetsDir = new File("target/test-classes/");
+
+    public ParserTest(String fileName) {
+        this.fileName = fileName;
+    }
+
+    @Parameterized.Parameters
+    public static List<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {"rulers"},
+                {"headers"},
+                {"list"},
+                {"paragraphs"},
+                {"snippets"},
+            });
     }
 
     @Test
-    public void parts() throws ParseException {
-        String[] contentparts = new String[]{"# Header 1",
-                "###### Header 6", "[id]: http://tautua.org \"Tautua\" ",
-                "   [id]: http://tautua.org", "  ", "***", "* * *",
-                " 1. item1", "2. item2", "- item3",};
-        for (int i = 0; i < contentparts.length; i++) {
-            String part = contentparts[i];
-            try {
-                compile(part);
-            } catch (ParseException e) {
-                System.out.println("Error in line #" + i + " - \"" + part
-                        + "\"");
-                throw e;
-            }
-        }
+    public void execute() throws ParseException, FileNotFoundException {
+        File input = new File(assetsDir, fileName + ".text");
+        Parser parser = new Parser(new FileReader(input));
+        Object obj = parser.parse();
+        assertNotNull(obj);
     }
 
     public Node compile(String part) throws ParseException {
