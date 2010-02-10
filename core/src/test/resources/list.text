@@ -7,3 +7,11 @@
       same line
        1. item 2.1.1
      2. item 2.2
+
++ item 1
++ item 2
+   1. same item 2
+
+- item 1
+- item 2
+    1. same item 2

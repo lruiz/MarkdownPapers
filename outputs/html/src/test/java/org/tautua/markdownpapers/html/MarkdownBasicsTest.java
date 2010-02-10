@@ -43,7 +43,27 @@ public class MarkdownBasicsTest {
         return Arrays.asList(new Object[][]{
                 {"Amps and angle encoding"},
                 {"Auto links"},
-                //{"Backslash escapes"}
+                {"Backslash escapes"},
+                {"Blockquotes with code blocks"},
+                {"Code Blocks"},
+                {"Code Spans"},
+                {"Hard-wrapped paragraphs with list-like lines"},
+                {"Horizontal rules"},
+                {"Images"},
+                {"Inline HTML (Advanced)"},
+                {"Inline HTML (Simple)"},
+                {"Inline HTML comments"},
+                {"Links, inline style"},
+                {"Links, reference style"},
+                {"Links, shortcut references"},
+                {"Literal quotes in titles"},
+                {"Markdown Documentation - Basics"},
+                {"Markdown Documentation - Syntax"},
+                {"Nested blockquotes"},
+                {"Ordered and unordered lists"},
+                {"Strong and em together"},
+                {"Tabs"},
+                {"Tidyness"}
             });
     }
 

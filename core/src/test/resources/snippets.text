@@ -3,48 +3,8 @@
     	
 	  
 
-Lorem ipsum
-
-Lorem ipsum, line 1
-line 2
-
-
-1. item 1
-2. item 2
-
-- item 1
-
-+ item 2
-
-* item 3
-
 [id]: http://markdown.tautua.org "Tautua"
 [ref1]: ref1.html
 
   [ref2]: /ref2.html
 
-    code text 1
-    code text 2 block 1 continues here
-	code text 3 with tab
-	 code text 4 with tab and space
-      code
-      
-
->1. item 1
-> 2. item 2
-> - item 3
-> + item 4
-> * item 5
-> ---
-> ___
-> ***
-> * * *
-> Lorem ipsum
->
-> 
->    
->		
->   
->	   
->    Lorem ipsum
->     Lorem ipsum

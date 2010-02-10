@@ -1,5 +1,5 @@
 options {
-    LOOKAHEAD = 2;
+    LOOKAHEAD = 1;
     STATIC = false;
     UNICODE_INPUT = true;
 
@@ -20,6 +20,11 @@ PARSER_BEGIN(Parser)
 package org.tautua.markdownpapers.grammar;
 
 public class Parser {
+    private static final String QUOTE = '"' + "";
+    private int quoteBlockLevel = 0;
+
+    int ident;
+    int delta;
 
     public Object parse() throws ParseException {
         Document();
@@ -30,83 +35,247 @@ public class Parser {
         return t.image.charAt(1);
     }
 
-    String removeMarks(Token t) {
-        return removeMarks(t, 1);
+    String getValue(Token t) {
+        if (t.kind == LINKREF_ID) {
+            return t.image.substring(1, t.image.length() - 2);
+        } else if (t.kind == CODE_SPAN && t.image.startsWith("``")) {
+            return getValue(t, 2);            
+        }
+        return getValue(t, 1);
     }
-    String removeMarks(Token t, int markLength) {
+
+    LinkAttr getLinkAttr(Token t) {
+        String[] v = t.image.substring(1, t.image.length() - 1).split(" ");
+        if (v != null && v.length == 1) {
+            return new LinkAttr(v[0].replace("<", "").replace(">",""));
+        } else if (v.length == 2 && v[1].startsWith(QUOTE) && v[1].endsWith(QUOTE)) {
+            return new LinkAttr(v[0], v[1].substring(1, v[1].length() - 1));
+        }
+
+        return null;
+    }
+
+    String getValue(Token t, int markLength) {
         return t.image.substring(markLength, t.image.length() - markLength);
+    }
+
+
+    boolean LineLookahead() {
+        int level = 0;
+        int i = 1;
+        Token t = getToken(i);
+
+        if (t.kind != EOL) {
+            return false;
+        }
+
+        do {
+            t = getToken(++i);
+            if(t.kind == GT) {
+                level++;
+            }
+        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+
+        if (t.kind == EOL || t.kind == EOF) {
+            return false;
+        }
+
+        if (quoteBlockLevel < level) {
+            return false;
+        }
+
+        return true;
+    }
+
+    boolean QuotedElementLookahead() {
+        int level = 0;
+        int i = 1;
+        Token t = getToken(i);
+
+        if (t.kind != EOL) {
+            return false;
+        }
+
+        do {
+            t = getToken(++i);
+            if (t.kind == GT) {
+                level++;
+            }
+        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+
+        if (t.kind == EOL || t.kind == EOF) {
+            return true;
+        }
+
+        if (quoteBlockLevel <= level) {
+            return true;
+        }
+
+        return false;
+    }
+
+    boolean ItemLookahead() {
+        int level = 0;
+        int _ident = 0;
+        int i = 1;
+        Token t = getToken(i);
+
+        if (t.kind != EOL) {
+            return false;
+        }
+
+        do {
+            t = getToken(++i);
+            if (t.kind == GT) {
+                level++;
+            } else if (t.kind == SPACE) {
+                _ident++;
+            } else if (t.kind == TAB) {
+                _ident += 4;
+            }
+        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+
+        if ((t.kind == LI_PLUS || t.kind == LI_MINUS || t.kind == LI_ASTERISK || t.kind == LI_NUMBER)
+            && (_ident > ident - delta || _ident == ident)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    boolean ListLookahead() {
+        int level = 0;
+        int _ident = 0;
+        int i = 1;
+        Token t = getToken(i);
+
+        if (t.kind != EOL) {
+            return false;
+        }
+
+        do {
+            t = getToken(++i);
+            if (t.kind == GT) {
+                level++;
+            } else if (t.kind == SPACE) {
+                _ident++;
+            } else if (t.kind == TAB) {
+                _ident += 4;
+            }
+        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+
+        if ((t.kind == LI_PLUS || t.kind == LI_MINUS || t.kind == LI_ASTERISK || t.kind == LI_NUMBER)
+            && _ident > ident) {
+            return true;
+        }
+        
+        return false;
     }
 }
 PARSER_END(Parser)
 
-<DEFAULT, LINKREF_FOLLOWS>
-SKIP : {
-    < " " >
+TOKEN_MGR_DECLS : {
+    boolean expectBlockEnd;
+    int spaces = 0;
+    int ident = 0;
+
+    public int getLexicalState() {
+        return curLexState;
+    }
+
+    void HandleSpace() {
+        if (curLexState == DEFAULT) {
+            spaces++;
+            if (spaces == 4) {
+                spaces = 0;
+                SwitchTo(CODE_FOLLOWS);
+            }
+        }
+    }
+
+    void HandleTAB() {
+        if (curLexState == DEFAULT && spaces == 0) {
+            SwitchTo(CODE_FOLLOWS);
+        }
+    }
+
+    void HandleEOL() {
+        if (curLexState != TEXT_FOLLOWS && curLexState != LI_FOLLOWS) {
+            SwitchTo(DEFAULT);
+        } else if (expectBlockEnd) {
+            expectBlockEnd = false;
+            SwitchTo(DEFAULT);
+        } else {
+            expectBlockEnd = true;
+        }
+
+        spaces = 0;
+    }
+
+    void HandleContent() {
+        if (curLexState == DEFAULT) {
+            SwitchTo(TEXT_FOLLOWS);
+        }
+        expectBlockEnd = false;
+    }
 }
 
-<LINKREF_FOLLOWS>
-SKIP : {
-    < "\t" >
-}
-
-<DEFAULT, CODE_FOLLOWS, LINKREF_FOLLOWS>
-SKIP : {
-    < "\r" | "\n" | "\r\n" > : DEFAULT
+<*>
+TOKEN : {
+    < SPACE : " " > { HandleSpace(); }
+    | < TAB : "\t" > { HandleTAB(); }
+    | < EOL : "\r" | "\n" | "\r\n" > { HandleEOL(); }
 }
 
 <DEFAULT>
 TOKEN : {
-    < HASH : ("#"){1,6} > : TEXT_FOLLOWS
-    | < REFNAME : "[" ( ~["]", " ", "\t"] )* "]" ":" > : LINKREF_FOLLOWS
-    | < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
-    | < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
-    | < ASTERISK_RULER : ( ( (" "){1,3} )? "*" ){2} ( ( (" "){1,3} )? "*" )+ >
-    | < GT : ">" ( " " )? >
-    | < IDENT : (" "){4} | "\t" > : CODE_FOLLOWS
+    < HASH : ("#"){1,6} > : HEADER_FOLLOWS
+    | < LINKREF_ID : "[" ( ~["]", " ", "\t"] )* "]" ":" > : LINKREF_FOLLOWS
 }
 
 <DEFAULT, LI_FOLLOWS>
 TOKEN : {
     < LI_PLUS : "+" " " > : LI_FOLLOWS
     | < LI_MINUS : "-" " " > : LI_FOLLOWS
-    | < LI_ASTERISK : "*" " "> : LI_FOLLOWS
+    | < LI_ASTERISK : "*" " " > : LI_FOLLOWS
+    | < LI_NUMBER : ( ["0"-"9"] )+ "." " " > : LI_FOLLOWS
 }
 
-<DEFAULT, INDEXED_LI_FOLLOWS>
+<DEFAULT, TEXT_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
-    < LI_NUMBER : ( ["0"-"9"] )+ "." " "> : INDEXED_LI_FOLLOWS
+    < UNDERSCORE_RULER : ( ( (" "){1,3} )? "_" ){2} ( ( (" "){1,3} )? "_" )+ >
+    | < MINUS_RULER : ( ( (" "){1,3} )? "-" ){2} ( ( (" "){1,3} )? "-" )+ >
+    | < ASTERISK_RULER : ( ( (" "){1,3} )? "*" ){2} ( ( (" "){1,3} )? "*" )+ >
 }
 
-<DEFAULT, TEXT_FOLLOWS, INDEXED_LI_FOLLOWS, LI_FOLLOWS>
+<DEFAULT, HEADER_FOLLOWS, TEXT_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
     < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")"
                         , "\\", "`", "_", ">", "#", ".", "!"
-                        , "+", "-", "*"] > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
-    | < CODE_SPAN : "`" ( ~[] )+ "`" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+                        , "+", "-", "*"] > { HandleContent(); }
+    | < CODE_SPAN : "`" ( ~["`"] )+ "`" | "`" "`" ( ~["'"] )+ "`" "`" > { HandleContent(); }
     | < EMPHASIS_ITALIC : "*" <EMP_A> ( ~["*"] )+ <EMP_A> "*"
-                    | "_" <EMP_U> ( ~["_"] )+ <EMP_U> "_"> { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+                    | "_" <EMP_U> ( ~["_"] )+ <EMP_U> "_"> { HandleContent(); }
     | < EMPHASIS_BOLD : "**" <EMP_A> ( ~["*"] )+ <EMP_A> "**"
-                    | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+                    | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> { HandleContent(); }
     | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ~["*"] )+ <EMP_A> "***"
-                    | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
-    | < TEXT : ~["\r", "\n"] > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS);}
-    | < INLINE_LINK : "[" ( ~["]", "\r", "\n"] )* "]" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS);}
-    | < INLINE_LINK_ATTR : "(" ~[")", "\r", "\n"] ")" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS);}
-    | < INLINE_URL : "<" ( ~[">", "\r", "\n"] )* ">" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
-    | < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
-    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" > { if(curLexState == DEFAULT)SwitchTo(TEXT_FOLLOWS); }
+                    | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> { HandleContent(); }
+    | < INLINE_LINK : "[" ( ~["]", "\r", "\n"] )+ "]" > { HandleContent(); }
+    | < INLINE_LINK_ATTR : "(" ( ~[")", "\r", "\n"] )+ ")" > { HandleContent(); }
+    | < INLINE_URL : "<" ( ~[">", "\r", "\n"] )+ ">" > { HandleContent(); }
+    | < AMP : "&" > { HandleContent(); }
+    | < GT : ">" >
+    | < LT : "<" >
+    | < LBRACE : "(" >
+    | < RBRACE : ")" >
+    | < LBRACKET : "[" >
+    | < RBRACKET : "]" >
+    | < BACKSLASH : "\\" >
+    | < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" > { HandleContent(); }
+    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" > { HandleContent(); }
+    | < TEXT : ( ~["#", "&", "<", ">", "(", ")", "[", "]", " ", "\\", "\t", "\r", "\n"] )+ > { HandleContent(); }
     | < #EMP_A : ~["*", " ", "\t", "\r", "\n"] >
     | < #EMP_U : ~["_", " ", "\t", "\r", "\n"] >
-}
-
-<TEXT_FOLLOWS, INDEXED_LI_FOLLOWS, LI_FOLLOWS>
-TOKEN : {
-    < TEXTCHUNK_BREAK : <EOL> ( " " | "\t" )* <EOL> > : DEFAULT 
-}
-
-<TEXT_FOLLOWS, INDEXED_LI_FOLLOWS, LI_FOLLOWS, CODE_FOLLOWS>
-TOKEN : {
-    < EOL : "\r" | "\n" | "\r\n" > {if(curLexState == CODE_FOLLOWS)SwitchTo(DEFAULT);}
 }
 
 <CODE_FOLLOWS>
@@ -121,7 +290,11 @@ TOKEN : {
 }
 
 void Document() #Document : {} {
-    ( Element() )* <EOF>
+    (
+    Element() ( LOOKAHEAD(2) <EOL> Element() )*
+    | <EOL>
+    )*
+    <EOF>
 }
 
 void Element() : {} {
@@ -134,78 +307,113 @@ void DocumentElement() : {} {
 
 void BlockElement() : {} {
     Header()
-    | Ruler()
-    | List()
-    | Quote()
+    | LOOKAHEAD( BlankLine() (<EOL> | <EOF>) ) BlankLine()
+    | LOOKAHEAD( ( <UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER>) (<EOL>|<EOF>) ) Ruler()
+    | LOOKAHEAD( ( <SPACE> <SPACE> <SPACE> <SPACE> | <TAB> ) ( <SPACE> | <TAB> )* <CODE_TEXT> ) Code()
+    | LOOKAHEAD( ( <SPACE> | <TAB> )* <GT> ) Quote()
+    | LOOKAHEAD( ( <SPACE> | <TAB> )* ( <LI_PLUS> | <LI_MINUS> | <LI_ASTERISK> | <LI_NUMBER> ) ) List()
     | Paragraph()
-    | Code()
+}
+
+void BlankLine() : {} {
+    ( <SPACE> | <TAB> )+
 }
 
 void Header() #Header : {} {
-    <HASH> Line() ( <EOL> )?
+    <HASH> Line()
 }
 
 void Ruler() #Ruler : {} {
     <UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER>
 }
 
-void Quote() #Quote : {} {
-    <GT> BlockElement()
+void Quote() #Quote : {
+    quoteBlockLevel++;
+} {
+    ( <SPACE> | <TAB> )* <GT> BlockElement()
+    ( LOOKAHEAD( {QuotedElementLookahead()} ) <EOL>
+        (
+            LOOKAHEAD( ( <SPACE> | <TAB> )* <GT> ) ( <SPACE> | <TAB> )* <GT> ( BlockElement() )?
+            | BlankLine()
+        )?
+    )*
+    { quoteBlockLevel--; }
 }
 
 void Code() #Code : {} {
-    CodeLine() ( <EOL> CodeLine() )* ( <EOL> )?
+    CodeLine()
+    ( LOOKAHEAD( <EOL> ( BlankLine() | CodeLine() )? ) <EOL>
+        (
+            LOOKAHEAD( BlankLine() ( < EOL> | <EOF> ) ) BlankLine()
+            | CodeLine()
+        )?
+    )*
 }
 
 void CodeLine() #Line : {} {
-    <IDENT> CodeText()
+    ( <SPACE> <SPACE> <SPACE> <SPACE> | <TAB> ) CodeText()
 }
 
 void CodeText() #Text : {
     Token t;
 } {
     (
-        t = <CODE_TEXT> { jjtThis.append(t.image); } 
-    )+
-}
-
-void Link() #InlineLink : {
-    Token t;
-} {
-    t = <INLINE_LINK> { jjtThis.setText(removeMarks(t)); }
-    ( <INLINE_LINK_ATTR> | t = <INLINE_LINK> { jjtThis.setRefId(removeMarks(t)); } )?
+        t = <SPACE> { jjtThis.append(t.image); }
+        | t = <TAB> { jjtThis.append(t.image); }
+    )*
+    t = <CODE_TEXT> { jjtThis.append(t.image); }
+    (
+        t = <SPACE> { jjtThis.append(t.image); }
+        | t = <TAB> { jjtThis.append(t.image); }
+        | t = <CODE_TEXT> { jjtThis.append(t.image); }
+    )*
 }
 
 void LinkRef() #LinkRef : {
     Token i, u, t = null;
 } {
-    i = <REFNAME> { jjtThis.setId(i.image); }
+    i = <LINKREF_ID> { jjtThis.setId(getValue(i)); }
+    ( <SPACE> | <TAB> )*
     u = <URL>
+    ( <SPACE> | <TAB> )*
     ( t = <QUOTED_TEXT> )?
-    { jjtThis.setAttr(new LinkAttr(u.image, t == null ? null : t.image)); }
+    { jjtThis.setAttr(new LinkAttr(u.image, t == null ? null : getValue(t))); }
 }
 
-void List() #List : {} {
-    ( Item() )+
+void List() #List : {
+    int oldIdent = ident;
+    int oldDelta = delta;
+} {
+    (
+        <SPACE> { ident++; }
+        | <TAB> { ident += 4; }
+        | <GT> { ident = 0; }
+    )*          { delta = ident - oldIdent; }
+    Item() ( LOOKAHEAD( {ItemLookahead()} ) <EOL> ( <SPACE> | <TAB> | <GT> )* Item() )*
+    {
+        ident = oldIdent;
+        delta = oldDelta;
+    }
 }
 
 void Item() #Item : {} {
     ( <LI_PLUS> | <LI_MINUS> | <LI_ASTERISK> | <LI_NUMBER> )
-    Paragraph()
+    ( Line() ( LOOKAHEAD( <EOL> ( <SPACE> | <TAB> )* <TEXT> ) <EOL> Line() )* #Paragraph(>1) )
+    ( LOOKAHEAD( {ListLookahead()} ) <EOL> List() )?
 }
 
 void Paragraph() #Paragraph : {} {
-    Line() ( <EOL> Line() )* ( <EOL> | <TEXTCHUNK_BREAK> )?
+    Line() ( LOOKAHEAD( {LineLookahead()} ) <EOL> ( <SPACE> | <TAB> | <GT> )* Line() )*
 }
 
 void Line() #Line : {} {
     (
-        Emphasis()
-        | Codespan()
-        | Link()
-        | Text()
+        CharRef()
+        | CodeSpan()
+        | Emphasis()
         | InlineURL()
-        | CharRef()
+        | InlineLink()
+        | Text()
     )+
 }
 
@@ -214,9 +422,32 @@ void Text() #Text : {
 } {
     (
         t = <ESCAPED_CHAR> { jjtThis.append(getEscapedChar(t)); }
-        | t = <TEXT> { jjtThis.append(t.image); }
-        | t = <INLINE_LINK_ATTR> { jjtThis.append(t.image); }
+        | (
+            t = <TEXT>
+            | t = <SPACE>
+            | t = <TAB>
+            | t = <AMP>
+            | t = <GT>
+            | t = <LT>
+            | t = <LBRACE>
+            | t = <RBRACE>
+            | t = <LBRACKET>
+            | t = <RBRACKET>
+            | t = <BACKSLASH>
+        ) { jjtThis.append(t.image); }
     )+
+}
+
+void CharRef() #CharRef : {
+    Token t;
+} {
+    ( t = <NUMERIC_CHAR_REF> | t = <CHAR_ENTITY_REF> ) { jjtThis.setValue(t.image); }
+}
+
+void CodeSpan() #CodeSpan : {
+    Token t;
+} {
+    t = <CODE_SPAN> { jjtThis.setText(getValue(t)); }
 }
 
 void Emphasis() #Emphasis : {
@@ -226,32 +457,22 @@ void Emphasis() #Emphasis : {
     (
         t = <EMPHASIS_ITALIC>
         | t = <EMPHASIS_BOLD> { markLength = 2; jjtThis.makeBold(); }
-        | t = <EMPHASIS_ITALIC_BOLD> { markLength = 3; jjtThis.makeItalicAndBold();}
-    )
-    { jjtThis.setText(removeMarks(t, markLength)); }
-}
-
-void Codespan() #Codespan : {
-    Token t;
-} {
-    t = <CODE_SPAN> { jjtThis.setText(removeMarks(t)); }
+        | t = <EMPHASIS_ITALIC_BOLD> { markLength = 3; jjtThis.makeItalicAndBold(); }
+    ) { jjtThis.setText(getValue(t, markLength)); }
 }
 
 void InlineURL() #InlineUrl : {
     Token t;
 } {
-    t = <INLINE_URL> { jjtThis.setUrl(removeMarks(t)); }
+    t = <INLINE_URL> { jjtThis.setUrl(getValue(t)); }
 }
 
-void CharRef() #CharRef : {
+void InlineLink() #InlineLink : {
     Token t;
 } {
-    ( t = <NUMERIC_CHAR_REF> | t = <CHAR_ENTITY_REF> ) { jjtThis.setValue(t.image); }
+    t = <INLINE_LINK> { jjtThis.setText(getValue(t)); }
+    (
+        ( <SPACE> )? t = <INLINE_LINK> { jjtThis.setRefId(getValue(t)); }
+        | t = <INLINE_LINK_ATTR> { jjtThis.setAttr(getLinkAttr(t)); }
+    )?
 }
-
-/* extras
-void AbbreviationDef() : {} {
-}
-void FootnoteDef() : {}{
-}
-*/

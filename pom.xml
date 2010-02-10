@@ -7,6 +7,7 @@
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <name>Markdown Papers Project</name>
+    <description>Markdown java implementation</description>
     <url>http://markdown.tautua.org</url>
     <inceptionYear>2009</inceptionYear>
     <modules>

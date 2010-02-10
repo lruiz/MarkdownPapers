@@ -1,13 +1,13 @@
 package org.tautua.markdownpapers.grammar;
 
-public class Codespan extends SimpleNode {
+public class CodeSpan extends SimpleNode {
     private String text;
 
-    public Codespan(int id) {
+    public CodeSpan(int id) {
         super(id);
     }
 
-    public Codespan(Parser p, int id) {
+    public CodeSpan(Parser p, int id) {
         super(p, id);
     }
 

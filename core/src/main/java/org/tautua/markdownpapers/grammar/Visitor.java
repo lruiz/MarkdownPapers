@@ -5,7 +5,7 @@ public interface Visitor {
 
     void visit(Code node);
 
-    void visit(Codespan node);
+    void visit(CodeSpan node);
 
     void visit(Document node);
 

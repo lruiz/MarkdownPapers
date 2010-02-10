@@ -30,19 +30,13 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(Code node) {
         append("<pre><code>");
-        int count = node.jjtGetNumChildren();
-        for(int i = 0; i < count; i++) {
-            node.jjtGetChild(i).accept(this);
-            if(i < count - 1) {
-                append("</br>");
-            }
-        }
+        visitChildrenAndAppendSeparator(node, "\n");
         append("</code></pre>");
     }
 
-    public void visit(Codespan node) {
+    public void visit(CodeSpan node) {
         append("<code>");
-        append(node.getText());
+        appendAndEscape(node.getText());
         append("</code>");
     }
 
@@ -90,7 +84,11 @@ public class HtmlGenerator implements Visitor {
         } else {
             append("<a");
             append(" href=\"");
-            append(attr.getUrl());
+            appendAndEscape(attr.getUrl());
+            if (attr.getTitle() != null) {
+                append("\" title=\"");
+                appendAndEscape(attr.getTitle());
+            }
             append("\">");
             appendAndEscape(node.getText());
             append("</a>");
@@ -127,7 +125,7 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(Paragraph node) {
         append("<p>");
-        node.childrenAccept(this);
+        visitChildrenAndAppendSeparator(node," ");
         append("</p>");
     }
 
@@ -161,6 +159,16 @@ public class HtmlGenerator implements Visitor {
         }
 
         return link.getAttr();
+    }
+
+    void visitChildrenAndAppendSeparator(Node node, String separator){
+        int count = node.jjtGetNumChildren();
+        for(int i = 0; i < count; i++) {
+            node.jjtGetChild(i).accept(this);
+            if(i < count - 1) {
+                append(separator);
+            }
+        }
     }
 
     void appendAndEscape(String val) {

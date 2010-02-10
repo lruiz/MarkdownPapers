@@ -11,6 +11,10 @@ public class LinkAttr {
     private String url;
     private String title;
 
+    public LinkAttr(String url) {
+        this.url = url;
+    }
+
     public LinkAttr(String url, String title) {
         this.url = url;
         this.title = title;
