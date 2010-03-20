@@ -99,7 +99,7 @@ public class MarkdownBasicsTest {
      */
     private static void compare(File expected, File output) throws IOException, SAXException, ParserConfigurationException {
         XMLUnit.setIgnoreWhitespace(true);
-        TolerantSaxDocumentBuilder tolerantSaxDocumentBuilder = new TolerantSaxDocumentBuilder(XMLUnit.getTestParser());
+        TolerantSaxDocumentBuilder tolerantSaxDocumentBuilder = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
         HTMLDocumentBuilder htmlDocumentBuilder = new HTMLDocumentBuilder(tolerantSaxDocumentBuilder);
         org.w3c.dom.Document e = htmlDocumentBuilder.parse(new FileReader(expected));
         org.w3c.dom.Document o = htmlDocumentBuilder.parse(new FileReader(output));

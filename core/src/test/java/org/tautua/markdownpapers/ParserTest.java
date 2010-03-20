@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.tautua.markdownpapers.grammar.Document;
 import org.tautua.markdownpapers.grammar.Node;
 import org.tautua.markdownpapers.grammar.Parser;
 import org.tautua.markdownpapers.grammar.ParseException;
@@ -16,35 +17,45 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(Parameterized.class)
 public class ParserTest {
-    private String fileName;
+    private Reader reader;
     private static final File assetsDir = new File("target/test-classes/");
 
-    public ParserTest(String fileName) {
-        this.fileName = fileName;
+    public ParserTest(Reader reader) {
+        this.reader = reader;
     }
 
     @Parameterized.Parameters
-    public static List<Object[]> data() {
+    public static List<Object[]> data() throws FileNotFoundException {
         return Arrays.asList(new Object[][]{
-                {"rulers"},
-                {"headers"},
-                {"list"},
-                {"paragraphs"},
-                {"snippets"},
+                {getStringReader("")},
+                {getAssetReader("rulers")},
+                {getAssetReader("headers")},
+                {getAssetReader("paragraphs")},
+                {getAssetReader("code")},
+                {getAssetReader("list")},
+                {getAssetReader("quotes")},
+                {getAssetReader("quoteAndList")},
+                {getAssetReader("inline")},
+                {getAssetReader("tags")}
             });
     }
 
     @Test
     public void execute() throws ParseException, FileNotFoundException {
-        File input = new File(assetsDir, fileName + ".text");
-        Parser parser = new Parser(new FileReader(input));
-        Object obj = parser.parse();
+        Object obj = parse(reader);
         assertNotNull(obj);
     }
 
-    public Node compile(String part) throws ParseException {
-        Reader reader = new StringReader(part);
+    static Document parse(Reader reader) throws ParseException {
         Parser parser = new Parser(reader);
-        return (Node)parser.parse();
+        return (Document)parser.parse();
+    }
+
+    static Reader getAssetReader(String assetName) throws FileNotFoundException {
+        return new FileReader(new File(assetsDir, assetName + ".text"));
+    }
+
+    static Reader getStringReader(String string) {
+        return new StringReader(string);
     }
 }

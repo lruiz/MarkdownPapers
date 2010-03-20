@@ -1,11 +1,11 @@
 package org.tautua.markdownpapers.grammar;
 
-public class EmptyLine extends SimpleNode {
-    public EmptyLine(int id) {
+public class BlankLine extends SimpleNode {
+    public BlankLine(int id) {
         super(id);
     }
 
-    public EmptyLine(Parser p, int id) {
+    public BlankLine(Parser p, int id) {
         super(p, id);
     }
 

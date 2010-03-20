@@ -11,7 +11,7 @@ public interface Visitor {
 
     void visit(Emphasis node);
 
-    void visit(EmptyLine node);
+    void visit(BlankLine node);
 
     void visit(Header node);
 
@@ -34,6 +34,8 @@ public interface Visitor {
     void visit(Ruler node);
 
     void visit(SimpleNode node);
+
+    void visit(Tag node);
 
     void visit(Text node);
 }

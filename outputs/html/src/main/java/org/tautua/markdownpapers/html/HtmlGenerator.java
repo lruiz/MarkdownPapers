@@ -65,7 +65,7 @@ public class HtmlGenerator implements Visitor {
         }
     }
 
-    public void visit(EmptyLine node) {
+    public void visit(BlankLine node) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -141,6 +141,26 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(SimpleNode node) {
         throw new IllegalArgumentException("can not process this element");
+    }
+
+    public void visit(Tag node) {
+        append("<");
+        append(node.getName());
+        for (TagAttr attr : node.getAttributes()) {
+            append(" ");
+            append(attr.getName());
+            append("=");
+            append(attr.getValue());
+        }
+        if (node.jjtGetNumChildren() > 0) {
+            append(">");
+            node.childrenAccept(this);
+            append("</");
+            append(node.getName());
+            append(">");
+        } else {
+            append("/>");
+        }
     }
 
     public void visit(Text node) {

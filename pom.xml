@@ -10,6 +10,16 @@
     <description>Markdown java implementation</description>
     <url>http://markdown.tautua.org</url>
     <inceptionYear>2009</inceptionYear>
+    <organization>
+        <name>TAUTUA Software</name>
+        <url>www.tautua.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
     <modules>
         <module>core</module>
         <module>outputs/html</module>
