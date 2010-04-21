@@ -28,14 +28,14 @@ public class ParserTest {
     public static List<Object[]> data() throws FileNotFoundException {
         return Arrays.asList(new Object[][]{
                 {getStringReader("")},
-                {getAssetReader("rulers")},
-                {getAssetReader("headers")},
-                {getAssetReader("paragraphs")},
                 {getAssetReader("code")},
-                {getAssetReader("list")},
-                {getAssetReader("quotes")},
-                {getAssetReader("quoteAndList")},
+                {getAssetReader("headers")},
                 {getAssetReader("inline")},
+                {getAssetReader("list")},
+                {getAssetReader("paragraphs")},
+                {getAssetReader("quoteAndList")},
+                {getAssetReader("quotes")},
+                {getAssetReader("rulers")},
                 {getAssetReader("tags")}
             });
     }

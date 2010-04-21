@@ -3,7 +3,7 @@ package org.tautua.markdownpapers.grammar;
 public class InlineLink extends SimpleNode {
     private String text;
     private String refId;
-    private LinkAttr attr;
+    private Location attr;
 
     public InlineLink(int id) {
         super(id);
@@ -29,11 +29,11 @@ public class InlineLink extends SimpleNode {
         this.refId = refId;
     }
 
-    public LinkAttr getAttr() {
+    public Location getAttr() {
         return attr;
     }
 
-    public void setAttr(LinkAttr attr) {
+    public void setAttr(Location attr) {
         this.attr = attr;
     }
 

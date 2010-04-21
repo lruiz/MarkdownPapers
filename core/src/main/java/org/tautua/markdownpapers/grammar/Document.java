@@ -22,9 +22,9 @@ public class Document extends SimpleNode {
     public void jjtAddChild(Node n, int i) {
         if (n instanceof LinkRef) {
             linkRefs.put(((LinkRef)n).getId(), (LinkRef)n);
-        } else {
-            super.jjtAddChild(n, i);
         }
+
+        super.jjtAddChild(n, i);
     }
 
     @Override

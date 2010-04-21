@@ -1,16 +1,17 @@
 package org.tautua.markdownpapers.grammar;
 
-import java.util.ArrayList;
+import java.util.*;
+import java.util.List;
 
-public class Tag extends SimpleNode {
+public class EmptyTag extends SimpleNode {
     private String name;
     private java.util.List<TagAttr> attributes = new ArrayList();
 
-    public Tag(int id) {
+    public EmptyTag(int id) {
         super(id);
     }
 
-    public Tag(Parser p, int id) {
+    public EmptyTag(Parser p, int id) {
         super(p, id);
     }
 
@@ -25,6 +26,10 @@ public class Tag extends SimpleNode {
 
     public java.util.List<TagAttr> getAttributes() {
         return attributes;
+    }
+
+    public void setAttributes(List<TagAttr> attributes) {
+        this.attributes = attributes;
     }
 
     public void addAttr(TagAttr attr) {

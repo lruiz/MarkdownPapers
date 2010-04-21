@@ -2,7 +2,7 @@ package org.tautua.markdownpapers.grammar;
 
 public class LinkRef extends SimpleNode {
     private String id;
-    private LinkAttr attr;
+    private Location attr;
 
     public LinkRef(int id) {
         super(id);
@@ -20,11 +20,11 @@ public class LinkRef extends SimpleNode {
         this.id = id;
     }
 
-    public LinkAttr getAttr() {
+    public Location getAttr() {
         return attr;
     }
 
-    public void setAttr(LinkAttr attr) {
+    public void setAttr(Location attr) {
         this.attr = attr;
     }
 

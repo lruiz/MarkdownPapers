@@ -28,6 +28,12 @@ public class HtmlGenerator implements Visitor {
         append(node.getValue());
     }
 
+    public void visit(CloseTag node) {
+        append("</");
+        append(node.getName());
+        append(">");
+    }
+
     public void visit(Code node) {
         append("<pre><code>");
         visitChildrenAndAppendSeparator(node, "\n");
@@ -75,8 +81,30 @@ public class HtmlGenerator implements Visitor {
         append("</h>");
     }
 
+    public void visit(Image node) {
+        Location location = resolve(node);
+        if (location == null) {
+            append("<img src=\"\" alt=\"");
+            appendAndEscape(node.getText());
+            append("\"/>");
+        } else {
+            append("<img");
+            append(" src=\"");
+            appendAndEscape(location.getUrl());
+            if (node.getText() != null) {
+                append("\" alt=\"");
+                appendAndEscape(node.getText());
+            }
+            if (location.getTitle() != null) {
+                append("\" title=\"");
+                appendAndEscape(location.getTitle());
+            }
+            append("\"/>");
+        }
+    }
+
     public void visit(InlineLink node) {
-        LinkAttr attr = resolve(node);
+        Location attr = resolve(node);
         if (attr == null) {
             append("[");
             appendAndEscape(node.getText());
@@ -123,6 +151,19 @@ public class HtmlGenerator implements Visitor {
         append("</ul>");
     }
 
+    public void visit(OpenTag node) {
+        append("<");
+        append(node.getName());
+        for(TagAttr attr : node.getAttributes()) {
+            append(" ");
+            append(attr.getName());
+            append("=\"");
+            append(attr.getValue());
+            append("\"");
+        }
+        append(">");
+    }
+
     public void visit(Paragraph node) {
         append("<p>");
         visitChildrenAndAppendSeparator(node," ");
@@ -143,31 +184,39 @@ public class HtmlGenerator implements Visitor {
         throw new IllegalArgumentException("can not process this element");
     }
 
-    public void visit(Tag node) {
+    public void visit(EmptyTag node) {
         append("<");
         append(node.getName());
         for (TagAttr attr : node.getAttributes()) {
             append(" ");
             append(attr.getName());
-            append("=");
+            append("=\"");
             append(attr.getValue());
+            append("\"");
         }
-        if (node.jjtGetNumChildren() > 0) {
-            append(">");
-            node.childrenAccept(this);
-            append("</");
-            append(node.getName());
-            append(">");
-        } else {
-            append("/>");
-        }
+        append("/>");
     }
 
     public void visit(Text node) {
         appendAndEscape(node.getValue());
     }
 
-    LinkAttr resolve(InlineLink link) {
+    Location resolve(Image node) {
+        if (node.getLocation() == null) {
+            LinkRef linkRef = null;
+            if (node.getRefId() != null) {
+                linkRef = document.getLinkRef(node.getRefId());
+            } else {
+                linkRef = document.getLinkRef(node.getText());
+            }
+            return linkRef != null ? linkRef.getAttr() : null;
+        }
+
+        return node.getLocation();
+    }
+
+
+    Location resolve(InlineLink link) {
         if (link.getAttr() == null) {
             LinkRef linkRef = null;
             if (link.getRefId() != null) {

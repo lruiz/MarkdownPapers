@@ -3,6 +3,8 @@ package org.tautua.markdownpapers.grammar;
 public interface Visitor {
     void visit(CharRef node);
 
+    void visit(CloseTag node);
+
     void visit(Code node);
 
     void visit(CodeSpan node);
@@ -11,9 +13,13 @@ public interface Visitor {
 
     void visit(Emphasis node);
 
+    void visit(EmptyTag node);
+
     void visit(BlankLine node);
 
     void visit(Header node);
+
+    void visit(Image node);
 
     void visit(InlineLink node);
 
@@ -27,6 +33,8 @@ public interface Visitor {
 
     void visit(List node);
 
+    void visit(OpenTag node);
+
     void visit(Paragraph node);
 
     void visit(Quote node);
@@ -34,8 +42,6 @@ public interface Visitor {
     void visit(Ruler node);
 
     void visit(SimpleNode node);
-
-    void visit(Tag node);
 
     void visit(Text node);
 }
