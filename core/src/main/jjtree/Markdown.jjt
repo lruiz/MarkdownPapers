@@ -276,12 +276,6 @@ TOKEN : {
     | < EOL : "\r" | "\n" | "\r\n" > { HandleEOL(); }
 }
 
-<DEFAULT>
-TOKEN : {
-    < HASH : ("#"){1,6} > : HEADER_FOLLOWS
-    //| < CODE_PREFIX : " "{4} | "\t" > : CODE_FOLLOWS
-}
-
 <DEFAULT, LI_FOLLOWS>
 TOKEN : {
     < LI_PLUS : "+" " " > : LI_FOLLOWS
@@ -301,6 +295,7 @@ TOKEN : {
 <DEFAULT, HEADER_FOLLOWS, TEXT_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
     < EXCLAMATION : "!" >
+    | < HASH : "#" > : HEADER_FOLLOWS
     | < GT : ">" >
     | < AMPERSAND : "&" > { HandleContent(); }
     | < LT : "<" > { HandleContent(); }
@@ -328,8 +323,10 @@ TOKEN : {
                     | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> { HandleContent(); }
     | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ~["*"] )+ <EMP_A> "***"
                     | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> { HandleContent(); }
+/*
     | < TAG_END_OPEN : "<" "/" >
     | < EMPTY_TAG_CLOSE : "/" ">" >
+*/
     | < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" > { HandleContent(); }
     | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" > { HandleContent(); }
     | < TEXT : ( ~["=", "#", "&", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n"] )+ > { HandleContent(); }
@@ -373,7 +370,7 @@ void BlankLine() : {} {
 }
 
 void Header() #Header : {} {
-    <HASH> Line()
+    "#" ( "#" ( "#" ( "#" ( "#" ( "#" )? )? )? )? )? Line()
 }
 
 void Ruler() #Ruler : {} {
@@ -490,6 +487,7 @@ void Text() #Text : {
         t = <ESCAPED_CHAR> { jjtThis.append(getEscapedChar(t)); }
         | (
             t = <TEXT>
+            | t = <HASH>
             | t = <SPACE>
             | t = <TAB>
             | t = <AMPERSAND>
@@ -509,7 +507,6 @@ void Text() #Text : {
             | t = <MINUS_RULER>
             | t = <ASTERISK_RULER>
             | t = <EQ>
-            | t = <TAG_END_OPEN>
             | t = <QUOTED_TEXT>
         ) { jjtThis.append(t.image); }
 }
@@ -553,7 +550,7 @@ void InlineURL() #InlineUrl : {
         | "&" { buff.append("&"); }
         | "=" { buff.append("="); }
     )*
-    ( <GT> | <EMPTY_TAG_CLOSE> { buff.append("/"); } )
+    <GT>
     { jjtThis.setUrl(buff.toString()); }
 }
 
@@ -567,16 +564,18 @@ void InlineLink() #InlineLink : {
     (
         ( <SPACE> )?
         "["
-        refid = refname() { jjtThis.setRefId(refid); }
+        ( refid = refname() { jjtThis.setRefId(refid); } )?
         "]"
         |
         "("
-         url = url() { jjtThis.setAttr(new Location(url)); }
             (
-                ( <SPACE> | <TAB> )+
-                <QUOTED_TEXT>
+                url = url() { jjtThis.setAttr(new Location(url)); }
+                (
+                    ( <SPACE> | <TAB> )+
+                    <QUOTED_TEXT>
+                )?
+                ( <SPACE> )*
             )?
-            ( <SPACE> )*
         ")"
     )?
 }
@@ -604,27 +603,22 @@ void Image() #Image : {
                 { jjtThis.setLocation(new Location(url, title != null ? getValue(title) : null)); }
             )?
             ( <SPACE> )*
-
         ")"
     )?
 }
 
-
-
-/*
-   { jjtThis.addAttr(new TagAttr(a.image, v.image)); } )
-   { jjtThis.setName(t.image); }
-*/
 void Tag() : {
     Token t, a, v;
     java.util.List<TagAttr> attributes = new java.util.ArrayList<TagAttr>();
 } {
     (
+    LOOKAHEAD(2)
+    "<" "/"  t = <TEXT> <GT> #CloseTag { ((CloseTag)jjtree.peekNode()).setName(t.image);}
+    |
     <LT> t = <TEXT>
     ( ( <SPACE> )+ a = <TEXT> "=" v = <QUOTED_TEXT> { attributes.add(new TagAttr(a.image, getValue(v))); } )*
-    ( <EMPTY_TAG_CLOSE> #EmptyTag { EmptyTag emptytag = (EmptyTag)jjtree.peekNode(); emptytag.setName(t.image); emptytag.setAttributes(attributes); }
+    ( "/" ">" #EmptyTag { EmptyTag emptytag = (EmptyTag)jjtree.peekNode(); emptytag.setName(t.image); emptytag.setAttributes(attributes); }
     | <GT> #OpenTag { OpenTag opentag = (OpenTag)jjtree.peekNode(); opentag.setName(t.image); opentag.setAttributes(attributes); })
-    | <TAG_END_OPEN> t = <TEXT> <GT> #CloseTag { ((CloseTag)jjtree.peekNode()).setName(t.image);}
     )
 }
 
@@ -662,7 +656,7 @@ String url() : {
 } {
      (
      (
-        ( <LT> | <TAG_END_OPEN> { buff.append("/"); } )
+        <LT>
         (
             (
             t = <TEXT>
@@ -673,10 +667,11 @@ String url() : {
             | t = <COLON>
             | t = <SLASH>
             | t = <BACKSLASH>
+            | t = <HASH>
             | t = <EQ>
             ) { buff.append(t.image); }
         ) +
-        ( <GT> | <EMPTY_TAG_CLOSE> { buff.append("/"); } )
+        <GT>
     )
     | (
         (
@@ -688,22 +683,10 @@ String url() : {
         | t = <COLON>
         | t = <SLASH>
         | t = <BACKSLASH>
+        | t = <HASH>
         | t = <EQ>
         ) { buff.append(t.image); }
     )+
     )
     { return buff.toString(); }
 }
-
-JAVACODE
-void __any() {
-    Token tok;
-    while (true) {
-        tok = getToken(1);
-        if (oneOf(tok, EOL, EOF)){
-            throw new ParseException("found <EOL> or <EOF>");
-        }
-        tok = getNextToken();
-    }
-}
-

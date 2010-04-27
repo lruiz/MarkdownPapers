@@ -1,6 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
 public interface Visitor {
+    void visit(BlankLine node);
+
     void visit(CharRef node);
 
     void visit(CloseTag node);
@@ -14,8 +16,6 @@ public interface Visitor {
     void visit(Emphasis node);
 
     void visit(EmptyTag node);
-
-    void visit(BlankLine node);
 
     void visit(Header node);
 

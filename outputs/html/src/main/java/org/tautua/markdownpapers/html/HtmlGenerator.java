@@ -1,6 +1,9 @@
 package org.tautua.markdownpapers.html;
 
 import org.tautua.markdownpapers.grammar.*;
+import org.tautua.markdownpapers.grammar.util.DequeStack;
+import org.tautua.markdownpapers.grammar.util.Stack;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -165,6 +168,7 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Paragraph node) {
+        Node child = node.jjtGetChild(0).jjtGetChild(0);
         append("<p>");
         visitChildrenAndAppendSeparator(node," ");
         append("</p>");
