@@ -11,7 +11,7 @@ options {
     NODE_DEFAULT_VOID = true;
     NODE_USES_PARSER = false;
 
-    DEBUG_PARSER = false;
+    DEBUG_PARSER = true;
     DEBUG_TOKEN_MANAGER = false;
     DEBUG_LOOKAHEAD = false;
 }
@@ -29,6 +29,7 @@ public class Parser {
     int delta;
 
     public Object parse() throws ParseException {
+        jj_input_stream.setTabSize(4);
         Document();
         return jjtree.rootNode();
     }
@@ -50,6 +51,20 @@ public class Parser {
         return t.image.substring(markLength, t.image.length() - markLength);
     }
 
+    String getTabWhitespace(Token prev, Token tab) {
+        int x = (4 - ((prev == null ? 1 : prev.endColumn + 1) % 4)) + 1;
+        switch(x) {
+            case 1:
+                return " ";
+            case 2:
+                return "  ";
+            case 3:
+                return "   ";
+            default:
+                return "    ";
+        }
+    }
+
 
     boolean LineLookahead() {
         int level = 0;
@@ -65,9 +80,9 @@ public class Parser {
             if(t.kind == GT) {
                 level++;
             }
-        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+        } while (oneOf(t, SPACE, TAB, GT));
 
-        if (t.kind == EOL || t.kind == EOF) {
+        if (oneOf(t, EOL, EOF)) {
             return false;
         }
 
@@ -81,7 +96,7 @@ public class Parser {
     boolean CodeLineLookahead() {
         int level = 0;
         int i = 1;
-        int _ident = 0;
+        int _indent = 0;
         Token t = getToken(i);
 
         if (t.kind != EOL) {
@@ -92,21 +107,20 @@ public class Parser {
             t = getToken(++i);
             if(t.kind == GT) {
                 level++;
-                _ident = 0;
+                _indent = 0;
             } else if(t.kind == SPACE) {
-                _ident++;
+                _indent++;
             } else if(t.kind == TAB) {
-                _ident += 4;
+                _indent += 4;
             }
-        } while ( (t.kind == SPACE || t.kind == TAB || t.kind == GT)
-            && ((level == 0 && _ident < 4) || (level > 0 && _ident <= 4)) );
+        } while (oneOf(t, SPACE, TAB, GT)
+            && ((level == 0 && _indent < 4) || (level > 0 && _indent <= 4)) );
 
-        if (t.kind == EOL || t.kind == EOF) {
+        if (oneOf(t, EOL, EOF)) {
             return true;
         }
 
-        if ( ((level == 0 && _ident >= 4) || (level > 0 && _ident > 4))
-            && level <= quoteBlockLevel ) {
+        if ( _indent >= 4 && level <= quoteBlockLevel ) {
             return true;
         }
 
@@ -127,9 +141,9 @@ public class Parser {
             if (t.kind == GT) {
                 level++;
             }
-        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+        } while (oneOf(t, SPACE, TAB, GT));
 
-        if (t.kind == EOL || t.kind == EOF) {
+        if (oneOf(t, EOL, EOF)) {
             return true;
         }
 
@@ -141,37 +155,52 @@ public class Parser {
     }
 
     boolean ItemLookahead() {
-        int level = 0;
-        int _ident = 0;
-        int i = 1;
-        Token t = getToken(i);
+        Token t = getToken(1);
 
         if (t.kind != EOL) {
             return false;
         }
 
+        boolean empty = true;
+        int j = 2;
         do {
-            t = getToken(++i);
+            t = getToken(j++);
+            if (noneOf(t, EOL, EOF, SPACE, TAB, SPACE, GT)) {
+                empty = false;
+                break;
+            }
+        } while(noneOf(t, EOL, EOF));
+
+        if(empty) {
+            return true;
+        }
+
+        int i = 2;
+        int level = 0;
+        int _indent = 0;
+        do {
+            t = getToken(i++);
             if (t.kind == GT) {
                 level++;
             } else if (t.kind == SPACE) {
-                _ident++;
+                _indent++;
             } else if (t.kind == TAB) {
-                _ident += 4;
+                _indent += 4;
             }
-        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+        } while (oneOf(t, SPACE, TAB, GT));
 
-        if ((t.kind == LI_PLUS || t.kind == LI_MINUS || t.kind == LI_ASTERISK || t.kind == LI_NUMBER)
-            && (_ident > ident - delta || _ident == ident)) {
+        if (oneOf(t, LI_PLUS, LI_MINUS, LI_ASTERISK, LI_NUMBER)
+            && (_indent > ident - delta || _indent == ident)) {
             return true;
         }
 
         return false;
     }
 
+
     boolean ListLookahead() {
         int level = 0;
-        int _ident = 0;
+        int _indent = 0;
         int i = 1;
         Token t = getToken(i);
 
@@ -184,14 +213,14 @@ public class Parser {
             if (t.kind == GT) {
                 level++;
             } else if (t.kind == SPACE) {
-                _ident++;
+                _indent++;
             } else if (t.kind == TAB) {
-                _ident += 4;
+                _indent += 4;
             }
-        } while (t.kind == SPACE || t.kind == TAB || t.kind == GT);
+        } while (oneOf(t, SPACE, TAB, GT));
 
-        if ((t.kind == LI_PLUS || t.kind == LI_MINUS || t.kind == LI_ASTERISK || t.kind == LI_NUMBER)
-            && _ident > ident) {
+        if (oneOf(t, LI_PLUS, LI_MINUS, LI_ASTERISK, LI_NUMBER)
+            && _indent > ident) {
             return true;
         }
         
@@ -278,10 +307,10 @@ TOKEN : {
 
 <DEFAULT, LI_FOLLOWS>
 TOKEN : {
-    < LI_PLUS : "+" " " > : LI_FOLLOWS
-    | < LI_MINUS : "-" " " > : LI_FOLLOWS
-    | < LI_ASTERISK : "*" " " > : LI_FOLLOWS
-    | < LI_NUMBER : ( ["0"-"9"] )+ "." " " > : LI_FOLLOWS
+    < LI_PLUS : "+" (" " | "\t") > : LI_FOLLOWS
+    | < LI_MINUS : "-" (" " | "\t") > : LI_FOLLOWS
+    | < LI_ASTERISK : "*" (" " | "\t") > : LI_FOLLOWS
+    | < LI_NUMBER : ( ["0"-"9"] )+ "." (" " | "\t") > : LI_FOLLOWS
 }
 
 <DEFAULT, TEXT_FOLLOWS, LI_FOLLOWS>
@@ -294,10 +323,10 @@ TOKEN : {
 /* PUNCTUATION */
 <DEFAULT, HEADER_FOLLOWS, TEXT_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
-    < EXCLAMATION : "!" >
+    < AMPERSAND : "&" > { HandleContent(); }
+    | < EXCLAMATION : "!" >
     | < HASH : "#" > : HEADER_FOLLOWS
     | < GT : ">" >
-    | < AMPERSAND : "&" > { HandleContent(); }
     | < LT : "<" > { HandleContent(); }
     | < LPAREN : "(" > { HandleContent(); }
     | < RPAREN : ")" > { HandleContent(); }
@@ -323,10 +352,6 @@ TOKEN : {
                     | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> { HandleContent(); }
     | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ~["*"] )+ <EMP_A> "***"
                     | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> { HandleContent(); }
-/*
-    | < TAG_END_OPEN : "<" "/" >
-    | < EMPTY_TAG_CLOSE : "/" ">" >
-*/
     | < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" > { HandleContent(); }
     | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" > { HandleContent(); }
     | < TEXT : ( ~["=", "#", "&", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n"] )+ > { HandleContent(); }
@@ -336,7 +361,7 @@ TOKEN : {
 
 <CODE_FOLLOWS>
 TOKEN : {
-    < CODE_TEXT : ~["\r", "\n"] >
+    < CODE_TEXT : ( ~[" ", "\t", "\r", "\n"] )* >
 }
 
 void Document() #Document : {} {
@@ -391,19 +416,17 @@ void Quote() #Quote : {
 }
 
 void QuotePrefix() : {} {
-    ( <SPACE>| <TAB> )* <GT> 
+    ( <SPACE> | <TAB> )* <GT> 
 }
 
 void Code() #Code : {} {
     CodeLine()
     ( LOOKAHEAD( {CodeLineLookahead()} ) <EOL>
         (
-            LOOKAHEAD( ( QuotePrefix() )* ( BlankLine() )? (<EOL>|<EOF>) )
-            ( LOOKAHEAD( QuotePrefix() ) QuotePrefix() )* ( BlankLine() )? #Line
-            | ( LOOKAHEAD( QuotePrefix() )
-                (
-                    LOOKAHEAD( QuotePrefix() ) QuotePrefix() )+ <SPACE>
-                )? CodeLine()
+            LOOKAHEAD( ( <GT> | <SPACE> | <TAB> )* ( <EOL>|<EOF> ) )
+            ( <GT> | <SPACE> | <TAB> )* #Line
+            | LOOKAHEAD( CodeLine() ) CodeLine()
+            | ( LOOKAHEAD( QuotePrefix() ) QuotePrefix() )+ <SPACE> CodeLine()
         )
     )*
 }
@@ -412,18 +435,16 @@ void CodeLine() #Line : {} {
     ( <SPACE> <SPACE> <SPACE> <SPACE> | <TAB> ) CodeText()
 }
 
-void CodeText() #Text : {
-    Token t;
+void CodeText() #CodeText : {
+    Token current;
+    Token prev = null;
 } {
     (
-        t = <SPACE> { jjtThis.append(t.image); }
-        | t = <TAB> { jjtThis.append(t.image); }
-    )*
-    t = <CODE_TEXT> { jjtThis.append(t.image); }
-    (
-        t = <SPACE> { jjtThis.append(t.image); }
-        | t = <TAB> { jjtThis.append(t.image); }
-        | t = <CODE_TEXT> { jjtThis.append(t.image); }
+        (
+            current = <SPACE> { jjtThis.append(current.image); }
+            | current = <TAB> { jjtThis.append(getTabWhitespace(prev, current)); }
+            | current = <CODE_TEXT> { jjtThis.append(current.image); }
+        ) { prev = current; }
     )*
 }
 
@@ -451,7 +472,11 @@ void List() #List : {
         | <TAB> { ident += 4; }
         | <GT> { ident = 0; }
     )*          { delta = ident - oldIdent; }
-    Item() ( LOOKAHEAD( {ItemLookahead()} ) <EOL> ( <SPACE> | <TAB> | <GT> )* Item() )*
+    Item()
+    (
+        LOOKAHEAD( {ItemLookahead()} ) <EOL>
+        ( <SPACE> | <TAB> | <GT> )* ( Item() )?
+    )*
     {
         ident = oldIdent;
         delta = oldDelta;
@@ -460,7 +485,7 @@ void List() #List : {
 
 void Item() #Item : {} {
     ( <LI_PLUS> | <LI_MINUS> | <LI_ASTERISK> | <LI_NUMBER> )
-    ( Line() ( LOOKAHEAD( <EOL> ( <SPACE> | <TAB> )* <TEXT> ) <EOL> Line() )* #Paragraph(>1) )
+    ( Line() ( LOOKAHEAD( <EOL> ( <SPACE> | <TAB> )* <TEXT> ) <EOL> Line() )* ) #Paragraph(>1)
     ( LOOKAHEAD( {ListLookahead()} ) <EOL> List() )?
 }
 
@@ -556,7 +581,7 @@ void InlineURL() #InlineUrl : {
 
 void InlineLink() #InlineLink : {
     String text, refid, url;
-    Token t = null;
+    Token title = null;
 } {
     "["
     text = refname() { jjtThis.setText(text); }
@@ -569,11 +594,12 @@ void InlineLink() #InlineLink : {
         |
         "("
             (
-                url = url() { jjtThis.setAttr(new Location(url)); }
+                url = url()
                 (
                     ( <SPACE> | <TAB> )+
-                    <QUOTED_TEXT>
+                    title = <QUOTED_TEXT>
                 )?
+                { jjtThis.setAttr(new Location(url, title != null ? getValue(title) : null)); }
                 ( <SPACE> )*
             )?
         ")"

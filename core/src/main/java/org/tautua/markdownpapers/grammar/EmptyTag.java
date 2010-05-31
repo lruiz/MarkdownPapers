@@ -3,8 +3,7 @@ package org.tautua.markdownpapers.grammar;
 import java.util.*;
 import java.util.List;
 
-public class EmptyTag extends SimpleNode {
-    private String name;
+public class EmptyTag extends Tag {
     private java.util.List<TagAttr> attributes = new ArrayList();
 
     public EmptyTag(int id) {
@@ -18,11 +17,6 @@ public class EmptyTag extends SimpleNode {
     public void setName(String name) {
         this.name = name;
     }
-
-    public String getName() {
-        return name;
-    }
-
 
     public java.util.List<TagAttr> getAttributes() {
         return attributes;

@@ -11,6 +11,8 @@ public interface Visitor {
 
     void visit(CodeSpan node);
 
+    void visit(CodeText node);
+
     void visit(Document node);
 
     void visit(Emphasis node);

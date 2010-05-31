@@ -5,12 +5,15 @@ import org.custommonkey.xmlunit.TolerantSaxDocumentBuilder;
 import org.custommonkey.xmlunit.XMLAssert;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.*;
+import org.junit.rules.MethodRule;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
 import org.tautua.markdownpapers.grammar.Document;
 import org.tautua.markdownpapers.grammar.ParseException;
 import org.tautua.markdownpapers.grammar.Parser;
+import org.tautua.markdownpapers.testing.LabelledParameterized;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,13 +24,16 @@ import java.util.List;
 /**
  * Unit test for simple App.
  */
-@RunWith(Parameterized.class)
-public class MarkdownBasicsTest {
-    private static final File outputDir = new File("target/output/basics");
-    private static final File basicsAssetsDir = new File("target/test-classes/basics");
+@RunWith(LabelledParameterized.class)
+public class Markdown_1_1_Tests {
+    private static final File outputDir = new File("target/output/1.1/basics");
+    private static final File basicsAssetsDir = new File("target/test-classes/1.1/basics");
+    private static final String INPUT_SUFFIX = ".text";
+    private static final String OUTPUT_SUFFIX = ".xhtml";
+
     private String fileName;
 
-    public MarkdownBasicsTest(String fileName) {
+    public Markdown_1_1_Tests(String fileName) {
         this.fileName = fileName;
     }
 
@@ -69,9 +75,9 @@ public class MarkdownBasicsTest {
 
     @Test
     public void execute() throws Exception {
-        File input = new File(basicsAssetsDir, fileName + ".text");
-        File expected = new File(basicsAssetsDir, fileName + ".xhtml");
-        File output = new File(outputDir, fileName + ".xhtml");
+        File input = new File(basicsAssetsDir, fileName + INPUT_SUFFIX);
+        File expected = new File(basicsAssetsDir, fileName + OUTPUT_SUFFIX);
+        File output = new File(outputDir, fileName + OUTPUT_SUFFIX);
         generate(output, (Document)parse(input));
         compare(expected, output);
     }

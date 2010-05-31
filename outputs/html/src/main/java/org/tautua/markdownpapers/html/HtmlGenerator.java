@@ -13,6 +13,8 @@ import java.util.Map;
  */
 public class HtmlGenerator implements Visitor {
     private static final Map<String, String> ESCAPED_CHARS;
+    private static final String TAB = "\t";
+    private static final String TAB_TO_WHITESPACE = "    ";
     private Appendable buffer;
     private Document document;
 
@@ -47,6 +49,10 @@ public class HtmlGenerator implements Visitor {
         append("<code>");
         appendAndEscape(node.getText());
         append("</code>");
+    }
+
+    public void visit(CodeText node) {
+        appendAndEscape(node.getValue());
     }
 
     public void visit(Document node) {
@@ -109,9 +115,9 @@ public class HtmlGenerator implements Visitor {
     public void visit(InlineLink node) {
         Location attr = resolve(node);
         if (attr == null) {
-            append("[");
+            append("<a href=\"\">");
             appendAndEscape(node.getText());
-            append("]");
+            append("</a>");
         } else {
             append("<a");
             append(" href=\"");
