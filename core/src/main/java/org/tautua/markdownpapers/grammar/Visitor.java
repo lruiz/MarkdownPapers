@@ -13,6 +13,8 @@ public interface Visitor {
 
     void visit(CodeText node);
 
+    void visit(Comment node);
+
     void visit(Document node);
 
     void visit(Emphasis node);
@@ -23,7 +25,7 @@ public interface Visitor {
 
     void visit(Image node);
 
-    void visit(InlineLink node);
+    void visit(Link node);
 
     void visit(InlineUrl node);
 

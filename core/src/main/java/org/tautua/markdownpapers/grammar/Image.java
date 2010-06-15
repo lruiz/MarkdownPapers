@@ -3,7 +3,7 @@ package org.tautua.markdownpapers.grammar;
 public class Image extends SimpleNode {
     private String refId;
     private String text;
-    private Location location;
+    private Resource resource;
 
     public Image(int id) {
         super(id);
@@ -29,12 +29,12 @@ public class Image extends SimpleNode {
         this.text = text;
     }
 
-    public Location getLocation() {
-        return location;
+    public Resource getResource() {
+        return resource;
     }
 
-    public void setLocation(Location location) {
-        this.location = location;
+    public void setResource(Resource resource) {
+        this.resource = resource;
     }
 
     @Override

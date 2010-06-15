@@ -1,8 +1,6 @@
 package org.tautua.markdownpapers.html;
 
 import org.tautua.markdownpapers.grammar.*;
-import org.tautua.markdownpapers.grammar.util.DequeStack;
-import org.tautua.markdownpapers.grammar.util.Stack;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -55,6 +53,12 @@ public class HtmlGenerator implements Visitor {
         appendAndEscape(node.getValue());
     }
 
+    public void visit(Comment node) {
+        append("<!--");
+        append(node.getText());
+        append("-->");
+    }
+
     public void visit(Document node) {
         document = node;
         node.childrenAccept(this);
@@ -85,50 +89,35 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Header node) {
-        append("<h>");
+        String level = String.valueOf(node.getLevel());
+        append("<h");
+        append(level);
+        append(">");
         node.childrenAccept(this);
-        append("</h>");
+        append("</h");
+        append(level);
+        append(">");
     }
 
     public void visit(Image node) {
-        Location location = resolve(node);
-        if (location == null) {
+        Resource resource = resolve(node);
+        if (resource == null) {
             append("<img src=\"\" alt=\"");
             appendAndEscape(node.getText());
             append("\"/>");
         } else {
             append("<img");
             append(" src=\"");
-            appendAndEscape(location.getUrl());
+            appendAndEscape(resource.getLocation());
             if (node.getText() != null) {
                 append("\" alt=\"");
                 appendAndEscape(node.getText());
             }
-            if (location.getTitle() != null) {
+            if (resource.getName() != null) {
                 append("\" title=\"");
-                appendAndEscape(location.getTitle());
+                appendAndEscape(resource.getName());
             }
             append("\"/>");
-        }
-    }
-
-    public void visit(InlineLink node) {
-        Location attr = resolve(node);
-        if (attr == null) {
-            append("<a href=\"\">");
-            appendAndEscape(node.getText());
-            append("</a>");
-        } else {
-            append("<a");
-            append(" href=\"");
-            appendAndEscape(attr.getUrl());
-            if (attr.getTitle() != null) {
-                append("\" title=\"");
-                appendAndEscape(attr.getTitle());
-            }
-            append("\">");
-            appendAndEscape(node.getText());
-            append("</a>");
         }
     }
 
@@ -149,15 +138,52 @@ public class HtmlGenerator implements Visitor {
     public void visit(Line node) {
         node.childrenAccept(this);
     }
-    
+
+    public void visit(Link node) {
+        Resource resource = resolve(node);
+        if (resource == null) {
+            if (node.isReferenced()) {
+                append("[");
+                appendAndEscape(node.getText());
+                append("]");
+                if (node.getReferenceName() != null) {
+                    append("[");
+                    append(node.getReferenceName());
+                    append("]");
+                }
+            } else {
+                append("<a href=\"\">");
+                appendAndEscape(node.getText());
+                append("</a>");
+            }
+        } else {
+            append("<a");
+            append(" href=\"");
+            appendAndEscape(resource.getLocation());
+            if (resource.getName() != null) {
+                append("\" title=\"");
+                appendAndEscape(resource.getName());
+            }
+            append("\">");
+            appendAndEscape(node.getText());
+            append("</a>");
+        }
+    }
+
     public void visit(LinkRef node) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public void visit(List node) {
-        append("<ul>");
-        node.childrenAccept(this);
-        append("</ul>");
+        if (node.isOrdered()) {
+            append("<ol>");
+            node.childrenAccept(this);
+            append("</ol>");
+        } else {
+            append("<ul>");
+            node.childrenAccept(this);
+            append("</ul>");
+        }
     }
 
     public void visit(OpenTag node) {
@@ -174,7 +200,13 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Paragraph node) {
-        Node child = node.jjtGetChild(0).jjtGetChild(0);
+        Node parent = node.jjtGetParent();
+        if(parent instanceof Item) {
+            if (!((Item)parent).isLoose()) {
+                visitChildrenAndAppendSeparator(node," ");
+                return;
+            }
+        }
         append("<p>");
         visitChildrenAndAppendSeparator(node," ");
         append("</p>");
@@ -211,33 +243,33 @@ public class HtmlGenerator implements Visitor {
         appendAndEscape(node.getValue());
     }
 
-    Location resolve(Image node) {
-        if (node.getLocation() == null) {
-            LinkRef linkRef = null;
-            if (node.getRefId() != null) {
-                linkRef = document.getLinkRef(node.getRefId());
-            } else {
+    Resource resolve(Image node) {
+        if (node.getResource() == null) {
+            LinkRef linkRef;
+            if (node.getRefId() == null) {
                 linkRef = document.getLinkRef(node.getText());
+            } else {
+                linkRef = document.getLinkRef(node.getRefId());
             }
-            return linkRef != null ? linkRef.getAttr() : null;
+            return linkRef != null ? linkRef.getResource() : null;
         }
 
-        return node.getLocation();
+        return node.getResource();
     }
 
 
-    Location resolve(InlineLink link) {
-        if (link.getAttr() == null) {
+    Resource resolve(Link link) {
+        if (link.isReferenced()) {
             LinkRef linkRef = null;
-            if (link.getRefId() != null) {
-                linkRef = document.getLinkRef(link.getRefId());
-            } else {
+            if (link.getReferenceName() == null || link.getReferenceName().equals("")) {
                 linkRef = document.getLinkRef(link.getText());
+            } else {
+                linkRef = document.getLinkRef(link.getReferenceName());
             }
-            return linkRef != null ? linkRef.getAttr() : null;
+            return linkRef != null ? linkRef.getResource() : null;
         }
 
-        return link.getAttr();
+        return link.getResource();
     }
 
     void visitChildrenAndAppendSeparator(Node node, String separator){
@@ -263,5 +295,15 @@ public class HtmlGenerator implements Visitor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    boolean isLast(Node parent, Node child) {
+        int count = parent.jjtGetNumChildren();
+        for (int i = 0; i < count; i++) {
+            if(parent.jjtGetChild(i).equals(child)) {
+                return i == count - 1;
+            }
+        }
+        return false;
     }
 }

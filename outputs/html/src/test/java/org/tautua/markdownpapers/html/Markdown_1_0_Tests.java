@@ -24,8 +24,8 @@ import java.util.List;
  */
 @RunWith(LabelledParameterized.class)
 public class Markdown_1_0_Tests {
-    private static final File outputDir = new File("target/output/1.0");
-    private static final File basicsAssetsDir = new File("target/test-classes/1.0");
+    private static final File OUTPUT_DIR = new File("target/output/1.0");
+    private static final File INPUT_DIR = new File("target/test-classes/1.0");
     private static final String INPUT_SUFFIX = ".text";
     private static final String OUTPUT_SUFFIX = ".html";
 
@@ -37,8 +37,8 @@ public class Markdown_1_0_Tests {
 
     @BeforeClass
     public static void setup() {
-        if (!outputDir.exists()) {
-            outputDir.mkdirs();
+        if (!OUTPUT_DIR.exists()) {
+            OUTPUT_DIR.mkdirs();
         }
     }
 
@@ -69,9 +69,9 @@ public class Markdown_1_0_Tests {
 
     @Test
     public void execute() throws Exception {
-        File input = new File(basicsAssetsDir, fileName + INPUT_SUFFIX);
-        File expected = new File(basicsAssetsDir, fileName + OUTPUT_SUFFIX);
-        File output = new File(outputDir, fileName + OUTPUT_SUFFIX);
+        File input = new File(INPUT_DIR, fileName + INPUT_SUFFIX);
+        File expected = new File(INPUT_DIR, fileName + OUTPUT_SUFFIX);
+        File output = new File(OUTPUT_DIR, fileName + OUTPUT_SUFFIX);
         generate(output, (Document)parse(input));
         compare(expected, output);
     }
@@ -99,6 +99,7 @@ public class Markdown_1_0_Tests {
      */
     private static void compare(File expected, File output) throws IOException, SAXException, ParserConfigurationException {
         XMLUnit.setIgnoreWhitespace(true);
+        XMLUnit.setIgnoreAttributeOrder(true);
         TolerantSaxDocumentBuilder tolerantSaxDocumentBuilder = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
         HTMLDocumentBuilder htmlDocumentBuilder = new HTMLDocumentBuilder(tolerantSaxDocumentBuilder);
         org.w3c.dom.Document e = htmlDocumentBuilder.parse(new FileReader(expected));

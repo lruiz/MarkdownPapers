@@ -13,4 +13,8 @@ public class Line extends SimpleNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+
+    public boolean isEmpty() {
+        return children.length == 0;
+    }
 }
