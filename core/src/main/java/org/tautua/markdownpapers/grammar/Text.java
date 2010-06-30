@@ -27,4 +27,8 @@ public class Text extends SimpleNode {
     public String getValue() {
         return buffer.toString();
     }
+
+    public boolean isWhitespace() {
+        return buffer.toString().trim().length() == 0;
+    }
 }

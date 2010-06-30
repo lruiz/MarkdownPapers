@@ -1,6 +1,8 @@
 package org.tautua.markdownpapers.html;
 
 import org.tautua.markdownpapers.grammar.*;
+import org.tautua.markdownpapers.grammar.util.DequeStack;
+import org.tautua.markdownpapers.grammar.util.Stack;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -10,17 +12,20 @@ import java.util.Map;
  * TODO:
  */
 public class HtmlGenerator implements Visitor {
-    private static final Map<String, String> ESCAPED_CHARS;
+    private static final Map<Character, String> ESCAPED_CHARS;
     private static final String TAB = "\t";
-    private static final String TAB_TO_WHITESPACE = "    ";
+    private static final String EOL = "\n";
+    private static final String SPACE = " ";
     private Appendable buffer;
     private Document document;
+    private Stack<Node> markupStack = new DequeStack<Node>();
 
     static {
         ESCAPED_CHARS = new HashMap();
-        ESCAPED_CHARS.put("&", "&amp;");
-        ESCAPED_CHARS.put("<", "&lt;");
-        ESCAPED_CHARS.put(">", "&gt;");
+        ESCAPED_CHARS.put('&', "&amp;");
+        ESCAPED_CHARS.put('<', "&lt;");
+        ESCAPED_CHARS.put('>', "&gt;");
+        ESCAPED_CHARS.put('\"', "&quot;");
     }
 
     public HtmlGenerator(Appendable buffer) {
@@ -31,7 +36,7 @@ public class HtmlGenerator implements Visitor {
         append(node.getValue());
     }
 
-    public void visit(CloseTag node) {
+    public void visit(ClosingTag node) {
         append("</");
         append(node.getName());
         append(">");
@@ -39,8 +44,9 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(Code node) {
         append("<pre><code>");
-        visitChildrenAndAppendSeparator(node, "\n");
+        visitChildrenAndAppendSeparator(node, EOL);
         append("</code></pre>");
+        append(EOL);
     }
 
     public void visit(CodeSpan node) {
@@ -61,7 +67,7 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(Document node) {
         document = node;
-        node.childrenAccept(this);
+        visitChildrenAndAppendSeparator(node, EOL);
     }
 
     public void visit(Emphasis node) {
@@ -97,6 +103,7 @@ public class HtmlGenerator implements Visitor {
         append("</h");
         append(level);
         append(">");
+        append(EOL);
     }
 
     public void visit(Image node) {
@@ -133,6 +140,7 @@ public class HtmlGenerator implements Visitor {
         append("<li>");
         node.childrenAccept(this);
         append("</li>");
+        append(EOL);
     }
 
     public void visit(Line node) {
@@ -177,16 +185,19 @@ public class HtmlGenerator implements Visitor {
     public void visit(List node) {
         if (node.isOrdered()) {
             append("<ol>");
+            append(EOL);
             node.childrenAccept(this);
             append("</ol>");
         } else {
             append("<ul>");
+            append(EOL);
             node.childrenAccept(this);
             append("</ul>");
         }
+        append(EOL);
     }
 
-    public void visit(OpenTag node) {
+    public void visit(OpeningTag node) {
         append("<");
         append(node.getName());
         for(TagAttr attr : node.getAttributes()) {
@@ -200,26 +211,37 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Paragraph node) {
-        Node parent = node.jjtGetParent();
-        if(parent instanceof Item) {
-            if (!((Item)parent).isLoose()) {
-                visitChildrenAndAppendSeparator(node," ");
-                return;
+        if (containsHR(node)) {
+            visitChildrenAndAppendSeparator(node, EOL);
+        } else if (isMarkup(node)) {
+            switchToMarkup(node);
+            visitChildrenAndAppendSeparator(node, EOL);
+        } else {
+            Node parent = node.jjtGetParent();
+            if(parent instanceof Item) {
+                if (!((Item)parent).isLoose()) {
+                    visitChildrenAndAppendSeparator(node, EOL);
+                    return;
+                }
             }
+            append("<p>");
+            visitChildrenAndAppendSeparator(node, EOL);
+            append("</p>");
+            append(EOL);
         }
-        append("<p>");
-        visitChildrenAndAppendSeparator(node," ");
-        append("</p>");
     }
 
     public void visit(Ruler node) {
         append("<hr/>");
+        append(EOL);
     }
 
     public void visit(Quote node) {
         append("<blockquote>");
+        append(EOL);
         node.childrenAccept(this);
         append("</blockquote>");
+        append(EOL);
     }
 
     public void visit(SimpleNode node) {
@@ -283,10 +305,14 @@ public class HtmlGenerator implements Visitor {
     }
 
     void appendAndEscape(String val) {
-        for(Map.Entry<String, String> e : ESCAPED_CHARS.entrySet()) {
-            val = val.replace(e.getKey(), e.getValue());
+        for(char c : val.toCharArray()) {
+            String escape = ESCAPED_CHARS.get(c);
+            if (escape != null) {
+                append(escape);
+            } else {
+                append(c);
+            }
         }
-        append(val);
     }
 
     void append(String val) {
@@ -297,13 +323,44 @@ public class HtmlGenerator implements Visitor {
         }
     }
 
-    boolean isLast(Node parent, Node child) {
-        int count = parent.jjtGetNumChildren();
-        for (int i = 0; i < count; i++) {
-            if(parent.jjtGetChild(i).equals(child)) {
-                return i == count - 1;
+    void append(char val) {
+        try {
+            buffer.append(val);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void switchToMarkup(Paragraph node){
+        markupStack.push(node.jjtGetChild(0).jjtGetChild(0));
+    }
+
+    private boolean isMarkup(Paragraph node) {
+        Node grandson = node.jjtGetChild(0).jjtGetChild(0);
+        return grandson instanceof OpeningTag && ((OpeningTag)grandson).isBalanced();
+    }
+
+    private boolean containsHR(Paragraph node) {
+        Node grandson = node.jjtGetChild(0).jjtGetChild(0);
+        if (grandson instanceof Tag && ((Tag)grandson).getName().equalsIgnoreCase("hr")) {
+            if (node.jjtGetNumChildren() > 1) {
+                return false;
+            } else if (node.jjtGetChild(0).jjtGetNumChildren() == 1) {
+                return true;
+            } else {
+                for (int i = 1; i < node.jjtGetChild(0).jjtGetNumChildren(); i++) {
+                    Node sibling = node.jjtGetChild(0).jjtGetChild(i);
+                    if (!(sibling instanceof Text && ((Text)sibling).isWhitespace())) {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
         return false;
+    }
+
+    private boolean isOnMarkupBlock() {
+        return markupStack.size() > 0;
     }
 }

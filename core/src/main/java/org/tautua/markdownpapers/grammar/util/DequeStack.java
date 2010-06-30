@@ -26,4 +26,8 @@ public class DequeStack<E> implements Stack<E> {
     public int size() {
         return deque.size();
     }
+
+    public void clear() {
+        deque.clear();
+    }
 }

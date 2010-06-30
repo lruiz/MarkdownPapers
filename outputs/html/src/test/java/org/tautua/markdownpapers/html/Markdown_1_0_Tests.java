@@ -90,7 +90,7 @@ public class Markdown_1_0_Tests {
     }
 
     /**
-     * <p>Compare the two xml files, ignoring whitespace.</p>
+     * <p>Compare two xml files, whitespace and attribute order are ignored.</p>
      * @param expected
      * @param output
      * @throws java.io.IOException

@@ -1,16 +1,18 @@
 package org.tautua.markdownpapers.grammar;
 
-import java.util.*;
 import java.util.List;
+import java.util.ArrayList;
 
-public class OpenTag extends Tag {
-    private java.util.List<TagAttr> attributes = new ArrayList();
+public class OpeningTag extends Tag {
+    private java.util.List<TagAttr> attributes = new ArrayList<TagAttr>();
+    private ClosingTag closingTag;
 
-    public OpenTag(int id) {
+
+    public OpeningTag(int id) {
         super(id);
     }
 
-    public OpenTag(Parser p, int id) {
+    public OpeningTag(Parser p, int id) {
         super(p, id);
     }
 
@@ -28,6 +30,18 @@ public class OpenTag extends Tag {
 
     public void addAttr(TagAttr attr) {
         attributes.add(attr);
+    }
+
+    public ClosingTag getClosingTag() {
+        return closingTag;
+    }
+
+    public void setClosingTag(ClosingTag closingTag) {
+        this.closingTag = closingTag;
+    }
+
+    public boolean isBalanced() {
+        return closingTag != null;
     }
 
     @Override

@@ -11,7 +11,7 @@ options {
     NODE_DEFAULT_VOID = true;
     NODE_USES_PARSER = false;
 
-    DEBUG_PARSER = true;
+    DEBUG_PARSER = false;
     DEBUG_TOKEN_MANAGER = false;
     DEBUG_LOOKAHEAD = false;
 }
@@ -26,7 +26,9 @@ public class Parser {
     private static final String QUOTE = '"' + "";
 
     private Stack<Node> stack = new DequeStack<Node>();
+    private Stack<Node> markupStack = new DequeStack<Node>();
     private int currentQuoteLevel = 0;
+
     int ident;
     int delta;
 
@@ -42,7 +44,7 @@ public class Parser {
 
     String getValue(Token t) {
         if (t.kind == CODE_SPAN && t.image.startsWith("``")) {
-            return getValue(t, 2);            
+            return getValue(t, 2);
         } else if (t.kind == TEXT) {
             return t.image;
         }
@@ -148,7 +150,7 @@ public class Parser {
             } else if(t.kind == TAB) {
                 _indent += 4;
             }
-        } while (t.oneOfKind(SPACE, TAB, GT));
+        } while (t.oneOfKind(SPACE, TAB, GT) && _indent < 4);
 
         if (t.oneOfKind(EOL, EOF)) {
             return true;
@@ -188,6 +190,70 @@ public class Parser {
         return false;
     }
 
+    boolean LooseLookahead() {
+        if (getToken(1).kind != EOL) {
+            return false;
+        }
+
+        int i = 2;
+        Token t;
+        boolean newline = false;
+        do {
+            t = getToken(i++);
+            if (t.kind == EOL) {
+                newline = true;
+            }
+        } while(t.oneOfKind(SPACE, TAB, EOL));
+
+        Item item = (Item)stack.peek();
+
+        return newline && t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING) && item.getIndentation() == t.beginColumn;
+    }
+
+    boolean TextLookahead() {
+        if (stack.size() > 0 && stack.peek() instanceof Header) {
+            int i = 1;
+            Token t;
+            do {
+                t = getToken(i++);
+            } while(t.oneOfKind(SHARP));
+
+            return t.noneOfKind(EOL,EOF);
+        }
+
+        return getToken(1).noneOfKind(EOL, EOF);
+    }
+
+    boolean ListLookahead() {
+        if (getToken(1).kind != EOL) {
+            return false;
+        }
+
+        Item item = (Item)stack.peek();
+        Token t;
+        int i = 2;
+        int quoteLevel = 0;
+        int _indent = 0;
+
+        do {
+            t = getToken(i++);
+            if (t.kind == GT) {
+                quoteLevel++;
+            } else if (t.kind == SPACE) {
+                _indent++;
+            } else if (t.kind == TAB) {
+                _indent += 4;
+            }
+        } while (t.oneOfKind(SPACE, TAB, GT));
+
+        if (t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING)
+            && item.getIndentation() < t.beginColumn) {
+            return true;
+        }
+        
+        return false;
+    }
+
     boolean ItemLookahead() {
         if (getToken(1).kind != EOL) {
             return false;
@@ -213,52 +279,18 @@ public class Parser {
         return false;
     }
 
-    boolean LooseLookahead() {
-        if (getToken(1).kind != EOL) {
-            return false;
+    boolean QuoteInsideTitleLookahead(int quoteKind) {
+        if (getToken(1).kind == quoteKind) {
+            Token t;
+            int i = 2;
+            do {
+                t = getToken(i++);
+            } while (t.noneOfKind(quoteKind, RPARENT, EOL, EOF));
+
+            return t.kind == quoteKind;
         }
 
-        int i = 2;
-        Token t;
-        boolean newline = false;
-        do {
-            t = getToken(i++);
-            if (t.kind == EOL) {
-                newline = true;
-            }
-        } while(t.oneOfKind(SPACE, TAB, EOL));
-
-        Item item = (Item)stack.peek();
-
-        return newline && t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING) && item.getIndentation() == t.beginColumn;
-    }
-
-    boolean ListLookahead() {
-        if (getToken(1).kind != EOL) {
-            return false;
-        }
-
-        int quoteLevel = 0;
-        int _indent = 0;
-        int i = 2;
-        Token t;
-        do {
-            t = getToken(i++);
-            if (t.kind == GT) {
-                quoteLevel++;
-            } else if (t.kind == SPACE) {
-                _indent++;
-            } else if (t.kind == TAB) {
-                _indent += 4;
-            }
-        } while (t.oneOfKind(SPACE, TAB, GT));
-
-        if (t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING)
-            && _indent > ident) {
-            return true;
-        }
-        
-        return false;
+        return getToken(1).noneOfKind(EOL, EOF);
     }
 
     boolean follows(int... args) {
@@ -296,7 +328,6 @@ TOKEN_MGR_DECLS : {
         }
         expectBlockEnd = false;
     }
-
 }
 
 <*>
@@ -306,7 +337,7 @@ TOKEN : {
     | < EOL : "\r" | "\n" | "\r\n" > { HandleEOL(); }
 }
 
-<DEFAULT, LI_FOLLOWS>
+<DEFAULT, LI_FOLLOWS, TEXT_FOLLOWS>
 TOKEN : {
     < PLUS : "+" > : LI_FOLLOWS
     | < MINUS : "-" > : LI_FOLLOWS
@@ -325,14 +356,17 @@ TOKEN : {
 <DEFAULT, HEADER_FOLLOWS, TEXT_FOLLOWS, LI_FOLLOWS>
 TOKEN : {
     < AMPERSAND : "&" > { HandleContent(); }
+    | < BACKTICK : "`" >
     | < EXCLAMATION : "!" >
-    | < HASH : "#" > : HEADER_FOLLOWS
+    | < SHARP : "#" > : HEADER_FOLLOWS
     | < GT : ">" >
+    | < SINGLE_QUOTE : "'" >
+    | < DOUBLE_QUOTE : "\"" >
     | < LT : "<" > { HandleContent(); }
-    | < LPAREN : "(" > { HandleContent(); }
-    | < RPAREN : ")" > { HandleContent(); }
     | < LBRACKET : "[" > { HandleContent(); }
+    | < LPARENT : "(" > { HandleContent(); }
     | < RBRACKET : "]" > { HandleContent(); }
+    | < RPARENT : ")" > { HandleContent(); }
     | < COLON : ":" > { HandleContent(); }
     | < SLASH : "/" > { HandleContent(); }
     | < BACKSLASH : "\\" > { HandleContent(); }
@@ -346,18 +380,16 @@ TOKEN : {
     < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")"
                         , "\\", "`", "_", ">", "#", ".", "!"
                         , "+", "-", "*"] > { HandleContent(); }
-    | < QUOTED_TEXT : "\"" ( ~["\"", "\r", "\n"] )+ "\""
-                    | "'" ( ~["'", "\r", "\n"] )+ "'" > { HandleContent(); }
-    | < CODE_SPAN : "`" ( ~["`"] )+ "`" | "`" "`" ( ~["'"] )+ "`" "`" > { HandleContent(); }
-    | < EMPHASIS_ITALIC : "*" <EMP_A> ( ~["*"] )+ <EMP_A> "*"
-                    | "_" <EMP_U> ( ~["_"] )+ <EMP_U> "_"> { HandleContent(); }
-    | < EMPHASIS_BOLD : "**" <EMP_A> ( ~["*"] )+ <EMP_A> "**"
-                    | "__" <EMP_U> ( ~["_"] )+ <EMP_U> "__"> { HandleContent(); }
-    | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ~["*"] )+ <EMP_A> "***"
-                    | "___" <EMP_U> ( ~["_"] )+ <EMP_U> "___"> { HandleContent(); }
+    | < CODE_SPAN : "`" ( ~["`", "\r", "\n"] )+ "`" | "`" "`" ( ~["'", "\r", "\n"] )+ "`" "`" > { HandleContent(); }
+    | < EMPHASIS_ITALIC : "*" <EMP_A> ( ( ~["*"] )* <EMP_A> )? "*"
+                    | "_" <EMP_U> ( ( ~["_"] )* <EMP_U> )? "_"> { HandleContent(); }
+    | < EMPHASIS_BOLD : "**" <EMP_A> ( ( ~["*"] )* <EMP_A> )? "**"
+                    | "__" <EMP_U> ( ( ~["_"] )* <EMP_U> )? "__"> { HandleContent(); }
+    | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ( ~["*"] )* <EMP_A> )? "***"
+                    | "___" <EMP_U> ( ( ~["_"] )* <EMP_U> )? "___"> { HandleContent(); }
     | < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" > { HandleContent(); }
     | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" > { HandleContent(); }
-    | < TEXT : ( ~["=", "#", "&", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n"] )+ > { HandleContent(); }
+    | < TEXT : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n"] )+ > { HandleContent(); }
     | < #EMP_A : ~["*", " ", "\t", "\r", "\n"] >
     | < #EMP_U : ~["_", " ", "\t", "\r", "\n"] >
 }
@@ -380,11 +412,12 @@ void DocumentElement() : {} {
 
 void BlockElement() : {} {
     Header()
+    | LOOKAHEAD( SetextHeader() ( <EOL> | <EOF> ) ) SetextHeader()
     | LOOKAHEAD( EmptyLine() ) Whitespace()
     | LOOKAHEAD( ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER> ) ( <EOL> | <EOF> ) ) Ruler()
     | LOOKAHEAD( CodeLine() ) Code()
     | LOOKAHEAD( QuotePrefix() ) Quote()
-    | LOOKAHEAD( ( <SPACE> | <TAB> )* ( <PLUS> | <MINUS> | <ASTERISK> | <NUMBERING> ) ) List()
+    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <ASTERISK> | <NUMBERING> ) ) List()
     | LOOKAHEAD( Comment() ) Comment()
     | Paragraph()
 }
@@ -403,10 +436,21 @@ void EmptyLine() : {} {
 
 void Header() #Header : {
     int level = 1;
+    stack.push(jjtThis);
 } {
     "#" ( "#" { level++; } ( "#" { level++; } ( "#" { level++; } ( "#" { level++; } ( "#" { level++; } )? )? )? )? )?
     { jjtThis.setLevel(level); }
-    Line()
+    Line() ( <SHARP> )*
+    { stack.pop(); }
+}
+
+void SetextHeader() #Header : {}{
+    Line() < EOL >
+    (
+        ( < EQ > )+ { jjtThis.setLevel(1); }
+        | < MINUS_RULER > { jjtThis.setLevel(2); }
+        | < MINUS > { jjtThis.setLevel(2); }
+    )
 }
 
 void Ruler() #Ruler : {} {
@@ -420,8 +464,9 @@ void Quote() #Quote : {
     QuotePrefix() BlockElement()
     ( LOOKAHEAD( {QuotedElementLookahead()} ) <EOL>
         (
-            LOOKAHEAD( QuotePrefix() ) QuotePrefix() ( BlockElement() )?
-            | Whitespace()
+            LOOKAHEAD( ( Whitespace() )? <EOL> | <EOF> ) Whitespace() #Line
+            | LOOKAHEAD( QuotePrefix() ) QuotePrefix() ( BlockElement() )?
+
         )?
     )*
     {
@@ -431,67 +476,78 @@ void Quote() #Quote : {
 }
 
 void QuotePrefix() : {} {
-    ( <SPACE> | <TAB> )* <GT> 
+    ( InsignificantWhitespace() )? <GT> ( <SPACE> )?
 }
 
 void Code() #Code : {} {
     CodeLine()
     ( LOOKAHEAD( {CodeLineLookahead()} ) <EOL>
+        ( LOOKAHEAD( QuotePrefix() ) QuotePrefix() )*
         (
-            LOOKAHEAD( ( <GT> | <SPACE> | <TAB> )* ( <EOL>|<EOF> ) )
-            ( <GT> | <SPACE> | <TAB> )* #Line
-            | LOOKAHEAD( CodeLine() ) CodeLine()
-            | ( LOOKAHEAD( QuotePrefix() ) QuotePrefix() )+ <SPACE> CodeLine()
+            LOOKAHEAD( ( Whitespace() )? <EOL> | <EOF> ) ( Whitespace() )? #Line
+            | CodeLine()
         )
     )*
 }
 
 void CodeLine() #Line : {} {
-    ( <SPACE> <SPACE> <SPACE> <SPACE> | <TAB> ) CodeText()
+    CodeLinePrefix() CodeText()
+}
+
+void CodeLinePrefix() : {} {
+    <SPACE> <SPACE> <SPACE> <SPACE> | <TAB>
 }
 
 void CodeText() #CodeText : {
-    Token current;
+    Token t;
     Token prev = null;
 } {
     (
         (
             (
-                current = <SPACE>
-                | current = <ESCAPED_CHAR>
-                | current = <EXCLAMATION>
-                | current = <NUMERIC_CHAR_REF>
-                | current = <CHAR_ENTITY_REF>
-                | current = <TEXT>
-                | current = <HASH>
-                | current = <AMPERSAND>
-                | current = <LPAREN>
-                | current = <RPAREN>
-                | current = <LBRACKET>
-                | current = <RBRACKET>
-                | current = <COLON>
-                | current = <SLASH>
-                | current = <BACKSLASH>
-                | current = <GT>
-                | current = <LT>
-                | current = <MINUS>
-                | current = <PLUS>
-                | current = <ASTERISK>
-                | current = <UNDERSCORE_RULER>
-                | current = <MINUS_RULER>
-                | current = <ASTERISK_RULER>
-                | current = <EQ>
-                | current = <QUOTED_TEXT>
-            ) { jjtThis.append(current.image); }
-            | current = <TAB> { jjtThis.append(getTabWhitespace(prev, current)); }
-        ) { prev = current; }
+                t = <SPACE>
+                | t = <AMPERSAND>
+                | t = <BACKTICK>
+                | t = <EMPHASIS_ITALIC>
+                | t = <EMPHASIS_BOLD>
+                | t = <EMPHASIS_ITALIC_BOLD>
+                | t = <ESCAPED_CHAR>
+                | t = <EXCLAMATION>
+                | t = <NUMERIC_CHAR_REF>
+                | t = <CHAR_ENTITY_REF>
+                | t = <TEXT>
+                | t = <SHARP>
+                | t = <LPARENT>
+                | t = <RPARENT>
+                | t = <LBRACKET>
+                | t = <RBRACKET>
+                | t = <CODE_SPAN>
+                | t = <COLON>
+                | t = <SLASH>
+                | t = <BACKSLASH>
+                | t = <GT>
+                | t = <LT>
+                | t = <MINUS>
+                | t = <PLUS>
+                | t = <ASTERISK>
+                | t = <UNDERSCORE_RULER>
+                | t = <MINUS_RULER>
+                | t = <NUMBERING>
+                | t = <ASTERISK_RULER>
+                | t = <EQ>
+                | t = <SINGLE_QUOTE>
+                | t = <DOUBLE_QUOTE>
+                | t = <OP_COMMENT>
+                | t = <CL_COMMENT>
+            ) { jjtThis.append(t.image); }
+            | t = <TAB> { jjtThis.append(getTabWhitespace(prev, t)); }
+        ) { prev = t; }
     )*
 }
 
 
 void LinkRef() #LinkRef : {
-    String n, u = null;
-    Token t = null;
+    String n, u, t = null;
 } {
     ( <SPACE> ( <SPACE> ( <SPACE> )? )? )?
     "[" n = refname() "]" { jjtThis.setId(n); }
@@ -499,19 +555,13 @@ void LinkRef() #LinkRef : {
     ( Whitespace() )?
     u = url()
     ( Whitespace() )?
-    ( t = <QUOTED_TEXT> )? { jjtThis.setResource(new Resource(u, t == null ? null : getValue(t))); }
+    ( t = quotedtext() )? { jjtThis.setResource(new Resource(u, t)); }
 }
 
 void List() #List : {
     stack.push(jjtThis);
-    int oldIdent = ident;
-    int oldDelta = delta;
 } {
-    (
-        <SPACE> { ident++; }
-        | <TAB> { ident += 4; }
-        | <GT> { ident = 0; }
-    )*          { delta = ident - oldIdent; }
+    ( <SPACE> | <TAB> | <GT> )*
     Item()
     (
         LOOKAHEAD( {ItemLookahead()} ) <EOL>
@@ -519,8 +569,6 @@ void List() #List : {
     )*
 
     {
-        ident = oldIdent;
-        delta = oldDelta;
         stack.pop();
     }
 }
@@ -543,20 +591,14 @@ void Item() #Item : {
     }
 }
 
-void Loose(Token t) : {
-    Token nt;
-} {
-     <EOL> ( ( Whitespace() )? <EOL> )+ ( Whitespace() )? ( nt = <PLUS> | nt = <MINUS> | nt = <ASTERISK> | nt = <NUMBERING> )
-     { if (nt.beginColumn < t.beginColumn) throw new ParseException("not at same level."); }
-}
-
 void Paragraph() #Paragraph : {} {
     Line()
     ( LOOKAHEAD( {LineLookahead()} ) <EOL> ( <SPACE> | <TAB> | <GT> )* Line() )*
 }
 
 void Line() #Line : {} {
-    (
+    (LOOKAHEAD( {TextLookahead()} )
+        (
         CharRef()
         | CodeSpan()
         | Emphasis()
@@ -565,6 +607,7 @@ void Line() #Line : {} {
         | LOOKAHEAD( Image() ) Image()
         | LOOKAHEAD( Link() ) Link()
         | Text()
+        )
     )+
 }
 
@@ -574,12 +617,13 @@ void Text() #Text : {
         t = <ESCAPED_CHAR> { jjtThis.append(getEscapedChar(t)); }
         | (
             t = <TEXT>
-            | t = <HASH>
+            | t = <SHARP>
             | t = <SPACE>
             | t = <TAB>
             | t = <AMPERSAND>
-            | t = <LPAREN>
-            | t = <RPAREN>
+            | t = <BACKTICK>
+            | t = <LPARENT>
+            | t = <RPARENT>
             | t = <LBRACKET>
             | t = <RBRACKET>
             | t = <COLON>
@@ -595,7 +639,8 @@ void Text() #Text : {
             | t = <MINUS_RULER>
             | t = <ASTERISK_RULER>
             | t = <EQ>
-            | t = <QUOTED_TEXT>
+            | t = <SINGLE_QUOTE>
+            | t = <DOUBLE_QUOTE>
         ) { jjtThis.append(t.image); }
 }
 
@@ -633,12 +678,13 @@ void Comment() #Comment : {
         | t = <SPACE>
         | t = <TAB>
         | t = <AMPERSAND>
+        | t = <BACKTICK>
         | t = <EXCLAMATION>
-        | t = <HASH>
+        | t = <SHARP>
         | t = <GT>
         | t = <LT>
-        | t = <LPAREN>
-        | t = <RPAREN>
+        | t = <LPARENT>
+        | t = <RPARENT>
         | t = <LBRACKET>
         | t = <RBRACKET>
         | t = <COLON>
@@ -677,7 +723,7 @@ void InlineURL() #InlineUrl : {
 void Link() #Link : {
     String text, refid = "", url = null;
     Resource resource = null;
-    Token title = null;
+    String title = null;
 } {
     "["
     text = LinkText() { jjtThis.setText(text); }
@@ -694,9 +740,9 @@ void Link() #Link : {
                 url = url()
                 (
                     ( <SPACE> | <TAB> )+
-                    title = <QUOTED_TEXT>
+                    title = quotedtext()
                 )?
-                { resource = new Resource(url, title != null ? getValue(title) : null); }
+                { resource = new Resource(url, title); }
                 ( <SPACE> )*
             )?
             { jjtThis.makeInline(resource); }
@@ -706,7 +752,7 @@ void Link() #Link : {
 
 void Image() #Image : {
     String text, refid, url;
-    Token title = null;
+    String title = null;
 } {
     "!" "["
     text = refname() { jjtThis.setText(text); }
@@ -722,9 +768,9 @@ void Image() #Image : {
                 url = url()
                 (
                     ( <SPACE> )+
-                    title = <QUOTED_TEXT>
+                    title = quotedtext()
                 )?
-                { jjtThis.setResource(new Resource(url, title != null ? getValue(title) : null)); }
+                { jjtThis.setResource(new Resource(url, title)); }
             )?
             ( <SPACE> )*
         ")"
@@ -732,18 +778,62 @@ void Image() #Image : {
 }
 
 void Tag() : {
-    Token t, a, v;
+    Token t;
+    TagAttr attr;
     java.util.List<TagAttr> attributes = new java.util.ArrayList<TagAttr>();
 } {
     (
     LOOKAHEAD(2)
-    "<" "/"  t = <TEXT> <GT> #CloseTag { ((CloseTag)jjtree.peekNode()).setName(t.image);}
+    "<" "/"  t = <TEXT> <GT> #ClosingTag
+    {
+        ClosingTag closing = ((ClosingTag)jjtree.peekNode());
+        closing.setName(t.image);
+        if (markupStack.size() > 0) {
+            OpeningTag opening = (OpeningTag)markupStack.peek();
+            if (opening.getName().equals(closing.getName())) {
+                opening.setClosingTag(closing);
+                markupStack.pop();
+            } else {
+                markupStack.clear();
+            }
+        }
+    }
     |
-    <LT> t = <TEXT>
-    ( ( <SPACE> )+ a = <TEXT> "=" v = <QUOTED_TEXT> { attributes.add(new TagAttr(a.image, getValue(v))); } )*
-    ( "/" ">" #EmptyTag { EmptyTag emptytag = (EmptyTag)jjtree.peekNode(); emptytag.setName(t.image); emptytag.setAttributes(attributes); }
-    | <GT> #OpenTag { OpenTag opentag = (OpenTag)jjtree.peekNode(); opentag.setName(t.image); opentag.setAttributes(attributes); })
+    "<" t = <TEXT>
+    (
+        LOOKAHEAD( ( <SPACE> )+ <TEXT> )
+        ( <SPACE> )+ attr = TagAttribute() { attributes.add(attr); }
+    )* ( <SPACE> )*
+    (
+        "/" ">" #EmptyTag { EmptyTag emptytag = (EmptyTag)jjtree.peekNode(); emptytag.setName(t.image); emptytag.setAttributes(attributes); }
+        | ">" #OpeningTag { OpeningTag opening = (OpeningTag)jjtree.peekNode(); opening.setName(t.image); opening.setAttributes(attributes); markupStack.push(opening); })
     )
+}
+
+TagAttr TagAttribute() : {
+    StringBuilder buff = new StringBuilder();
+    Token attrName;
+    Token t;
+} {
+    attrName = <TEXT> "="
+    <DOUBLE_QUOTE>
+    (
+        (
+            t = <TEXT>
+            | t = <SPACE>
+            | t = <TAB>
+            | t = "&"
+            | t = "("
+            | t = ")"
+            | t = "/"
+            | t = "\\"
+            | t = "'"
+        ) { buff.append(t.image); }
+    )*
+    <DOUBLE_QUOTE>
+    {
+        return new TagAttr(attrName.image, buff.toString());
+    }
 }
 
 String LinkText() : {
@@ -758,10 +848,12 @@ String LinkText() : {
             | t = <SPACE>
             | t = <TAB>
             | t = <AMPERSAND>
-            | t = <LPAREN>
-            | t = <RPAREN>
+            | t = <LPARENT>
+            | t = <RPARENT>
             | t = <COLON>
             | t = <SLASH>
+            | t = <SINGLE_QUOTE>
+            | t = <DOUBLE_QUOTE>
             | t = <BACKSLASH>
             | t = <GT>
             | t = <LT>
@@ -784,8 +876,8 @@ String refname() : {
         | t = <SPACE>
         | t = <TAB>
         | t = <AMPERSAND>
-        | t = <LPAREN>
-        | t = <RPAREN>
+        | t = <LPARENT>
+        | t = <RPARENT>
         | t = <LBRACKET>
         | t = <COLON>
         | t = <SLASH>
@@ -795,6 +887,54 @@ String refname() : {
         | t = <EQ>
         ) { buff.append(t.image); }
     )+
+    { return buff.toString(); }
+}
+
+
+
+String quotedtext() : {
+    StringBuilder buff = new StringBuilder();
+    Token t;
+} {
+    (
+        (
+            <DOUBLE_QUOTE>
+            (
+                LOOKAHEAD( {QuoteInsideTitleLookahead(DOUBLE_QUOTE)} )
+                (
+                    t = <TEXT>
+                    | t = <SPACE>
+                    | t = <TAB>
+                    | t = "&"
+                    | t = "("
+                    | t = ")"
+                    | t = "/"
+                    | t = "\\"
+                    | t = "'"
+                    | t = "\""
+                ) { buff.append(t.image); }
+            )*
+            <DOUBLE_QUOTE>
+        )
+        |
+        (
+            <SINGLE_QUOTE>
+            (
+                (
+                    t = <TEXT>
+                    | t = <SPACE>
+                    | t = <TAB>
+                    | t = "&"
+                    | t = "("
+                    | t = ")"
+                    | t = "/"
+                    | t = "\\"
+                    | t = "\""
+                ) { buff.append(t.image); }
+            )*
+            <SINGLE_QUOTE>
+        )
+    )
     { return buff.toString(); }
 }
 
@@ -809,13 +949,13 @@ String url() : {
             (
             t = <TEXT>
             | t = <AMPERSAND>
-            | t = <LPAREN>
+            | t = <LPARENT>
             | t = <LBRACKET>
             | t = <RBRACKET>
             | t = <COLON>
             | t = <SLASH>
             | t = <BACKSLASH>
-            | t = <HASH>
+            | t = <SHARP>
             | t = <EQ>
             ) { buff.append(t.image); }
         ) +
@@ -825,13 +965,13 @@ String url() : {
         (
         t = <TEXT>
         | t = <AMPERSAND>
-        | t = <LPAREN>
+        | t = <LPARENT>
         | t = <LBRACKET>
         | t = <RBRACKET>
         | t = <COLON>
         | t = <SLASH>
         | t = <BACKSLASH>
-        | t = <HASH>
+        | t = <SHARP>
         | t = <EQ>
         ) { buff.append(t.image); }
     )+

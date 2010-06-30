@@ -5,7 +5,7 @@ public interface Visitor {
 
     void visit(CharRef node);
 
-    void visit(CloseTag node);
+    void visit(ClosingTag node);
 
     void visit(Code node);
 
@@ -37,7 +37,7 @@ public interface Visitor {
 
     void visit(List node);
 
-    void visit(OpenTag node);
+    void visit(OpeningTag node);
 
     void visit(Paragraph node);
 

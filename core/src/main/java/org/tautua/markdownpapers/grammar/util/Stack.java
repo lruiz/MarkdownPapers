@@ -18,4 +18,6 @@ public interface Stack<E> {
     E pop();
 
     int size();
+
+    void clear();
 }

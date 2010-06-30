@@ -1,14 +1,12 @@
 package org.tautua.markdownpapers.grammar;
 
-import java.util.ArrayList;
+public class ClosingTag extends Tag {
 
-public class CloseTag extends Tag {
-
-    public CloseTag(int id) {
+    public ClosingTag(int id) {
         super(id);
     }
 
-    public CloseTag(Parser p, int id) {
+    public ClosingTag(Parser p, int id) {
         super(p, id);
     }
 
