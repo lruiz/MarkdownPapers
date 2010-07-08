@@ -23,6 +23,11 @@
     <modules>
         <module>core</module>
     </modules>
+    <scm>
+        <connection>scm:git:git://github.com/lruiz/MarkdownPapers.git</connection>
+        <developerConnection>scm:git:git@github.com:lruiz/MarkdownPapers.git</developerConnection>
+        <url>http://github.com/lruiz/MarkdownPapers</url>
+    </scm>
     <developers>
         <developer>
             <id>lruiz</id>
