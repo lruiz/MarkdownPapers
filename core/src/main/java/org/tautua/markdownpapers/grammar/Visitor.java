@@ -1,8 +1,6 @@
 package org.tautua.markdownpapers.grammar;
 
 public interface Visitor {
-    void visit(BlankLine node);
-
     void visit(CharRef node);
 
     void visit(ClosingTag node);

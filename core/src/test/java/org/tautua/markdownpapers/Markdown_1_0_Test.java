@@ -1,16 +1,17 @@
-package org.tautua.markdownpapers.html;
+package org.tautua.markdownpapers;
 
 import org.custommonkey.xmlunit.HTMLDocumentBuilder;
 import org.custommonkey.xmlunit.TolerantSaxDocumentBuilder;
 import org.custommonkey.xmlunit.XMLAssert;
 import org.custommonkey.xmlunit.XMLUnit;
-import org.junit.*;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameters;
+import org.tautua.markdownpapers.generators.HtmlGenerator;
 import org.tautua.markdownpapers.grammar.Document;
 import org.tautua.markdownpapers.grammar.ParseException;
 import org.tautua.markdownpapers.grammar.Parser;
-import org.tautua.markdownpapers.testing.LabelledParameterized;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,15 +23,15 @@ import java.util.List;
  * Unit test for simple App.
  */
 @RunWith(LabelledParameterized.class)
-public class Markdown_1_1_Tests {
-    private static final File OUTPUT_DIR = new File("target/output/1.1/basics");
-    private static final File INPUT_DIR = new File("target/test-classes/1.1/basics");
+public class Markdown_1_0_Test {
+    private static final File OUTPUT_DIR = new File("target/output/1.0");
+    private static final File INPUT_DIR = new File("target/test-classes/1.0");
     private static final String INPUT_SUFFIX = ".text";
-    private static final String OUTPUT_SUFFIX = ".xhtml";
+    private static final String OUTPUT_SUFFIX = ".html";
 
     private String fileName;
 
-    public Markdown_1_1_Tests(String fileName) {
+    public Markdown_1_0_Test(String fileName) {
         this.fileName = fileName;
     }
 
@@ -48,17 +49,13 @@ public class Markdown_1_1_Tests {
                 {"Auto links"},
                 {"Backslash escapes"},
                 {"Blockquotes with code blocks"},
-                {"Code Blocks"},
-                {"Code Spans"},
                 {"Hard-wrapped paragraphs with list-like lines"},
                 {"Horizontal rules"},
-                {"Images"},
                 {"Inline HTML (Advanced)"},
                 {"Inline HTML (Simple)"},
                 {"Inline HTML comments"},
                 {"Links, inline style"},
                 {"Links, reference style"},
-                {"Links, shortcut references"},
                 {"Literal quotes in titles"},
                 {"Markdown Documentation - Basics"},
                 {"Markdown Documentation - Syntax"},
@@ -93,15 +90,16 @@ public class Markdown_1_1_Tests {
     }
 
     /**
-     * <p>Compare the two xml files, ignoring whitespace.</p>
+     * <p>Compare two xml files, whitespace and attribute order are ignored.</p>
      * @param expected
      * @param output
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws java.io.IOException
+     * @throws org.xml.sax.SAXException
+     * @throws javax.xml.parsers.ParserConfigurationException
      */
     private static void compare(File expected, File output) throws IOException, SAXException, ParserConfigurationException {
         XMLUnit.setIgnoreWhitespace(true);
+        XMLUnit.setIgnoreAttributeOrder(true);
         TolerantSaxDocumentBuilder tolerantSaxDocumentBuilder = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
         HTMLDocumentBuilder htmlDocumentBuilder = new HTMLDocumentBuilder(tolerantSaxDocumentBuilder);
         org.w3c.dom.Document e = htmlDocumentBuilder.parse(new FileReader(expected));

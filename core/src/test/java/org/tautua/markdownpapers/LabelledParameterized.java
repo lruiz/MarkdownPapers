@@ -1,4 +1,4 @@
-package org.tautua.markdownpapers.testing;
+package org.tautua.markdownpapers;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

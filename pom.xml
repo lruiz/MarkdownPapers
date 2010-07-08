@@ -22,7 +22,6 @@
     </licenses>
     <modules>
         <module>core</module>
-        <module>outputs/html</module>
     </modules>
     <developers>
         <developer>

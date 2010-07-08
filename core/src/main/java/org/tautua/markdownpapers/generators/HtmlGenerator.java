@@ -1,15 +1,14 @@
-package org.tautua.markdownpapers.html;
+package org.tautua.markdownpapers.generators;
 
 import org.tautua.markdownpapers.grammar.*;
-import org.tautua.markdownpapers.grammar.util.DequeStack;
-import org.tautua.markdownpapers.grammar.util.Stack;
+import org.tautua.markdownpapers.grammar.util.*;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO:
+ * <p>Markdown to HTML transformer.</p>
  */
 public class HtmlGenerator implements Visitor {
     private static final Map<Character, String> ESCAPED_CHARS;
@@ -88,10 +87,6 @@ public class HtmlGenerator implements Visitor {
                 append("</em></strong>");
                 break;
         }
-    }
-
-    public void visit(BlankLine node) {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public void visit(Header node) {
