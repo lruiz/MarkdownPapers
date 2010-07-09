@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Emphasis extends SimpleNode {
     private String text;
     private Type type = Type.ITALIC;

@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class LinkRef extends SimpleNode {
     private String id;
     private Resource resource;

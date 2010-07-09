@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Ruler extends SimpleNode {
     public Ruler(int id) {
         super(id);

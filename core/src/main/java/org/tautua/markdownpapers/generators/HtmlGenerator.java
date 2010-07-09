@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>Markdown to HTML transformer.</p>
+ * <p>HTML generator.</p>
+ *
+ * @author Larry Ruiz
  */
 public class HtmlGenerator implements Visitor {
     private static final Map<Character, String> ESCAPED_CHARS;

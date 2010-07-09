@@ -7,7 +7,7 @@ import java.util.Deque;
 /**
  * <p>Stack implementation based on java.util.Deque</p>
  *
- * @author
+ * @author Larry Ruiz
  */
 public class DequeStack<E> implements Stack<E> {
     private Deque<E> deque = new ArrayDeque<E>();

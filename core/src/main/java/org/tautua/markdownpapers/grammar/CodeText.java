@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class CodeText extends SimpleNode {
     private StringBuilder buffer = new StringBuilder();
 

@@ -1,11 +1,7 @@
 package org.tautua.markdownpapers.grammar;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lruiz
- * Date: Jun 4, 2010
- * Time: 12:19:25 AM
- * To change this template use File | Settings | File Templates.
+ * @author Larry Ruiz
  */
 public class Comment extends SimpleNode {
     private String text;

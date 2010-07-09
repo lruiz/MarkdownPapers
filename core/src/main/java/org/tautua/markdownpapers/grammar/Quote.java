@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Quote extends SimpleNode {
     public Quote(int id) {
         super(id);

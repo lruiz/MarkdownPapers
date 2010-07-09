@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Item extends SimpleNode {
     private Item previous;
     private int indentation;

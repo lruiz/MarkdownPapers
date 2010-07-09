@@ -3,6 +3,9 @@ package org.tautua.markdownpapers.grammar;
 import java.util.*;
 import java.util.List;
 
+/**
+ * @author Larry Ruiz
+ */
 public class EmptyTag extends Tag {
     private java.util.List<TagAttr> attributes = new ArrayList();
 

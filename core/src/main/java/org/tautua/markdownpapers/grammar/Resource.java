@@ -2,6 +2,8 @@ package org.tautua.markdownpapers.grammar;
 
 /**
  * <p>A Resource represents resource location.</p>
+ * 
+ * @author Larry Ruiz
  */
 public class Resource {
     private String location;

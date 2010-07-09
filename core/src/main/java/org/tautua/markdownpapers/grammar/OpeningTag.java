@@ -3,6 +3,9 @@ package org.tautua.markdownpapers.grammar;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * @author Larry Ruiz
+ */
 public class OpeningTag extends Tag {
     private java.util.List<TagAttr> attributes = new ArrayList<TagAttr>();
     private ClosingTag closingTag;

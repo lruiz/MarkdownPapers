@@ -1,11 +1,7 @@
 package org.tautua.markdownpapers.grammar;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lruiz
- * Date: Apr 29, 2010
- * Time: 12:08:50 AM
- * To change this template use File | Settings | File Templates.
+ * @author Larry Ruiz
  */
 public class Tag extends SimpleNode {
     protected String name;

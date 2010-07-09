@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class SimpleNode implements Node {
     private static final Node[] EMPTY_ARRAY = new Node[0];
     protected Node parent;

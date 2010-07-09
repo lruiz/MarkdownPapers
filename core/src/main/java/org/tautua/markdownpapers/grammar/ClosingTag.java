@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class ClosingTag extends Tag {
 
     public ClosingTag(int id) {

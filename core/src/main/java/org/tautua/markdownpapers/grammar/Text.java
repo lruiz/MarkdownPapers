@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Text extends SimpleNode {
     private StringBuilder buffer = new StringBuilder();
 

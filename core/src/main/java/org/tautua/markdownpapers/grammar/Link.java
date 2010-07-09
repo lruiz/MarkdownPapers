@@ -1,5 +1,8 @@
 package org.tautua.markdownpapers.grammar;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Link extends SimpleNode {
     private String text;
     private Type type = Type.REFERENCED;

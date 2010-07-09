@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Unit test for simple App.
+ * @author Larry Ruiz
  */
 @RunWith(LabelledParameterized.class)
 public class Markdown_1_0_Test {

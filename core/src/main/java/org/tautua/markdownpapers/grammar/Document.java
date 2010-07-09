@@ -3,6 +3,9 @@ package org.tautua.markdownpapers.grammar;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Larry Ruiz
+ */
 public class Document extends SimpleNode {
     private Map<String, LinkRef> linkRefs = new HashMap();
 
