@@ -4,13 +4,13 @@
     <parent>
         <artifactId>markdownpapers</artifactId>
         <groupId>org.tautua.markdownpapers</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.tautua.markdownpapers</groupId>
     <artifactId>markdownpapers-core</artifactId>
     <name>Markdown Papers Core</name>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <build>
         <plugins>
             <plugin>
