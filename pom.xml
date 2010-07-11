@@ -5,7 +5,7 @@
     <groupId>org.tautua.markdownpapers</groupId>
     <artifactId>markdownpapers</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1</version>
+    <version>0.1.0-SNAPSHOT</version>
     <name>Markdown Papers Project</name>
     <description>Markdown java implementation</description>
     <url>http://markdown.tautua.org</url>
