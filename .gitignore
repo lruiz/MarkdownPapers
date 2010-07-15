@@ -6,3 +6,5 @@
 .settings/
 target/
 core/target/
+cli/target/
+*~

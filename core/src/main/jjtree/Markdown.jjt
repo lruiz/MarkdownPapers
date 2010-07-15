@@ -11,7 +11,7 @@ options {
     NODE_DEFAULT_VOID = true;
     NODE_USES_PARSER = false;
 
-    DEBUG_PARSER = false;
+    DEBUG_PARSER = true;
     DEBUG_TOKEN_MANAGER = false;
     DEBUG_LOOKAHEAD = false;
 }
@@ -28,9 +28,6 @@ public class Parser {
     private Stack<Node> stack = new DequeStack<Node>();
     private Stack<Node> markupStack = new DequeStack<Node>();
     private int currentQuoteLevel = 0;
-
-    int ident;
-    int delta;
 
     public Object parse() throws ParseException {
         jj_input_stream.setTabSize(4);
@@ -816,21 +813,47 @@ TagAttr TagAttribute() : {
     Token t;
 } {
     attrName = <TEXT> "="
-    <DOUBLE_QUOTE>
     (
+        <DOUBLE_QUOTE>
         (
-            t = <TEXT>
-            | t = <SPACE>
-            | t = <TAB>
-            | t = "&"
-            | t = "("
-            | t = ")"
-            | t = "/"
-            | t = "\\"
-            | t = "'"
-        ) { buff.append(t.image); }
-    )*
-    <DOUBLE_QUOTE>
+            (
+                t = <CODE_SPAN>
+                | t = <ESCAPED_CHAR>
+                | t = <SPACE>
+                | t = <TAB>
+                | t = <TEXT>
+                | t = "&"
+                | t = "("
+                | t = ")"
+                | t = "/"
+                | t = "\\"
+                | t = "'"
+                | t = "`"
+
+            ) { buff.append(t.image); }
+        )*
+        <DOUBLE_QUOTE>
+        |
+        <SINGLE_QUOTE>
+        (
+            (
+                t = <CODE_SPAN>
+                | t = <ESCAPED_CHAR>
+                | t = <SPACE>
+                | t = <TAB>
+                | t = <TEXT>
+                | t = "&"
+                | t = "("
+                | t = ")"
+                | t = "/"
+                | t = "\\"
+                | t = "\""
+                | t = "`"
+
+            ) { buff.append(t.image); }
+        )*
+        <SINGLE_QUOTE>
+    )
     {
         return new TagAttr(attrName.image, buff.toString());
     }

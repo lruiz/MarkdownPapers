@@ -1,0 +1,10 @@
+#!/bin/bash
+
+LIB="`dirname $0`/../lib"
+JARS="$LIB/commons-cli-1.2.jar:$LIB/markdownpapers-core-0.1.0-SNAPSHOT.jar:$LIB/markdownpapers-cli-0.1.0-SNAPSHOT.jar"
+
+case "`uname`" in
+     CYGWIN*) JAR="`cygpath --windows -- "$JAR"`" ;;
+esac
+
+java -classpath "$JARS" org.tautua.markdownpapers.cli.Main "$@"
