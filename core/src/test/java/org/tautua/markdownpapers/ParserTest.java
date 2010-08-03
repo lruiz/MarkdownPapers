@@ -62,7 +62,7 @@ public class ParserTest {
 
     static Document parse(Reader reader) throws ParseException {
         Parser parser = new Parser(reader);
-        return (Document)parser.parse();
+        return parser.parse();
     }
 
     static Reader getAssetReader(String assetName) throws FileNotFoundException {
