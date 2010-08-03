@@ -27,7 +27,6 @@ import java.util.*;
  * @author Larry Ruiz
  */
 public class Main {
-    private static final File[] EMPTY_FILE_ARRAY = new File[0];
     private static final String DEFAULT_INPUT_EXTENSION = ".md";
     private static final String OUTPUT_EXTENSION = ".html";
 
@@ -55,20 +54,16 @@ public class Main {
 
     private static Options getOptions() {
         Options options = new Options();
-//        options.addOption(OptionBuilder.hasArg().withArgName("file|directory")
-//                .withDescription("input file or directory").create("i"));
-        options.addOption(OptionBuilder.hasArg().withArgName("directory")
-                .withDescription("outputDirectory directory").create("o"));
+        options.addOption("o", true, "output directory");
         options.addOption("r", false, "recursive");
         options.addOption("h", false, "help");
-
         return options;
     }
 
     public void execute() throws Exception {
         if (badUsage) {                 
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("mdpapers (input)+ [options]", options);
+            formatter.printHelp("mdpapers <input> [options]", options);
         } else {
             String inputArg = commandLine.getArgs()[0];
             input = ((inputArg == null) ? new File(".") : new File(inputArg));

@@ -50,4 +50,9 @@ public class Text extends SimpleNode {
     public boolean isWhitespace() {
         return buffer.toString().trim().length() == 0;
     }
+
+    @Override
+    public String toString() {
+        return buffer.toString();
+    }
 }

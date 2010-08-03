@@ -30,9 +30,10 @@ import java.util.Map;
  */
 public class HtmlGenerator implements Visitor {
     private static final Map<Character, String> ESCAPED_CHARS;
-    private static final String TAB = "\t";
-    private static final String EOL = "\n";
-    private static final String SPACE = " ";
+    private static final String EMPTY_STRING = "";
+    private static final char TAB = '\t';
+    private static final char EOL = '\n';
+    private static final char SPACE = ' ';
     private Appendable buffer;
     private Document document;
     private Stack<Node> markupStack = new DequeStack<Node>();
@@ -120,7 +121,7 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Image node) {
-        Resource resource = resolve(node);
+        Resource resource = resolveResource(node);
         if (resource == null) {
             append("<img src=\"\" alt=\"");
             appendAndEscape(node.getText());
@@ -161,20 +162,23 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Link node) {
-        Resource resource = resolve(node);
+        Resource resource = resolveResource(node);
         if (resource == null) {
             if (node.isReferenced()) {
                 append("[");
-                appendAndEscape(node.getText());
+                node.childrenAccept(this);
                 append("]");
                 if (node.getReferenceName() != null) {
+                    if (node.hasWhitespaceAtMiddle()) {
+                        append(' ');
+                    }
                     append("[");
                     append(node.getReferenceName());
                     append("]");
                 }
             } else {
                 append("<a href=\"\">");
-                appendAndEscape(node.getText());
+                node.childrenAccept(this);
                 append("</a>");
             }
         } else {
@@ -186,7 +190,7 @@ public class HtmlGenerator implements Visitor {
                 appendAndEscape(resource.getName());
             }
             append("\">");
-            appendAndEscape(node.getText());
+            node.childrenAccept(this);
             append("</a>");
         }
     }
@@ -278,25 +282,24 @@ public class HtmlGenerator implements Visitor {
         appendAndEscape(node.getValue());
     }
 
-    Resource resolve(Image node) {
-        if (node.getResource() == null) {
+    Resource resolveResource(Image image) {
+        if (image.getResource() == null) {
             LinkRef linkRef;
-            if (node.getRefId() == null) {
-                linkRef = document.getLinkRef(node.getText());
+            if (image.getRefId() == null) {
+                linkRef = document.getLinkRef(image.getText());
             } else {
-                linkRef = document.getLinkRef(node.getRefId());
+                linkRef = document.getLinkRef(image.getRefId());
             }
             return linkRef != null ? linkRef.getResource() : null;
         }
 
-        return node.getResource();
+        return image.getResource();
     }
 
-
-    Resource resolve(Link link) {
+    Resource resolveResource(Link link) {
         if (link.isReferenced()) {
             LinkRef linkRef = null;
-            if (link.getReferenceName() == null || link.getReferenceName().equals("")) {
+            if (link.getReferenceName() == null || link.getReferenceName().equals(EMPTY_STRING)) {
                 linkRef = document.getLinkRef(link.getText());
             } else {
                 linkRef = document.getLinkRef(link.getReferenceName());
@@ -307,7 +310,7 @@ public class HtmlGenerator implements Visitor {
         return link.getResource();
     }
 
-    void visitChildrenAndAppendSeparator(Node node, String separator){
+    void visitChildrenAndAppendSeparator(Node node, char separator){
         int count = node.jjtGetNumChildren();
         for(int i = 0; i < count; i++) {
             node.jjtGetChild(i).accept(this);

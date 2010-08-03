@@ -11,7 +11,7 @@ options {
     NODE_DEFAULT_VOID = true;
     NODE_USES_PARSER = false;
 
-    DEBUG_PARSER = true;
+    DEBUG_PARSER = false;
     DEBUG_TOKEN_MANAGER = false;
     DEBUG_LOOKAHEAD = false;
 }
@@ -28,10 +28,16 @@ public class Parser {
     private Stack<Node> stack = new DequeStack<Node>();
     private Stack<Node> markupStack = new DequeStack<Node>();
     private int currentQuoteLevel = 0;
+    private int parentheses;
+    private int brackets;
 
-    public Object parse() throws ParseException {
+    public Document parse() throws ParseException {
         jj_input_stream.setTabSize(4);
         Document();
+        return (Document)getRootNode();
+    }
+
+    public Node getRootNode() {
         return jjtree.rootNode();
     }
 
@@ -230,18 +236,13 @@ public class Parser {
         Token t;
         int i = 2;
         int quoteLevel = 0;
-        int _indent = 0;
 
         do {
             t = getToken(i++);
             if (t.kind == GT) {
                 quoteLevel++;
-            } else if (t.kind == SPACE) {
-                _indent++;
-            } else if (t.kind == TAB) {
-                _indent += 4;
             }
-        } while (t.oneOfKind(SPACE, TAB, GT));
+        } while (t.oneOfKind(EOL, SPACE, TAB, GT));
 
         if (t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING)
             && item.getIndentation() < t.beginColumn) {
@@ -260,7 +261,6 @@ public class Parser {
         Token t;
         int i = 2;
         int quoteLevel = 0;
-        int _indent = 0;
         do {
             t = getToken(i++);
             if (t.kind == GT) {
@@ -288,6 +288,20 @@ public class Parser {
         }
 
         return getToken(1).noneOfKind(EOL, EOF);
+    }
+
+    boolean NestedParenthesesLookahead() {
+        if (getToken(1).kind == RPARENT) {
+            Token t;
+            int i = 2;
+            do {
+                t = getToken(i++);
+            } while (t.noneOfKind(RPARENT, LT, GT, DOUBLE_QUOTE, SINGLE_QUOTE, SPACE, EOL, EOF));
+
+            return t.kind == RPARENT;
+        }
+
+        return getToken(1).noneOfKind(RPARENT, LT, GT, DOUBLE_QUOTE, SINGLE_QUOTE, SPACE, EOL, EOF);
     }
 
     boolean follows(int... args) {
@@ -544,15 +558,14 @@ void CodeText() #CodeText : {
 
 
 void LinkRef() #LinkRef : {
-    String n, u, t = null;
+    String n = null;
+    Resource resource;
 } {
     ( <SPACE> ( <SPACE> ( <SPACE> )? )? )?
     "[" n = refname() "]" { jjtThis.setId(n); }
     ( <SPACE> )? ":"
     ( Whitespace() )?
-    u = url()
-    ( Whitespace() )?
-    ( t = quotedtext() )? { jjtThis.setResource(new Resource(u, t)); }
+    resource = Resource() { jjtThis.setResource(resource); }
 }
 
 void List() #List : {
@@ -574,11 +587,21 @@ void Item() #Item : {
     stack.push(jjtThis);
     Token t;
 } {
-    ( t = <PLUS> | t = <MINUS> | t = <ASTERISK> | t = <NUMBERING> { jjtThis.makeOrdered(); } ( <SPACE> | <TAB> )) { jjtThis.setIndentation(t.beginColumn); }
-    Paragraph() ( LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() )*
-    ( LOOKAHEAD( {ListLookahead()} ) <EOL> List() )?
-    ( LOOKAHEAD( {LooseLookahead()} ) <EOL> ( Whitespace() )? { jjtThis.makeLoose(); } )?
-
+    (
+        (
+            t = <PLUS>
+            | t = <MINUS>
+            | t = <ASTERISK>
+            | t = <NUMBERING> { jjtThis.makeOrdered(); }
+        )
+        ( <SPACE> | <TAB> )
+    ) { jjtThis.setIndentation(t.beginColumn); }
+    Paragraph()
+    (
+        LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() { jjtThis.makeLoose(); }
+        | LOOKAHEAD( {ListLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* List()
+        | LOOKAHEAD( {LooseLookahead()} ) <EOL> ( Whitespace() )? { jjtThis.makeLoose(); }
+    )*
     {
         Item item = (Item)stack.pop();
         List list = (List)stack.peek();
@@ -718,38 +741,47 @@ void InlineURL() #InlineUrl : {
 }
 
 void Link() #Link : {
-    String text, refid = "", url = null;
+    String text, refid = "";
     Resource resource = null;
-    String title = null;
 } {
     "["
-    text = LinkText() { jjtThis.setText(text); }
+        (
+        CharRef()
+        | CodeSpan()
+        | Emphasis()
+        | LOOKAHEAD( InlineURL() ) InlineURL()
+        | LOOKAHEAD( Image() ) Image()
+        | LOOKAHEAD( Link() ) Link()
+        | LOOKAHEAD( {getToken(1).noneOfKind(RBRACKET, EOL, EOF)}) Text()
+        | <EOL> #Text { ((Text)jjtree.peekNode()).append("\n"); } 
+        )+
+        /*
+        text = LinkText() { jjtThis.setText(text); }
+        */
     "]"
+
+
     (
-        ( <SPACE> )? ( <EOL> )?
-        "["
-            ( refid = refname() )?
-            { jjtThis.makeReferenced(refid); }
-        "]"
-        |
-        "("
-            (
-                url = url()
-                (
-                    ( <SPACE> | <TAB> )+
-                    title = quotedtext()
-                )?
-                { resource = new Resource(url, title); }
-                ( <SPACE> )*
-            )?
-            { jjtThis.makeInline(resource); }
-        ")"
+        LOOKAHEAD(3)
+        (
+            ( <SPACE> { jjtThis.setWhitespaceAtMiddle(); } )? ( <EOL> )?
+            "["
+                ( refid = refname() )?
+                { jjtThis.makeReferenced(refid); }
+            "]"
+            |
+            "("
+                ( resource = Resource() )?
+                ( Whitespace() )?
+                { jjtThis.makeInline(resource); }
+            ")"
+        )
     )?
 }
 
 void Image() #Image : {
-    String text, refid, url;
-    String title = null;
+    String text, refid;
+    Resource resource = null;
 } {
     "!" "["
     text = refname() { jjtThis.setText(text); }
@@ -761,15 +793,8 @@ void Image() #Image : {
         "]"
         |
         "("
-            (
-                url = url()
-                (
-                    ( <SPACE> )+
-                    title = quotedtext()
-                )?
-                { jjtThis.setResource(new Resource(url, title)); }
-            )?
-            ( <SPACE> )*
+            (resource = Resource() { jjtThis.setResource(resource); })?
+            ( Whitespace() )?
         ")"
     )?
 }
@@ -825,6 +850,8 @@ TagAttr TagAttribute() : {
                 | t = "&"
                 | t = "("
                 | t = ")"
+                | t = "<"
+                | t = ">"
                 | t = "/"
                 | t = "\\"
                 | t = "'"
@@ -845,6 +872,8 @@ TagAttr TagAttribute() : {
                 | t = "&"
                 | t = "("
                 | t = ")"
+                | t = "<"
+                | t = ">"
                 | t = "/"
                 | t = "\\"
                 | t = "\""
@@ -870,20 +899,25 @@ String LinkText() : {
             t = <TEXT>
             | t = <SPACE>
             | t = <TAB>
-            | t = <AMPERSAND>
-            | t = <LPARENT>
-            | t = <RPARENT>
-            | t = <COLON>
-            | t = <SLASH>
+            | t = "&"
+            | t = "("
+            | t = ")"
+/*
+            | t = "[" { brackets++; }
+            | LOOKAHEAD({brackets > 0}) t = "]" { brackets--; }
+*/
+            | t = ":"
+            | t = "/"
+            | t = "\\"
             | t = <SINGLE_QUOTE>
             | t = <DOUBLE_QUOTE>
-            | t = <BACKSLASH>
-            | t = <GT>
-            | t = <LT>
-            | t = <EQ>
+            | t = "<"
+            | t = ">"
+            | t = "="
+            | t = "+"
             ) { buff.append(t.image); }
         )+
-        | <LBRACKET> text = LinkText() <RBRACKET> { buff.append("[").append(text).append("]"); }
+        | "[" text = LinkText() "]" { buff.append("[").append(text).append("]"); }
     )+
 
     { return buff.toString(); }
@@ -913,91 +947,90 @@ String refname() : {
     { return buff.toString(); }
 }
 
+Resource Resource() : {
+    String url;
+    String name = null;
+} {
+    url = url()
+    (
+        Whitespace()
+        name = title()
+    )?
+    { return new Resource(url, name); }
+}
 
+String url() : {
+    String text;
+} {
+    (
+        <LT>
+        text = urltext()
+        <GT>
+        |
+        text = urltext()
+    )
+    { return text; }
+}
 
-String quotedtext() : {
-    StringBuilder buff = new StringBuilder();
+String urltext() : {
     Token t;
+    StringBuilder buff = new StringBuilder();
+} {
+    (
+        (
+        t = <TEXT>
+        | t = "&"
+        | t = "(" { parentheses++; }
+        | LOOKAHEAD({parentheses > 0}) t = ")" { parentheses--; }
+        | t = "["
+        | t = "]"
+        | t = ":"
+        | t = "/"
+        | t = "\\"
+        | t = "#"
+        | t = "="
+        ) { buff.append(t.image); }
+    ) +
+    { parentheses = 0; return buff.toString(); }
+}
+
+String title() : {
+    String text;
 } {
     (
         (
             <DOUBLE_QUOTE>
-            (
-                LOOKAHEAD( {QuoteInsideTitleLookahead(DOUBLE_QUOTE)} )
-                (
-                    t = <TEXT>
-                    | t = <SPACE>
-                    | t = <TAB>
-                    | t = "&"
-                    | t = "("
-                    | t = ")"
-                    | t = "/"
-                    | t = "\\"
-                    | t = "'"
-                    | t = "\""
-                ) { buff.append(t.image); }
-            )*
+            text = titletext(DOUBLE_QUOTE)
             <DOUBLE_QUOTE>
         )
         |
         (
             <SINGLE_QUOTE>
-            (
-                (
-                    t = <TEXT>
-                    | t = <SPACE>
-                    | t = <TAB>
-                    | t = "&"
-                    | t = "("
-                    | t = ")"
-                    | t = "/"
-                    | t = "\\"
-                    | t = "\""
-                ) { buff.append(t.image); }
-            )*
+            text = titletext(SINGLE_QUOTE)
             <SINGLE_QUOTE>
         )
     )
-    { return buff.toString(); }
+    { return text; }
 }
 
-String url() : {
-    Token t;
+String titletext(int quoteType) : {
     StringBuilder buff = new StringBuilder();
+    Token t;
 } {
-     (
-     (
-        <LT>
+    (
+        LOOKAHEAD( {QuoteInsideTitleLookahead(quoteType)} )
         (
-            (
             t = <TEXT>
-            | t = <AMPERSAND>
-            | t = <LPARENT>
-            | t = <LBRACKET>
-            | t = <RBRACKET>
-            | t = <COLON>
-            | t = <SLASH>
-            | t = <BACKSLASH>
-            | t = <SHARP>
-            | t = <EQ>
-            ) { buff.append(t.image); }
-        ) +
-        <GT>
-    )
-    | (
-        (
-        t = <TEXT>
-        | t = <AMPERSAND>
-        | t = <LPARENT>
-        | t = <LBRACKET>
-        | t = <RBRACKET>
-        | t = <COLON>
-        | t = <SLASH>
-        | t = <BACKSLASH>
-        | t = <SHARP>
-        | t = <EQ>
+            | t = <SPACE>
+            | t = <TAB>
+            | t = "&"
+            | t = "("
+            | t = ")"
+            | t = "/"
+            | t = "\\"
+            | t = "'"
+            | t = "\""
         ) { buff.append(t.image); }
-    )+
-    )
+    )*
     { return buff.toString(); }
 }
