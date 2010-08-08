@@ -17,6 +17,7 @@
 package org.tautua.markdownpapers.cli;
 
 import org.apache.commons.cli.*;
+import org.tautua.markdownpapers.Markdown;
 import org.tautua.markdownpapers.generators.HtmlGenerator;
 import org.tautua.markdownpapers.grammar.Document;
 
@@ -120,9 +121,8 @@ public class Main {
     }
 
     public void transform(Reader in, Writer out) throws org.tautua.markdownpapers.grammar.ParseException {
-        org.tautua.markdownpapers.grammar.Parser parser = new org.tautua.markdownpapers.grammar.Parser(in);
-        HtmlGenerator generator = new HtmlGenerator(out);
-        generator.visit((Document) parser.parse());
+        Markdown md = new Markdown();
+        md.transform(in, out);
     }
 
     public static void main(String[] arguments) throws Exception {
