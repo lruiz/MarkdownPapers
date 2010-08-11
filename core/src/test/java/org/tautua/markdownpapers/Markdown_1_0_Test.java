@@ -28,6 +28,7 @@ import org.tautua.markdownpapers.generators.HtmlGenerator;
 import org.tautua.markdownpapers.grammar.Document;
 import org.tautua.markdownpapers.grammar.ParseException;
 import org.tautua.markdownpapers.grammar.Parser;
+import org.tautua.markdownpapers.Markdown;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -88,21 +89,17 @@ public class Markdown_1_0_Test {
         File input = new File(INPUT_DIR, fileName + INPUT_SUFFIX);
         File expected = new File(INPUT_DIR, fileName + OUTPUT_SUFFIX);
         File output = new File(OUTPUT_DIR, fileName + OUTPUT_SUFFIX);
-        generate(output, (Document)parse(input));
+        transform(input, output);
         compare(expected, output);
     }
 
-    private static Object parse(File input) throws FileNotFoundException, ParseException {
-        Parser parser = new Parser(new FileReader(input));
-        return parser.parse();
-    }
-
-    private static void generate(File output, Document doc) throws IOException {
-        Writer writer = new FileWriter(output);
-        HtmlGenerator generator = new HtmlGenerator(writer);
-        doc.accept(generator);
-        writer.flush();
-        writer.close();
+    private static void transform(File in, File out) throws Exception {
+        Markdown md = new Markdown();
+        Reader r = new FileReader(in);
+        Writer w = new FileWriter(out);
+        md.transform(r, w);
+        r.close();
+        w.close();
     }
 
     /**
