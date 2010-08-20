@@ -18,14 +18,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <artifactId>markdownpapers</artifactId>
         <groupId>org.tautua.markdownpapers</groupId>
+        <artifactId>markdownpapers-parent</artifactId>
         <version>0.3.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.tautua.markdownpapers</groupId>
     <artifactId>markdownpapers-cli</artifactId>
-    <name>Markdown Papers Command Line Interface</name>
+    <name>MarkdownPapers Command Line Interface</name>
     <dependencies>
         <dependency>
             <groupId>org.tautua.markdownpapers</groupId>

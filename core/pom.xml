@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Copyright 2010 the original author or authors.
 
@@ -17,14 +18,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <artifactId>markdownpapers</artifactId>
         <groupId>org.tautua.markdownpapers</groupId>
+        <artifactId>markdownpapers-parent</artifactId>
         <version>0.3.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.tautua.markdownpapers</groupId>
     <artifactId>markdownpapers-core</artifactId>
-    <name>Markdown Papers Core</name>
+    <name>MarkdownPapers Core</name>
     <build>
         <plugins>
             <plugin>
