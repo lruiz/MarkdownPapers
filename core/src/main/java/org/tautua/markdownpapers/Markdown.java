@@ -28,9 +28,9 @@ import java.io.Writer;
  * @author Larry Ruiz. Aug 6, 2010
  */
 public class Markdown {
-    public void transform(Reader reader, Writer writer) throws ParseException {
-        Parser parser = new Parser(reader);
-        HtmlGenerator generator = new HtmlGenerator(writer);
+    public void transform(Reader in, Writer out) throws ParseException {
+        Parser parser = new Parser(in);
+        HtmlGenerator generator = new HtmlGenerator(out);
         Document document = parser.parse();
         generator.visit(document);
     }

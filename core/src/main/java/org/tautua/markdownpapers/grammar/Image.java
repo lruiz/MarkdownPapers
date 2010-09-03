@@ -20,7 +20,7 @@ package org.tautua.markdownpapers.grammar;
  * @author Larry Ruiz
  */
 public class Image extends SimpleNode {
-    private String refId;
+    private String resourceName;
     private String text;
     private Resource resource;
 
@@ -32,12 +32,12 @@ public class Image extends SimpleNode {
         super(p, id);
     }
 
-    public String getRefId() {
-        return refId;
+    public String getResourceName() {
+        return resourceName;
     }
 
-    public void setRefId(String refId) {
-        this.refId = refId;
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
     }
 
     public String getText() {

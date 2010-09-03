@@ -17,28 +17,29 @@
 package org.tautua.markdownpapers.grammar;
 
 /**
- * <p>A Resource represents resource location.</p>
+ * <p>Represents a resource which include location and an additional hint information,
+ * it could be a webpage or image</p>
  * 
  * @author Larry Ruiz
  */
 public class Resource {
     private String location;
-    private String name;
+    private String hint;
 
     public Resource(String location) {
         this.location = location;
     }
 
-    public Resource(String location, String name) {
+    public Resource(String location, String hint) {
         this.location = location;
-        this.name = name;
+        this.hint = hint;
     }
 
     public String getLocation() {
         return location;
     }
 
-    public String getName() {
-        return name;
+    public String getHint() {
+        return hint;
     }
 }

@@ -21,7 +21,7 @@ package org.tautua.markdownpapers.grammar;
  */
 public class Link extends SimpleNode {
     private Type type = Type.REFERENCED;
-    private String referenceName;
+    private String resourceName;
     private Resource resource;
     private boolean whitespaceAtMiddle = false;
 
@@ -57,17 +57,17 @@ public class Link extends SimpleNode {
         return buff.toString();
     }
 
-    public String getReferenceName() {
-        return referenceName;
+    public String getResourceName() {
+        return resourceName;
     }
 
     public Resource getResource() {
         return resource;
     }
 
-    public void makeReferenced(String referenceName) {
+    public void makeReferenced(String resourceName) {
         type = Type.REFERENCED;
-        this.referenceName = referenceName;
+        this.resourceName = resourceName;
     }
 
     public void makeInline(Resource resource) {

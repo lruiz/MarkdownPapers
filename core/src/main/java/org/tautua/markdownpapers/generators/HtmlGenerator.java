@@ -20,31 +20,17 @@ import org.tautua.markdownpapers.grammar.*;
 import org.tautua.markdownpapers.grammar.util.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
+import static org.tautua.markdownpapers.generators.Chars.*;
 /**
  * <p>HTML generator.</p>
  *
  * @author Larry Ruiz
  */
 public class HtmlGenerator implements Visitor {
-    private static final Map<Character, String> ESCAPED_CHARS;
-    private static final String EMPTY_STRING = "";
-    private static final char TAB = '\t';
-    private static final char EOL = '\n';
-    private static final char SPACE = ' ';
     private Appendable buffer;
     private Document document;
     private Stack<Node> markupStack = new DequeStack<Node>();
-
-    static {
-        ESCAPED_CHARS = new HashMap();
-        ESCAPED_CHARS.put('&', "&amp;");
-        ESCAPED_CHARS.put('<', "&lt;");
-        ESCAPED_CHARS.put('>', "&gt;");
-        ESCAPED_CHARS.put('\"', "&quot;");
-    }
 
     public HtmlGenerator(Appendable buffer) {
         this.buffer = buffer;
@@ -69,12 +55,12 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(CodeSpan node) {
         append("<code>");
-        appendAndEscape(node.getText());
+        escapeAndAppend(node.getText());
         append("</code>");
     }
 
     public void visit(CodeText node) {
-        appendAndEscape(node.getValue());
+        escapeAndAppend(node.getValue());
     }
 
     public void visit(Comment node) {
@@ -124,19 +110,19 @@ public class HtmlGenerator implements Visitor {
         Resource resource = resolveResource(node);
         if (resource == null) {
             append("<img src=\"\" alt=\"");
-            appendAndEscape(node.getText());
+            escapeAndAppend(node.getText());
             append("\"/>");
         } else {
             append("<img");
             append(" src=\"");
-            appendAndEscape(resource.getLocation());
+            escapeAndAppend(resource.getLocation());
             if (node.getText() != null) {
                 append("\" alt=\"");
-                appendAndEscape(node.getText());
+                escapeAndAppend(node.getText());
             }
-            if (resource.getName() != null) {
+            if (resource.getHint() != null) {
                 append("\" title=\"");
-                appendAndEscape(resource.getName());
+                escapeAndAppend(resource.getHint());
             }
             append("\"/>");
         }
@@ -144,9 +130,9 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(InlineUrl node) {
         append("<a href=\"");
-        appendAndEscape(node.getUrl());
+        escapeAndAppend(node.getUrl());
         append("\">");
-        appendAndEscape(node.getUrl());
+        escapeAndAppend(node.getUrl());
         append("</a>");
     }
 
@@ -168,12 +154,12 @@ public class HtmlGenerator implements Visitor {
                 append("[");
                 node.childrenAccept(this);
                 append("]");
-                if (node.getReferenceName() != null) {
+                if (node.getResourceName() != null) {
                     if (node.hasWhitespaceAtMiddle()) {
                         append(' ');
                     }
                     append("[");
-                    append(node.getReferenceName());
+                    append(node.getResourceName());
                     append("]");
                 }
             } else {
@@ -184,10 +170,10 @@ public class HtmlGenerator implements Visitor {
         } else {
             append("<a");
             append(" href=\"");
-            appendAndEscape(resource.getLocation());
-            if (resource.getName() != null) {
+            escapeAndAppend(resource.getLocation());
+            if (resource.getHint() != null) {
                 append("\" title=\"");
-                appendAndEscape(resource.getName());
+                escapeAndAppend(resource.getHint());
             }
             append("\">");
             node.childrenAccept(this);
@@ -218,7 +204,7 @@ public class HtmlGenerator implements Visitor {
         append("<");
         append(node.getName());
         for(TagAttr attr : node.getAttributes()) {
-            append(" ");
+            append(SPACE);
             append(attr.getName());
             append("=\"");
             append(attr.getValue());
@@ -269,7 +255,7 @@ public class HtmlGenerator implements Visitor {
         append("<");
         append(node.getName());
         for (TagAttr attr : node.getAttributes()) {
-            append(" ");
+            append(SPACE);
             append(attr.getName());
             append("=\"");
             append(attr.getValue());
@@ -279,16 +265,16 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Text node) {
-        appendAndEscape(node.getValue());
+        escapeAndAppend(node.getValue());
     }
 
     Resource resolveResource(Image image) {
         if (image.getResource() == null) {
             LinkRef linkRef;
-            if (image.getRefId() == null) {
+            if (image.getResourceName() == null) {
                 linkRef = document.getLinkRef(image.getText());
             } else {
-                linkRef = document.getLinkRef(image.getRefId());
+                linkRef = document.getLinkRef(image.getResourceName());
             }
             return linkRef != null ? linkRef.getResource() : null;
         }
@@ -299,10 +285,10 @@ public class HtmlGenerator implements Visitor {
     Resource resolveResource(Link link) {
         if (link.isReferenced()) {
             LinkRef linkRef = null;
-            if (link.getReferenceName() == null || link.getReferenceName().equals(EMPTY_STRING)) {
+            if (link.getResourceName() == null || link.getResourceName().equals(EMPTY_STRING)) {
                 linkRef = document.getLinkRef(link.getText());
             } else {
-                linkRef = document.getLinkRef(link.getReferenceName());
+                linkRef = document.getLinkRef(link.getResourceName());
             }
             return linkRef != null ? linkRef.getResource() : null;
         }
@@ -320,14 +306,9 @@ public class HtmlGenerator implements Visitor {
         }
     }
 
-    void appendAndEscape(String val) {
-        for(char c : val.toCharArray()) {
-            String escape = ESCAPED_CHARS.get(c);
-            if (escape != null) {
-                append(escape);
-            } else {
-                append(c);
-            }
+    void escapeAndAppend(String val) {
+        for(char character : val.toCharArray()) {
+            append(escape(character));
         }
     }
 
