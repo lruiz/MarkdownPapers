@@ -21,7 +21,7 @@
     <groupId>org.tautua.markdownpapers</groupId>
     <artifactId>markdownpapers-reactor</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.0</version>
+    <version>0.4.0-SNAPSHOT</version>
     <name>MarkdownPapers Reactor POM</name>
     <modules>
         <module>core</module>
