@@ -20,10 +20,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * <p>Represents a markdown document</p>
+ *
  * @author Larry Ruiz
  */
 public class Document extends SimpleNode {
-    private Map<String, LinkRef> linkRefs = new HashMap();
+    private Map<String, Resource> namedResources = new HashMap<String, Resource>();
 
     public Document(int id) {
         super(id);
@@ -33,14 +35,15 @@ public class Document extends SimpleNode {
         super(p, id);
     }
 
-    public LinkRef getLinkRef(String id) {
-        return linkRefs.get(id);
+    public Resource findResourceByName(String name) {
+        return namedResources.get(name);
     }
 
     @Override
     public void jjtAddChild(Node n, int i) {
         if (n instanceof LinkRef) {
-            linkRefs.put(((LinkRef)n).getId(), (LinkRef)n);
+            LinkRef ref = (LinkRef) n;
+            namedResources.put(ref.getId(), ref.getResource());
         }
 
         super.jjtAddChild(n, i);

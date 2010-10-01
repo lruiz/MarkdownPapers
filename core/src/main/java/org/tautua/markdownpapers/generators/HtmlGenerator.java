@@ -21,7 +21,7 @@ import org.tautua.markdownpapers.grammar.util.*;
 
 import java.io.IOException;
 
-import static org.tautua.markdownpapers.generators.Chars.*;
+import static org.tautua.markdownpapers.generators.Utils.*;
 /**
  * <p>HTML generator.</p>
  *
@@ -270,13 +270,13 @@ public class HtmlGenerator implements Visitor {
 
     Resource resolveResource(Image image) {
         if (image.getResource() == null) {
-            LinkRef linkRef;
-            if (image.getResourceName() == null) {
-                linkRef = document.getLinkRef(image.getText());
+            Resource resource;
+            if (isBlank(image.getResourceName())) {
+                resource = document.findResourceByName(image.getText());
             } else {
-                linkRef = document.getLinkRef(image.getResourceName());
+                resource = document.findResourceByName(image.getResourceName());
             }
-            return linkRef != null ? linkRef.getResource() : null;
+            return resource;
         }
 
         return image.getResource();
@@ -284,13 +284,13 @@ public class HtmlGenerator implements Visitor {
 
     Resource resolveResource(Link link) {
         if (link.isReferenced()) {
-            LinkRef linkRef = null;
-            if (link.getResourceName() == null || link.getResourceName().equals(EMPTY_STRING)) {
-                linkRef = document.getLinkRef(link.getText());
+            Resource resource;
+            if (isBlank(link.getResourceName())) {
+                resource = document.findResourceByName(link.getText());
             } else {
-                linkRef = document.getLinkRef(link.getResourceName());
+                resource = document.findResourceByName(link.getResourceName());
             }
-            return linkRef != null ? linkRef.getResource() : null;
+            return resource;
         }
 
         return link.getResource();
