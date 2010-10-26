@@ -107,7 +107,7 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Image node) {
-        Resource resource = resolveResource(node);
+        Resource resource = node.resolve();
         if (resource == null) {
             append("<img src=\"\" alt=\"");
             escapeAndAppend(node.getText());
@@ -148,7 +148,7 @@ public class HtmlGenerator implements Visitor {
     }
 
     public void visit(Link node) {
-        Resource resource = resolveResource(node);
+        Resource resource = node.resolve();
         if (resource == null) {
             if (node.isReferenced()) {
                 append("[");
@@ -181,8 +181,8 @@ public class HtmlGenerator implements Visitor {
         }
     }
 
-    public void visit(LinkRef node) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void visit(NamedResource node) {
+        // do nothing
     }
 
     public void visit(List node) {
@@ -266,34 +266,6 @@ public class HtmlGenerator implements Visitor {
 
     public void visit(Text node) {
         escapeAndAppend(node.getValue());
-    }
-
-    Resource resolveResource(Image image) {
-        if (image.getResource() == null) {
-            Resource resource;
-            if (isBlank(image.getResourceName())) {
-                resource = document.findResourceByName(image.getText());
-            } else {
-                resource = document.findResourceByName(image.getResourceName());
-            }
-            return resource;
-        }
-
-        return image.getResource();
-    }
-
-    Resource resolveResource(Link link) {
-        if (link.isReferenced()) {
-            Resource resource;
-            if (isBlank(link.getResourceName())) {
-                resource = document.findResourceByName(link.getText());
-            } else {
-                resource = document.findResourceByName(link.getResourceName());
-            }
-            return resource;
-        }
-
-        return link.getResource();
     }
 
     void visitChildrenAndAppendSeparator(Node node, char separator){

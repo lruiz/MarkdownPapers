@@ -16,10 +16,12 @@
 
 package org.tautua.markdownpapers.grammar;
 
+import static org.tautua.markdownpapers.generators.Utils.isBlank;
+
 /**
  * @author Larry Ruiz
  */
-public class Image extends SimpleNode {
+public class Image extends SimpleNode implements ResourceHolder {
     private String resourceName;
     private String text;
     private Resource resource;
@@ -59,5 +61,17 @@ public class Image extends SimpleNode {
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+
+    public Resource resolve() {
+        if (resource == null) {
+            if (isBlank(resourceName)) {
+                resource = getDocument().findResourceByName(text);
+            } else {
+                resource = getDocument().findResourceByName(resourceName);
+            }
+        }
+
+        return resource;
     }
 }

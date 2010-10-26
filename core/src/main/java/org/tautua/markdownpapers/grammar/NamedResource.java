@@ -16,42 +16,35 @@
 
 package org.tautua.markdownpapers.grammar;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * <p>Represents a markdown document</p>
- *
  * @author Larry Ruiz
  */
-public class Document extends SimpleNode {
-    private Map<String, Resource> namedResources = new HashMap<String, Resource>();
+public class NamedResource extends SimpleNode {
+    private String id;
+    private Resource resource;
 
-    public Document(int id) {
+    public NamedResource(int id) {
         super(id);
     }
 
-    public Document(Parser p, int id) {
+    public NamedResource(Parser p, int id) {
         super(p, id);
     }
 
-    @Override
-    protected Document getDocument() {
-        return this;
+    public String getId() {
+        return id;
     }
 
-    public Resource findResourceByName(String name) {
-        return namedResources.get(name);
+    public void setId(String id) {
+        this.id = id;
     }
 
-    @Override
-    public void jjtAddChild(Node n, int i) {
-        if (n instanceof NamedResource) {
-            NamedResource r = (NamedResource) n;
-            namedResources.put(r.getId(), r.getResource());
-        }
+    public Resource getResource() {
+        return resource;
+    }
 
-        super.jjtAddChild(n, i);
+    public void setResource(Resource resource) {
+        this.resource = resource;
     }
 
     @Override
@@ -59,4 +52,3 @@ public class Document extends SimpleNode {
         visitor.visit(this);
     }
 }
-

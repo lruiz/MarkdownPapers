@@ -21,11 +21,13 @@ package org.tautua.markdownpapers.grammar;
  */
 public class SimpleNode implements Node {
     private static final Node[] EMPTY_ARRAY = new Node[0];
+
     protected Node parent;
     protected Node[] children = EMPTY_ARRAY;
     protected int id;
     protected Object value;
     protected Parser parser;
+    private Document document;
 
     public SimpleNode(int i) {
         id = i;
@@ -34,6 +36,15 @@ public class SimpleNode implements Node {
     public SimpleNode(Parser p, int i) {
         this(i);
         parser = p;
+    }
+
+    protected Document getDocument() {
+        if (document != null) {
+            return document;
+        }
+
+        document = ((SimpleNode)parent).getDocument();
+        return document;
     }
 
     public void jjtOpen() {

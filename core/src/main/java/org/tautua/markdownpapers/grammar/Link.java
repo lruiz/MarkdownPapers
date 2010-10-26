@@ -16,10 +16,12 @@
 
 package org.tautua.markdownpapers.grammar;
 
+import static org.tautua.markdownpapers.generators.Utils.isBlank;
+
 /**
  * @author Larry Ruiz
  */
-public class Link extends SimpleNode {
+public class Link extends SimpleNode implements ResourceHolder {
     private Type type = Type.REFERENCED;
     private String resourceName;
     private Resource resource;
@@ -85,6 +87,18 @@ public class Link extends SimpleNode {
 
     public void setWhitespaceAtMiddle() {
         whitespaceAtMiddle = true;
+    }
+
+    public Resource resolve() {
+        if (resource == null) {
+            if (isBlank(resourceName)) {
+                resource = getDocument().findResourceByName(getText());
+            } else {
+                resource = getDocument().findResourceByName(resourceName);
+            }
+        }
+
+        return resource;
     }
 
     @Override
