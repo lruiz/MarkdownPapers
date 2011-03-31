@@ -304,6 +304,11 @@ public class HtmlGenerator implements Visitor {
         markupStack.push(node.jjtGetChild(0).jjtGetChild(0));
     }
 
+    /**
+     * Find out if the paragraph starts with a balanced tag then we are in markup block.
+     * @param node
+     * @return
+     */
     private boolean isMarkup(Paragraph node) {
         Node grandson = node.jjtGetChild(0).jjtGetChild(0);
         return grandson instanceof OpeningTag && ((OpeningTag)grandson).isBalanced();

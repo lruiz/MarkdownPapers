@@ -27,8 +27,8 @@
     <inceptionYear>2009</inceptionYear>
     <packaging>pom</packaging>
     <organization>
-        <name>Tautua Software</name>
-        <url>www.tautua.com</url>
+        <name>Tautua</name>
+        <url>http://www.tautua.org</url>
     </organization>
     <licenses>
         <license>
@@ -59,11 +59,15 @@
             <id>lruiz</id>
             <name>Larry Ruiz</name>
             <email>lruiz@tautua.com</email>
-            <organization>Tautua Software</organization>
-            <organizationUrl>http://www.tautua.com</organizationUrl>
             <timezone>-6</timezone>
         </developer>
     </developers>
+    <contributors>
+        <contributor>
+            <name>Sabri Mahmud</name>
+            <timezone>-6</timezone>
+        </contributor>
+    </contributors>
     <profiles>
         <profile>
             <id>live</id>
