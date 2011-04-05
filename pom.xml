@@ -29,6 +29,7 @@
     <packaging>pom</packaging>
     <name>MarkdownPapers Reactor POM</name>
     <modules>
+        <module>parent</module>
         <module>core</module>
         <module>cli</module>
     </modules>
