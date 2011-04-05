@@ -30,10 +30,6 @@ public class Image extends SimpleNode implements ResourceHolder {
         super(id);
     }
 
-    public Image(Parser p, int id) {
-        super(p, id);
-    }
-
     public String getResourceName() {
         return resourceName;
     }

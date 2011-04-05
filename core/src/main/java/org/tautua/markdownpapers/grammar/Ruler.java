@@ -24,10 +24,6 @@ public class Ruler extends SimpleNode {
         super(id);
     }
 
-    public Ruler(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

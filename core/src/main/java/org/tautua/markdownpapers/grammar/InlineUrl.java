@@ -26,10 +26,6 @@ public class InlineUrl extends SimpleNode {
         super(id);
     }
 
-    public InlineUrl(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

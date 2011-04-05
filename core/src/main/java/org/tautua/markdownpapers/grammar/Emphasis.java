@@ -27,10 +27,6 @@ public class Emphasis extends SimpleNode {
         super(id);
     }
 
-    public Emphasis(Parser p, int id) {
-        super(p, id);
-    }
-
     public String getText() {
         return text;
     }

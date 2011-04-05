@@ -29,10 +29,6 @@ public class EmptyTag extends Tag {
         super(id);
     }
 
-    public EmptyTag(Parser p, int id) {
-        super(p, id);
-    }
-
     public void setName(String name) {
         this.name = name;
     }

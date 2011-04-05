@@ -26,10 +26,6 @@ public class CodeSpan extends SimpleNode {
         super(id);
     }
 
-    public CodeSpan(Parser p, int id) {
-        super(p, id);
-    }
-
     public String getText() {
         return text;
     }

@@ -26,10 +26,6 @@ public class List extends SimpleNode {
         super(id);
     }
 
-    public List(Parser p, int id) {
-        super(p, id);
-    }
-
     public int getIndentation() {
         return indentation;
     }

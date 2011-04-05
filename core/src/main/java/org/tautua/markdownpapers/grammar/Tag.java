@@ -22,10 +22,6 @@ package org.tautua.markdownpapers.grammar;
 public class Tag extends SimpleNode {
     protected String name;
 
-    public Tag(Parser p, int i) {
-        super(p, i);
-    }
-
     public Tag(int i) {
         super(i);
     }

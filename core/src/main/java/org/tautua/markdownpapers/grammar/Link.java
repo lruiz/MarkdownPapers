@@ -36,10 +36,6 @@ public class Link extends SimpleNode implements ResourceHolder {
         super(id);
     }
 
-    public Link(Parser p, int id) {
-        super(p, id);
-    }
-
     public String getText() {
         StringBuilder buff = new StringBuilder();
         for (Node child : children) {

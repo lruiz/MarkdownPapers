@@ -31,10 +31,6 @@ public class OpeningTag extends Tag {
         super(id);
     }
 
-    public OpeningTag(Parser p, int id) {
-        super(p, id);
-    }
-
     public void setName(String name) {
         this.name = name;
     }

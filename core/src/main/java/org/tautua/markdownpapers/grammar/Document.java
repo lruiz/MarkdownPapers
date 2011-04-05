@@ -31,10 +31,6 @@ public class Document extends SimpleNode {
         super(id);
     }
 
-    public Document(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     protected Document getDocument() {
         return this;

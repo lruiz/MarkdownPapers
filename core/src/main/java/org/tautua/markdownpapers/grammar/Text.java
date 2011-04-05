@@ -26,10 +26,6 @@ public class Text extends SimpleNode {
         super(id);
     }
 
-    public Text(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

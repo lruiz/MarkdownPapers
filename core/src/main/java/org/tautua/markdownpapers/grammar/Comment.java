@@ -26,10 +26,6 @@ public class Comment extends SimpleNode {
         super(i);
     }
 
-    public Comment(Parser p, int i) {
-        super(p, i);
-    }
-
     public String getText() {
         return text;
     }

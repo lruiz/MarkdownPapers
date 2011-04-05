@@ -29,10 +29,6 @@ public class Item extends SimpleNode {
         super(id);
     }
 
-    public Item(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

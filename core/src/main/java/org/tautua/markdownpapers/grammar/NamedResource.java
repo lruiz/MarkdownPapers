@@ -27,10 +27,6 @@ public class NamedResource extends SimpleNode {
         super(id);
     }
 
-    public NamedResource(Parser p, int id) {
-        super(p, id);
-    }
-
     public String getId() {
         return id;
     }

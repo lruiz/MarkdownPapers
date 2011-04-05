@@ -25,10 +25,6 @@ public class ClosingTag extends Tag {
         super(id);
     }
 
-    public ClosingTag(Parser p, int id) {
-        super(p, id);
-    }
-
     public void setName(String name) {
         this.name = name;
     }

@@ -24,10 +24,6 @@ public class Line extends SimpleNode {
         super(id);
     }
 
-    public Line(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

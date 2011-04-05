@@ -26,16 +26,10 @@ public class SimpleNode implements Node {
     protected Node[] children = EMPTY_ARRAY;
     protected int id;
     protected Object value;
-    protected Parser parser;
     private Document document;
 
     public SimpleNode(int i) {
         id = i;
-    }
-
-    public SimpleNode(Parser p, int i) {
-        this(i);
-        parser = p;
     }
 
     protected Document getDocument() {

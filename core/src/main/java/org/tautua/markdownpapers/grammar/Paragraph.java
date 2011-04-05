@@ -24,10 +24,6 @@ public class Paragraph extends SimpleNode {
         super(id);
     }
 
-    public Paragraph(Parser p, int id) {
-        super(p, id);
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
