@@ -17,7 +17,7 @@
 package org.tautua.markdownpapers;
 
 import org.tautua.markdownpapers.generators.HtmlGenerator;
-import org.tautua.markdownpapers.grammar.Document;
+import org.tautua.markdownpapers.ast.Document;
 import org.tautua.markdownpapers.grammar.ParseException;
 import org.tautua.markdownpapers.grammar.Parser;
 

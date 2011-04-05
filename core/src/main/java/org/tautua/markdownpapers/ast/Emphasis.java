@@ -14,16 +14,29 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class CharRef extends SimpleNode {
-    private String value;
+public class Emphasis extends SimpleNode {
+    private String text;
+    private Type type = Type.ITALIC;
 
-    public CharRef(int id) {
+    public Emphasis(int id) {
         super(id);
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public Type getType() {
+        return type;
     }
 
     @Override
@@ -31,11 +44,21 @@ public class CharRef extends SimpleNode {
         visitor.visit(this);
     }
 
-    public String getValue() {
-        return value;
+    public void makeItalic() {
+        type = Type.ITALIC;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void makeBold() {
+        type = Type.BOLD;
+    }
+
+    public void makeItalicAndBold() {
+        type = Type.ITALIC_AND_BOLD;
+    }
+
+    public static enum Type {
+        ITALIC,
+        BOLD,
+        ITALIC_AND_BOLD,
     }
 }

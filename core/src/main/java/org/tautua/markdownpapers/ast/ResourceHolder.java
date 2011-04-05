@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
- * @author Larry Ruiz
+ * @author Larry Ruiz, 10/25/2010
  */
-public class Ruler extends SimpleNode {
-    public Ruler(int id) {
-        super(id);
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
+public interface ResourceHolder {
+    Resource resolve();
 }

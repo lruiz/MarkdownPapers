@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class InlineUrl extends SimpleNode {
-    private String url;
+public class CodeSpan extends SimpleNode {
+    private String text;
 
-    public InlineUrl(int id) {
+    public CodeSpan(int id) {
         super(id);
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
     }
 }

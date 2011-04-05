@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class TagAttr {
-    private String name;
+public class CharRef extends SimpleNode {
     private String value;
 
-    public TagAttr(String name, String value) {
-        this.name = name;
-        this.value = value;
+    public CharRef(int id) {
+        super(id);
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 
     public String getValue() {
         return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 }

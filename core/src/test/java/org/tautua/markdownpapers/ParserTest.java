@@ -23,7 +23,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.tautua.markdownpapers.grammar.Document;
+import org.tautua.markdownpapers.ast.Document;
 import org.tautua.markdownpapers.grammar.Parser;
 import org.tautua.markdownpapers.grammar.ParseException;
 

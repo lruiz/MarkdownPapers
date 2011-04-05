@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 import static org.tautua.markdownpapers.generators.Utils.isBlank;
 

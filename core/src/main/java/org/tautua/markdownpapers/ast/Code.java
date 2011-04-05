@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class Quote extends SimpleNode {
-    public Quote(int id) {
+public class Code extends SimpleNode {
+    public Code(int id) {
         super(id);
     }
 

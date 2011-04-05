@@ -14,22 +14,32 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
+ * <p>Represents a resource which include location and an additional hint information,
+ * it could be a webpage or image</p>
+ * 
  * @author Larry Ruiz
  */
-public class Line extends SimpleNode {
-    public Line(int id) {
-        super(id);
+public class Resource {
+    private String location;
+    private String hint;
+
+    public Resource(String location) {
+        this.location = location;
     }
 
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
+    public Resource(String location, String hint) {
+        this.location = location;
+        this.hint = hint;
     }
 
-    public boolean isEmpty() {
-        return children.length == 0;
+    public String getLocation() {
+        return location;
+    }
+
+    public String getHint() {
+        return hint;
     }
 }

@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class Tag extends SimpleNode {
-    protected String name;
-
-    public Tag(int i) {
-        super(i);
+public class Ruler extends SimpleNode {
+    public Ruler(int id) {
+        super(id);
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

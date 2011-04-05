@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class ClosingTag extends Tag {
-
-    public ClosingTag(int id) {
+public class Line extends SimpleNode {
+    public Line(int id) {
         super(id);
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+
+    public boolean isEmpty() {
+        return children.length == 0;
     }
 }

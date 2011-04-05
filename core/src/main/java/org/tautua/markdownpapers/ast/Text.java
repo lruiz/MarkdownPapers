@@ -14,28 +14,41 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class Comment extends SimpleNode {
-    private String text;
+public class Text extends SimpleNode {
+    private StringBuilder buffer = new StringBuilder();
 
-    public Comment(int i) {
-        super(i);
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
+    public Text(int id) {
+        super(id);
     }
 
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+
+    public void append(String str) {
+        buffer.append(str);
+    }
+
+    public void append(char c) {
+        buffer.append(c);
+    }
+
+    public String getValue() {
+        return buffer.toString();
+    }
+
+    public boolean isWhitespace() {
+        return buffer.toString().trim().length() == 0;
+    }
+
+    @Override
+    public String toString() {
+        return buffer.toString();
     }
 }

@@ -24,11 +24,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized.Parameters;
-import org.tautua.markdownpapers.generators.HtmlGenerator;
-import org.tautua.markdownpapers.grammar.Document;
-import org.tautua.markdownpapers.grammar.ParseException;
-import org.tautua.markdownpapers.grammar.Parser;
-import org.tautua.markdownpapers.Markdown;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;

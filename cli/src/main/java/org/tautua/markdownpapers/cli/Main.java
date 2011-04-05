@@ -19,7 +19,7 @@ package org.tautua.markdownpapers.cli;
 import org.apache.commons.cli.*;
 import org.tautua.markdownpapers.Markdown;
 import org.tautua.markdownpapers.generators.HtmlGenerator;
-import org.tautua.markdownpapers.grammar.Document;
+import org.tautua.markdownpapers.ast.Document;
 
 import java.io.*;
 import java.util.*;

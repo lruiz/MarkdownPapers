@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
+import java.util.*;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * @author Larry Ruiz
  */
-public class OpeningTag extends Tag {
-    private java.util.List<TagAttr> attributes = new ArrayList<TagAttr>();
-    private ClosingTag closingTag;
+public class EmptyTag extends Tag {
+    private java.util.List<TagAttr> attributes = new ArrayList();
 
-
-    public OpeningTag(int id) {
+    public EmptyTag(int id) {
         super(id);
     }
 
@@ -47,20 +45,9 @@ public class OpeningTag extends Tag {
         attributes.add(attr);
     }
 
-    public ClosingTag getClosingTag() {
-        return closingTag;
-    }
-
-    public void setClosingTag(ClosingTag closingTag) {
-        this.closingTag = closingTag;
-    }
-
-    public boolean isBalanced() {
-        return closingTag != null;
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
 }
+

@@ -42,6 +42,10 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <!-- the plugin doesn't read it from the .jjt file -->
+                    <nodePackage>org.tautua.markdownpapers.ast</nodePackage>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>

@@ -14,11 +14,32 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
- * @author Larry Ruiz, 10/25/2010
+ * @author Larry Ruiz
  */
-public interface ResourceHolder {
-    Resource resolve();
+public class CodeText extends SimpleNode {
+    private StringBuilder buffer = new StringBuilder();
+
+    public CodeText(int id) {
+        super(id);
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+    public void append(String str) {
+        buffer.append(str);
+    }
+
+    public void append(char c) {
+        buffer.append(c);
+    }
+
+    public String getValue() {
+        return buffer.toString();
+    }
 }

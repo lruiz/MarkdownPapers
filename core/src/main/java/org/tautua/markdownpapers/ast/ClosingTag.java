@@ -14,40 +14,19 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
-
-import java.util.HashMap;
-import java.util.Map;
+package org.tautua.markdownpapers.ast;
 
 /**
- * <p>Represents a markdown document</p>
- *
  * @author Larry Ruiz
  */
-public class Document extends SimpleNode {
-    private Map<String, Resource> namedResources = new HashMap<String, Resource>();
+public class ClosingTag extends Tag {
 
-    public Document(int id) {
+    public ClosingTag(int id) {
         super(id);
     }
 
-    @Override
-    protected Document getDocument() {
-        return this;
-    }
-
-    public Resource findResourceByName(String name) {
-        return namedResources.get(name);
-    }
-
-    @Override
-    public void jjtAddChild(Node n, int i) {
-        if (n instanceof NamedResource) {
-            NamedResource r = (NamedResource) n;
-            namedResources.put(r.getId(), r.getResource());
-        }
-
-        super.jjtAddChild(n, i);
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
@@ -55,4 +34,3 @@ public class Document extends SimpleNode {
         visitor.visit(this);
     }
 }
-

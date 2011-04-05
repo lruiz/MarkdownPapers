@@ -14,35 +14,14 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
-
-import java.util.*;
-import java.util.List;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class EmptyTag extends Tag {
-    private java.util.List<TagAttr> attributes = new ArrayList();
-
-    public EmptyTag(int id) {
+public class Quote extends SimpleNode {
+    public Quote(int id) {
         super(id);
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public java.util.List<TagAttr> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<TagAttr> attributes) {
-        this.attributes = attributes;
-    }
-
-    public void addAttr(TagAttr attr) {
-        attributes.add(attr);
     }
 
     @Override
@@ -50,4 +29,3 @@ public class EmptyTag extends Tag {
         visitor.visit(this);
     }
 }
-

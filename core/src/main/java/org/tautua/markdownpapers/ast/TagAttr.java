@@ -14,32 +14,25 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
- * <p>Represents a resource which include location and an additional hint information,
- * it could be a webpage or image</p>
- * 
  * @author Larry Ruiz
  */
-public class Resource {
-    private String location;
-    private String hint;
+public class TagAttr {
+    private String name;
+    private String value;
 
-    public Resource(String location) {
-        this.location = location;
+    public TagAttr(String name, String value) {
+        this.name = name;
+        this.value = value;
     }
 
-    public Resource(String location, String hint) {
-        this.location = location;
-        this.hint = hint;
+    public String getName() {
+        return name;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public String getHint() {
-        return hint;
+    public String getValue() {
+        return value;
     }
 }

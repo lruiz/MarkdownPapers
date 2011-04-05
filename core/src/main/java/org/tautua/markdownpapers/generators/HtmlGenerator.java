@@ -16,7 +16,7 @@
 
 package org.tautua.markdownpapers.generators;
 
-import org.tautua.markdownpapers.grammar.*;
+import org.tautua.markdownpapers.ast.*;
 import org.tautua.markdownpapers.grammar.util.*;
 
 import java.io.IOException;

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.ast;
 
 /**
  * @author Larry Ruiz
  */
-public class Text extends SimpleNode {
-    private StringBuilder buffer = new StringBuilder();
+public class InlineUrl extends SimpleNode {
+    private String url;
 
-    public Text(int id) {
+    public InlineUrl(int id) {
         super(id);
     }
 
@@ -31,24 +31,11 @@ public class Text extends SimpleNode {
         visitor.visit(this);
     }
 
-    public void append(String str) {
-        buffer.append(str);
+    public String getUrl() {
+        return url;
     }
 
-    public void append(char c) {
-        buffer.append(c);
-    }
-
-    public String getValue() {
-        return buffer.toString();
-    }
-
-    public boolean isWhitespace() {
-        return buffer.toString().trim().length() == 0;
-    }
-
-    @Override
-    public String toString() {
-        return buffer.toString();
+    public void setUrl(String url) {
+        this.url = url;
     }
 }
