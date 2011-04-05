@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.grammar.util;
+package org.tautua.markdownpapers.util;
 
 /**
  * <p>Stack representation - LIFO.</p>

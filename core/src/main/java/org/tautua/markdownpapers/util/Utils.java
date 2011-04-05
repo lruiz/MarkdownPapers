@@ -1,4 +1,4 @@
-package org.tautua.markdownpapers.generators;
+package org.tautua.markdownpapers.util;
 
 import java.util.HashMap;
 import java.util.Map;

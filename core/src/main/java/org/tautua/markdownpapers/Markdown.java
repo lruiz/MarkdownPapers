@@ -16,7 +16,6 @@
 
 package org.tautua.markdownpapers;
 
-import org.tautua.markdownpapers.generators.HtmlGenerator;
 import org.tautua.markdownpapers.ast.Document;
 import org.tautua.markdownpapers.grammar.ParseException;
 import org.tautua.markdownpapers.grammar.Parser;
@@ -30,8 +29,8 @@ import java.io.Writer;
 public class Markdown {
     public void transform(Reader in, Writer out) throws ParseException {
         Parser parser = new Parser(in);
-        HtmlGenerator generator = new HtmlGenerator(out);
+        HtmlEmitter emitter = new HtmlEmitter(out);
         Document document = parser.parse();
-        generator.visit(document);
+        emitter.visit(document);
     }
 }

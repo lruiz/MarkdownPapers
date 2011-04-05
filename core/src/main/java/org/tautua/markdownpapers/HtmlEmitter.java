@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package org.tautua.markdownpapers.generators;
+package org.tautua.markdownpapers;
 
 import org.tautua.markdownpapers.ast.*;
-import org.tautua.markdownpapers.grammar.util.*;
+import org.tautua.markdownpapers.util.DequeStack;
+import org.tautua.markdownpapers.util.Stack;
 
 import java.io.IOException;
 
-import static org.tautua.markdownpapers.generators.Utils.*;
+import static org.tautua.markdownpapers.util.Utils.*;
 /**
  * <p>HTML generator.</p>
  *
  * @author Larry Ruiz
  */
-public class HtmlGenerator implements Visitor {
+public class HtmlEmitter implements Visitor {
     private Appendable buffer;
     private Document document;
     private Stack<Node> markupStack = new DequeStack<Node>();
 
-    public HtmlGenerator(Appendable buffer) {
+    public HtmlEmitter(Appendable buffer) {
         this.buffer = buffer;
     }
 

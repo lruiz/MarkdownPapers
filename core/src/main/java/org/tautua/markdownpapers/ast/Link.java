@@ -16,7 +16,7 @@
 
 package org.tautua.markdownpapers.ast;
 
-import static org.tautua.markdownpapers.generators.Utils.isBlank;
+import static org.tautua.markdownpapers.util.Utils.isBlank;
 
 /**
  * @author Larry Ruiz

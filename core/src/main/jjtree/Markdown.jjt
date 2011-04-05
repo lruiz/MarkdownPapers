@@ -21,7 +21,7 @@ PARSER_BEGIN(Parser)
 package org.tautua.markdownpapers.grammar;
 
 import org.tautua.markdownpapers.ast.*;
-import org.tautua.markdownpapers.grammar.util.*;
+import org.tautua.markdownpapers.util.*;
 
 public class Parser {
     private static final String EMPTY_STRING = "";
