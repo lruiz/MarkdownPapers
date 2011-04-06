@@ -18,7 +18,7 @@ options {
 }
 
 PARSER_BEGIN(Parser)
-package org.tautua.markdownpapers.grammar;
+package org.tautua.markdownpapers.parser;
 
 import org.tautua.markdownpapers.ast.*;
 import org.tautua.markdownpapers.util.*;

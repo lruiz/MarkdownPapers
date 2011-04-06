@@ -17,8 +17,8 @@
 package org.tautua.markdownpapers;
 
 import org.tautua.markdownpapers.ast.Document;
-import org.tautua.markdownpapers.grammar.ParseException;
-import org.tautua.markdownpapers.grammar.Parser;
+import org.tautua.markdownpapers.parser.ParseException;
+import org.tautua.markdownpapers.parser.Parser;
 
 import java.io.Reader;
 import java.io.Writer;

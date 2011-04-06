@@ -118,7 +118,7 @@ public class Main {
                 + OUTPUT_EXTENSION);
     }
 
-    public void transform(Reader in, Writer out) throws org.tautua.markdownpapers.grammar.ParseException {
+    public void transform(Reader in, Writer out) throws org.tautua.markdownpapers.parser.ParseException {
         Markdown md = new Markdown();
         md.transform(in, out);
     }

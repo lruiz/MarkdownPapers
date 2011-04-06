@@ -24,8 +24,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.tautua.markdownpapers.ast.Document;
-import org.tautua.markdownpapers.grammar.Parser;
-import org.tautua.markdownpapers.grammar.ParseException;
+import org.tautua.markdownpapers.parser.Parser;
+import org.tautua.markdownpapers.parser.ParseException;
 
 import static org.junit.Assert.assertNotNull;
 
