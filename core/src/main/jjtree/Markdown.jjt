@@ -763,8 +763,8 @@ void Image() #Image : {
 
 void Tag() : {
     Token t;
-    TagAttr attr;
-    java.util.List<TagAttr> attributes = new java.util.ArrayList<TagAttr>();
+    TagAttribute attribute;
+    java.util.List<TagAttribute> attributes = new java.util.ArrayList<TagAttribute>();
 } {
     (
     LOOKAHEAD(2)
@@ -786,7 +786,7 @@ void Tag() : {
     "<" t = <TEXT>
     (
         LOOKAHEAD( ( <SPACE> )+ <TEXT> )
-        ( <SPACE> )+ attr = TagAttribute() { attributes.add(attr); }
+        ( <SPACE> )+ attribute = TagAttribute() { attributes.add(attribute); }
     )* ( <SPACE> )*
     (
         "/" ">" #EmptyTag { EmptyTag emptytag = (EmptyTag)jjtree.peekNode(); emptytag.setName(t.image); emptytag.setAttributes(attributes); }
@@ -794,7 +794,7 @@ void Tag() : {
     )
 }
 
-TagAttr TagAttribute() : {
+TagAttribute TagAttribute() : {
     StringBuilder buff = new StringBuilder();
     Token attrName;
     Token t;
@@ -846,7 +846,7 @@ TagAttr TagAttribute() : {
         <SINGLE_QUOTE>
     )
     {
-        return new TagAttr(attrName.image, buff.toString());
+        return new TagAttribute(attrName.image, buff.toString());
     }
 }
 

@@ -204,11 +204,11 @@ public class HtmlEmitter implements Visitor {
     public void visit(OpeningTag node) {
         append("<");
         append(node.getName());
-        for(TagAttr attr : node.getAttributes()) {
+        for(TagAttribute attribute : node.getAttributes()) {
             append(SPACE);
-            append(attr.getName());
+            append(attribute.getName());
             append("=\"");
-            append(attr.getValue());
+            append(attribute.getValue());
             append("\"");
         }
         append(">");
@@ -255,11 +255,11 @@ public class HtmlEmitter implements Visitor {
     public void visit(EmptyTag node) {
         append("<");
         append(node.getName());
-        for (TagAttr attr : node.getAttributes()) {
+        for (TagAttribute attribute : node.getAttributes()) {
             append(SPACE);
-            append(attr.getName());
+            append(attribute.getName());
             append("=\"");
-            append(attr.getValue());
+            append(attribute.getValue());
             append("\"");
         }
         append("/>");

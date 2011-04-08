@@ -19,11 +19,11 @@ package org.tautua.markdownpapers.ast;
 /**
  * @author Larry Ruiz
  */
-public class TagAttr {
+public class TagAttribute {
     private String name;
     private String value;
 
-    public TagAttr(String name, String value) {
+    public TagAttribute(String name, String value) {
         this.name = name;
         this.value = value;
     }

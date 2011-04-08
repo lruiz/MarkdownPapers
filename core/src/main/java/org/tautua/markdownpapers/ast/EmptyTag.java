@@ -23,7 +23,7 @@ import java.util.List;
  * @author Larry Ruiz
  */
 public class EmptyTag extends Tag {
-    private java.util.List<TagAttr> attributes = new ArrayList();
+    private java.util.List<TagAttribute> attributes = new ArrayList();
 
     public EmptyTag(int id) {
         super(id);
@@ -33,16 +33,16 @@ public class EmptyTag extends Tag {
         this.name = name;
     }
 
-    public java.util.List<TagAttr> getAttributes() {
+    public java.util.List<TagAttribute> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<TagAttr> attributes) {
+    public void setAttributes(List<TagAttribute> attributes) {
         this.attributes = attributes;
     }
 
-    public void addAttr(TagAttr attr) {
-        attributes.add(attr);
+    public void addAttr(TagAttribute attribute) {
+        attributes.add(attribute);
     }
 
     @Override
