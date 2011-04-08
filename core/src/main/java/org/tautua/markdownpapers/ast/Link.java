@@ -21,16 +21,11 @@ import static org.tautua.markdownpapers.util.Utils.isBlank;
 /**
  * @author Larry Ruiz
  */
-public class Link extends SimpleNode implements ResourceHolder {
-    private Type type = Type.REFERENCED;
-    private String resourceName;
+public class Link extends SimpleNode implements ResourceReference {
+    private boolean inline = false;
+    private String reference;
     private Resource resource;
     private boolean whitespaceAtMiddle = false;
-
-    public enum Type {
-        INLINE,
-        REFERENCED
-    }
 
     public Link(int id) {
         super(id);
@@ -55,26 +50,33 @@ public class Link extends SimpleNode implements ResourceHolder {
         return buff.toString();
     }
 
-    public String getResourceName() {
-        return resourceName;
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 
     public Resource getResource() {
+        if (resource == null) {
+            if (isBlank(reference)) {
+                resource = getDocument().findResource(getText());
+            } else {
+                resource = getDocument().findResource(reference);
+            }
+        }
+
         return resource;
     }
 
-    public void makeReferenced(String resourceName) {
-        type = Type.REFERENCED;
-        this.resourceName = resourceName;
-    }
-
-    public void makeInline(Resource resource) {
-        type = Type.INLINE;
+    public void setResource(Resource resource) {
+        inline = true;
         this.resource = resource;
     }
 
     public boolean isReferenced() {
-        return type == Type.REFERENCED;
+        return !inline;
     }
 
     public boolean hasWhitespaceAtMiddle() {
@@ -83,18 +85,6 @@ public class Link extends SimpleNode implements ResourceHolder {
 
     public void setWhitespaceAtMiddle() {
         whitespaceAtMiddle = true;
-    }
-
-    public Resource resolve() {
-        if (resource == null) {
-            if (isBlank(resourceName)) {
-                resource = getDocument().findResourceByName(getText());
-            } else {
-                resource = getDocument().findResourceByName(resourceName);
-            }
-        }
-
-        return resource;
     }
 
     @Override

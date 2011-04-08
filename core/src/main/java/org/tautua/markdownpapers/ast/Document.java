@@ -25,7 +25,7 @@ import java.util.Map;
  * @author Larry Ruiz
  */
 public class Document extends SimpleNode {
-    private Map<String, Resource> namedResources = new HashMap<String, Resource>();
+    private Map<String, Resource> resourceDefinitions = new HashMap<String, Resource>();
 
     public Document(int id) {
         super(id);
@@ -36,15 +36,15 @@ public class Document extends SimpleNode {
         return this;
     }
 
-    public Resource findResourceByName(String name) {
-        return namedResources.get(name);
+    public Resource findResource(String id) {
+        return resourceDefinitions.get(id);
     }
 
     @Override
     public void jjtAddChild(Node n, int i) {
-        if (n instanceof NamedResource) {
-            NamedResource r = (NamedResource) n;
-            namedResources.put(r.getId(), r.getResource());
+        if (n instanceof ResourceDefinition) {
+            ResourceDefinition r = (ResourceDefinition) n;
+            resourceDefinitions.put(r.getId(), r.getResource());
         }
 
         super.jjtAddChild(n, i);

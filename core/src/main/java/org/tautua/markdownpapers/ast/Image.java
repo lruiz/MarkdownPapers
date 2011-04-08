@@ -21,8 +21,8 @@ import static org.tautua.markdownpapers.util.Utils.isBlank;
 /**
  * @author Larry Ruiz
  */
-public class Image extends SimpleNode implements ResourceHolder {
-    private String resourceName;
+public class Image extends SimpleNode implements ResourceReference {
+    private String reference;
     private String text;
     private Resource resource;
 
@@ -30,12 +30,12 @@ public class Image extends SimpleNode implements ResourceHolder {
         super(id);
     }
 
-    public String getResourceName() {
-        return resourceName;
+    public String getReference() {
+        return reference;
     }
 
-    public void setResourceName(String resourceName) {
-        this.resourceName = resourceName;
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 
     public String getText() {
@@ -47,6 +47,14 @@ public class Image extends SimpleNode implements ResourceHolder {
     }
 
     public Resource getResource() {
+        if (resource == null) {
+            if (isBlank(reference)) {
+                resource = getDocument().findResource(text);
+            } else {
+                resource = getDocument().findResource(reference);
+            }
+        }
+
         return resource;
     }
 
@@ -57,17 +65,5 @@ public class Image extends SimpleNode implements ResourceHolder {
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
-    }
-
-    public Resource resolve() {
-        if (resource == null) {
-            if (isBlank(resourceName)) {
-                resource = getDocument().findResourceByName(text);
-            } else {
-                resource = getDocument().findResourceByName(resourceName);
-            }
-        }
-
-        return resource;
     }
 }

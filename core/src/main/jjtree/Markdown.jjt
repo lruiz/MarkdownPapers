@@ -373,11 +373,11 @@ void Document() #Document : {} {
 }
 
 void Element() : {} {
-    LOOKAHEAD( NamedResource() ) DocumentElement() | BlockElement()
+    LOOKAHEAD( ResourceDefinition() ) DocumentElement() | BlockElement()
 }
 
 void DocumentElement() : {} {
-    NamedResource()
+    ResourceDefinition()
 }
 
 void BlockElement() : {} {
@@ -524,7 +524,7 @@ void CodeText() #CodeText : {
 }
 
 
-void NamedResource() #NamedResource : {
+void ResourceDefinition() #ResourceDefinition : {
     String n = null;
     Resource resource;
 } {
@@ -708,7 +708,7 @@ void InlineURL() #InlineUrl : {
 }
 
 void Link() #Link : {
-    String text, resourceName = "";
+    String text, reference = "";
     Resource resource = null;
 } {
     "["
@@ -728,21 +728,21 @@ void Link() #Link : {
         (
             ( <SPACE> { jjtThis.setWhitespaceAtMiddle(); } )? ( <EOL> )?
             "["
-                ( resourceName = refname() )?
-                { jjtThis.makeReferenced(resourceName); }
+                ( reference = refname() )?
+                { jjtThis.setReference(reference); }
             "]"
             |
             "("
                 ( resource = Resource() )?
                 ( Whitespace() )?
-                { jjtThis.makeInline(resource); }
+                { jjtThis.setResource(resource); }
             ")"
         )
     )?
 }
 
 void Image() #Image : {
-    String text, resourceName;
+    String text, reference;
     Resource resource = null;
 } {
     "!" "["
@@ -751,7 +751,7 @@ void Image() #Image : {
     (
         ( <SPACE> )?
         "["
-        resourceName = refname() { jjtThis.setResourceName(resourceName); }
+        reference = refname() { jjtThis.setReference(reference); }
         "]"
         |
         "("

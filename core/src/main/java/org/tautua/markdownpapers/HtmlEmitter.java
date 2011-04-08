@@ -108,7 +108,7 @@ public class HtmlEmitter implements Visitor {
     }
 
     public void visit(Image node) {
-        Resource resource = node.resolve();
+        Resource resource = node.getResource();
         if (resource == null) {
             append("<img src=\"\" alt=\"");
             escapeAndAppend(node.getText());
@@ -149,18 +149,18 @@ public class HtmlEmitter implements Visitor {
     }
 
     public void visit(Link node) {
-        Resource resource = node.resolve();
+        Resource resource = node.getResource();
         if (resource == null) {
             if (node.isReferenced()) {
                 append("[");
                 node.childrenAccept(this);
                 append("]");
-                if (node.getResourceName() != null) {
+                if (node.getReference() != null) {
                     if (node.hasWhitespaceAtMiddle()) {
                         append(' ');
                     }
                     append("[");
-                    append(node.getResourceName());
+                    append(node.getReference());
                     append("]");
                 }
             } else {
@@ -182,7 +182,7 @@ public class HtmlEmitter implements Visitor {
         }
     }
 
-    public void visit(NamedResource node) {
+    public void visit(ResourceDefinition node) {
         // do nothing
     }
 

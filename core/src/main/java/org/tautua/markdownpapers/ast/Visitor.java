@@ -50,7 +50,7 @@ public interface Visitor {
 
     void visit(Line node);
 
-    void visit(NamedResource node);
+    void visit(ResourceDefinition node);
 
     void visit(List node);
 

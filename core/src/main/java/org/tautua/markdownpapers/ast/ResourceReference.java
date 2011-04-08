@@ -17,34 +17,8 @@
 package org.tautua.markdownpapers.ast;
 
 /**
- * @author Larry Ruiz
+ * @author Larry Ruiz, 10/25/2010
  */
-public class NamedResource extends SimpleNode {
-    private String id;
-    private Resource resource;
-
-    public NamedResource(int id) {
-        super(id);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Resource getResource() {
-        return resource;
-    }
-
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
+public interface ResourceReference {
+    Resource getResource();
 }

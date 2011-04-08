@@ -17,8 +17,34 @@
 package org.tautua.markdownpapers.ast;
 
 /**
- * @author Larry Ruiz, 10/25/2010
+ * @author Larry Ruiz
  */
-public interface ResourceHolder {
-    Resource resolve();
+public class ResourceDefinition extends SimpleNode {
+    private String id;
+    private Resource resource;
+
+    public ResourceDefinition(int id) {
+        super(id);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Resource getResource() {
+        return resource;
+    }
+
+    public void setResource(Resource resource) {
+        this.resource = resource;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }
