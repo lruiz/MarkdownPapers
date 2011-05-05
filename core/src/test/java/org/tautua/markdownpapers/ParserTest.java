@@ -50,6 +50,7 @@ public class ParserTest {
                 {getAssetReader("quoteAndList")},
                 {getAssetReader("quotes")},
                 {getAssetReader("rulers")},
+                {getAssetReader("snippets")},
                 {getAssetReader("tags")}
             });
     }

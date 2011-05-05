@@ -2,11 +2,7 @@ options {
     LOOKAHEAD = 1;
     STATIC = false;
     UNICODE_INPUT = true;
-
     MULTI = true;
-    /*
-    NODE_EXTENDS = "org.tautua.markdownpapers.Node";
-    */
     BUILD_NODE_FILES = false;
     NODE_PREFIX = "";
     NODE_DEFAULT_VOID = true;
@@ -92,7 +88,7 @@ public class Parser {
             }
         } while(t.oneOfKind(EOL, SPACE, TAB, GT));
 
-        if (t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING, EOF)) {
+        if (t.oneOfKind(PLUS, MINUS, STAR, NUMBERING, EOF)) {
             return false;
         }
 
@@ -124,7 +120,7 @@ public class Parser {
             return false;
         }
 
-        if (stack.peek() instanceof Item && t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING)) {
+        if (stack.peek() instanceof Item && t.oneOfKind(PLUS, MINUS, STAR, NUMBERING)) {
             return false;
         }
 
@@ -212,7 +208,7 @@ public class Parser {
 
         Item item = (Item)stack.peek();
 
-        return newline && t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING) && item.getIndentation() == t.beginColumn;
+        return newline && t.oneOfKind(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() == t.beginColumn;
     }
 
     boolean TextLookahead() {
@@ -246,7 +242,7 @@ public class Parser {
             }
         } while (t.oneOfKind(EOL, SPACE, TAB, GT));
 
-        if (t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING)
+        if (t.oneOfKind(PLUS, MINUS, STAR, NUMBERING)
             && item.getIndentation() < t.beginColumn) {
             return true;
         }
@@ -270,7 +266,7 @@ public class Parser {
             }
         } while (t.oneOfKind(EOL, SPACE, TAB, GT));
 
-        if (t.oneOfKind(PLUS, MINUS, ASTERISK, NUMBERING)
+        if (t.oneOfKind(PLUS, MINUS, STAR, NUMBERING)
             && list.getIndentation() == t.beginColumn) {
             return true;
         }
@@ -284,7 +280,7 @@ public class Parser {
             int i = 2;
             do {
                 t = getToken(i++);
-            } while (t.noneOfKind(quoteKind, RPARENT, EOL, EOF));
+            } while (t.noneOfKind(quoteKind, RPAREN, EOL, EOF));
 
             return t.kind == quoteKind;
         }
@@ -293,17 +289,17 @@ public class Parser {
     }
 
     boolean NestedParenthesesLookahead() {
-        if (getToken(1).kind == RPARENT) {
+        if (getToken(1).kind == RPAREN) {
             Token t;
             int i = 2;
             do {
                 t = getToken(i++);
-            } while (t.noneOfKind(RPARENT, LT, GT, DOUBLE_QUOTE, SINGLE_QUOTE, SPACE, EOL, EOF));
+            } while (t.noneOfKind(RPAREN, LT, GT, DOUBLE_QUOTE, SINGLE_QUOTE, SPACE, EOL, EOF));
 
-            return t.kind == RPARENT;
+            return t.kind == RPAREN;
         }
 
-        return getToken(1).noneOfKind(RPARENT, LT, GT, DOUBLE_QUOTE, SINGLE_QUOTE, SPACE, EOL, EOF);
+        return getToken(1).noneOfKind(RPAREN, LT, GT, DOUBLE_QUOTE, SINGLE_QUOTE, SPACE, EOL, EOF);
     }
 }
 PARSER_END(Parser)
@@ -318,31 +314,30 @@ TOKEN : {
 /* PUNCTUATION */
 TOKEN : {
     < AMPERSAND : "&" >
+    | < STAR : "*" >
+    | < BACKSLASH : "\\" >
     | < BACKTICK : "`" >
+    | < COLON : ":" >
+    | < EQ : "=" >
     | < EXCLAMATION : "!" >
-    | < SHARP : "#" >
-    | < GT : ">" >
-    | < SINGLE_QUOTE : "'" >
     | < DOUBLE_QUOTE : "\"" >
+    | < GT : ">" >
     | < LT : "<" >
     | < LBRACKET : "[" >
-    | < LPARENT : "(" >
-    | < RBRACKET : "]" >
-    | < RPARENT : ")" >
-    | < COLON : ":" >
-    | < SLASH : "/" >
-    | < BACKSLASH : "\\" >
-    | < EQ : "=" >
-    | < PLUS : "+" >
+    | < LPAREN : "(" >
     | < MINUS : "-" >
-    | < ASTERISK : "*" >
+    | < PLUS : "+" >
+    | < RBRACKET : "]" >
+    | < RPAREN : ")" >
+    | < SHARP : "#" >
+    | < SINGLE_QUOTE : "'" >
+    | < SLASH : "/" >
 }
 
 TOKEN : {
-
     < UNDERSCORE_RULER : "_" ( (" "){0,2} )? "_"  ( ( (" "){0,2} )? "_" )+ >
     | < MINUS_RULER : "-" ( (" "){0,2} )? "-" ( ( (" "){0,2} )? "-" )+ >
-    | < ASTERISK_RULER : "*" ( (" "){0,2} )? "*" ( ( (" "){0,2} )? "*" )+ >
+    | < STAR_RULER : "*" ( (" "){0,2} )? "*" ( ( (" "){0,2} )? "*" )+ >
     | < OP_COMMENT : "<!--" >
     | < CL_COMMENT : "-->" >
 }
@@ -359,7 +354,7 @@ TOKEN : {
     | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
     | < NUMBERING : ( ["0"-"9"] )+ "." >
     | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
-    | < TEXT : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n"] )+ >
+    | < TEXT : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n", "!"] )+ >
     | < #EMP_A : ~["*", " ", "\t", "\r", "\n"] >
     | < #EMP_U : ~["_", " ", "\t", "\r", "\n"] >
 }
@@ -384,10 +379,10 @@ void BlockElement() : {} {
     Header()
     | LOOKAHEAD( SetextHeader() ( <EOL> | <EOF> ) ) SetextHeader()
     | LOOKAHEAD( EmptyLine() ) Whitespace()
-    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER> ) ( <EOL> | <EOF> ) ) Ruler()
+    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <STAR_RULER> ) ( <EOL> | <EOF> ) ) Ruler()
     | LOOKAHEAD( CodeLine() ) Code()
     | LOOKAHEAD( QuotePrefix() ) Quote()
-    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <ASTERISK> | <NUMBERING> ) ) List()
+    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <STAR> | <NUMBERING> ) ) List()
     | LOOKAHEAD( Comment() ) Comment()
     | Paragraph()
 }
@@ -432,7 +427,7 @@ void SetextHeader() #Header : {}{
 }
 
 void Ruler() #Ruler : {} {
-    ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <ASTERISK_RULER> )
+    ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <STAR_RULER> )
 }
 
 void Quote() #Quote : {
@@ -495,8 +490,8 @@ void CodeText() #CodeText : {
                 | t = <CHAR_ENTITY_REF>
                 | t = <TEXT>
                 | t = <SHARP>
-                | t = <LPARENT>
-                | t = <RPARENT>
+                | t = <LPAREN>
+                | t = <RPAREN>
                 | t = <LBRACKET>
                 | t = <RBRACKET>
                 | t = <CODE_SPAN>
@@ -507,11 +502,11 @@ void CodeText() #CodeText : {
                 | t = <LT>
                 | t = <MINUS>
                 | t = <PLUS>
-                | t = <ASTERISK>
+                | t = <STAR>
                 | t = <UNDERSCORE_RULER>
                 | t = <MINUS_RULER>
                 | t = <NUMBERING>
-                | t = <ASTERISK_RULER>
+                | t = <STAR_RULER>
                 | t = <EQ>
                 | t = <SINGLE_QUOTE>
                 | t = <DOUBLE_QUOTE>
@@ -558,7 +553,7 @@ void Item() #Item : {
         (
             t = <PLUS>
             | t = <MINUS>
-            | t = <ASTERISK>
+            | t = <STAR>
             | t = <NUMBERING> { jjtThis.makeOrdered(); }
         )
         ( <SPACE> | <TAB> )
@@ -603,31 +598,32 @@ void Text() #Text : {
 } {
         t = <ESCAPED_CHAR> { jjtThis.append(getEscapedChar(t)); }
         | (
-            t = <TEXT>
-            | t = <SHARP>
-            | t = <SPACE>
-            | t = <TAB>
-            | t = <AMPERSAND>
-            | t = <BACKTICK>
-            | t = <LPARENT>
-            | t = <RPARENT>
-            | t = <LBRACKET>
-            | t = <RBRACKET>
-            | t = <COLON>
-            | t = <SLASH>
+            t = <AMPERSAND>
+            | t = <STAR>
+            | t = <STAR_RULER>
             | t = <BACKSLASH>
+            | t = <BACKTICK>
+            | t = <COLON>
+            | t = <DOUBLE_QUOTE>
+            | t = <EQ>
+            | t = <EXCLAMATION>
             | t = <GT>
+            | t = <LBRACKET>
+            | t = <LPAREN>
             | t = <LT>
             | t = <MINUS>
-            | t = <PLUS>
-            | t = <NUMBERING>
-            | t = <ASTERISK>
-            | t = <UNDERSCORE_RULER>
             | t = <MINUS_RULER>
-            | t = <ASTERISK_RULER>
-            | t = <EQ>
+            | t = <NUMBERING>
+            | t = <PLUS>
+            | t = <RBRACKET>
+            | t = <RPAREN>
+            | t = <SHARP>
             | t = <SINGLE_QUOTE>
-            | t = <DOUBLE_QUOTE>
+            | t = <SLASH>
+            | t = <SPACE>
+            | t = <TAB>
+            | t = <TEXT>
+            | t = <UNDERSCORE_RULER>
         ) { jjtThis.append(t.image); }
 }
 
@@ -670,8 +666,8 @@ void Comment() #Comment : {
         | t = <SHARP>
         | t = <GT>
         | t = <LT>
-        | t = <LPARENT>
-        | t = <RPARENT>
+        | t = <LPAREN>
+        | t = <RPAREN>
         | t = <LBRACKET>
         | t = <RBRACKET>
         | t = <COLON>
@@ -680,7 +676,7 @@ void Comment() #Comment : {
         | t = <EQ>
         | t = <MINUS_RULER>
         | t = <UNDERSCORE_RULER>
-        | t = <ASTERISK_RULER>
+        | t = <STAR_RULER>
         | t = <EOL>
         ) { buff.append(t.image); }
     )*
@@ -692,7 +688,7 @@ void InlineURL() #InlineUrl : {
     Token t;
     StringBuilder buff = new StringBuilder();
 } {
-    <LT>
+    "<"
     t = <TEXT> { buff.append(t.image); }
     ":" { buff.append(":"); }
     ( "/" { buff.append("/"); } )*
@@ -703,7 +699,7 @@ void InlineURL() #InlineUrl : {
         | "&" { buff.append("&"); }
         | "=" { buff.append("="); }
     )*
-    <GT>
+    ">"
     { jjtThis.setUrl(buff.toString()); }
 }
 
@@ -801,7 +797,7 @@ TagAttribute TagAttribute() : {
 } {
     attrName = <TEXT> "="
     (
-        <DOUBLE_QUOTE>
+        "\""
         (
             (
                 t = <CODE_SPAN>
@@ -821,9 +817,9 @@ TagAttribute TagAttribute() : {
 
             ) { buff.append(t.image); }
         )*
-        <DOUBLE_QUOTE>
+        "\""
         |
-        <SINGLE_QUOTE>
+        "'"
         (
             (
                 t = <CODE_SPAN>
@@ -843,7 +839,7 @@ TagAttribute TagAttribute() : {
 
             ) { buff.append(t.image); }
         )*
-        <SINGLE_QUOTE>
+        "'"
     )
     {
         return new TagAttribute(attrName.image, buff.toString());
@@ -856,19 +852,19 @@ String refname() : {
 } {
     (
         (
-        t = <TEXT>
+        t = <AMPERSAND>
+        | t = <BACKSLASH>
+        | t = <COLON>
+        | t = <EQ>
+        | t = <GT>
+        | t = <LBRACKET>
+        | t = <LPAREN>
+        | t = <LT>
+        | t = <RPAREN>
+        | t = <SLASH>
         | t = <SPACE>
         | t = <TAB>
-        | t = <AMPERSAND>
-        | t = <LPARENT>
-        | t = <RPARENT>
-        | t = <LBRACKET>
-        | t = <COLON>
-        | t = <SLASH>
-        | t = <BACKSLASH>
-        | t = <GT>
-        | t = <LT>
-        | t = <EQ>
+        | t = <TEXT>
         ) { buff.append(t.image); }
     )+
     { return buff.toString(); }
@@ -890,9 +886,9 @@ String url() : {
     String text;
 } {
     (
-        <LT>
+        "<"
         text = urltext()
-        <GT>
+        ">"
         |
         text = urltext()
     )
@@ -926,15 +922,15 @@ String title() : {
 } {
     (
         (
-            <DOUBLE_QUOTE>
+            "\""
             text = titletext(DOUBLE_QUOTE)
-            <DOUBLE_QUOTE>
+            "\""
         )
         |
         (
-            <SINGLE_QUOTE>
+            "'"
             text = titletext(SINGLE_QUOTE)
-            <SINGLE_QUOTE>
+            "'"
         )
     )
     { return text; }
