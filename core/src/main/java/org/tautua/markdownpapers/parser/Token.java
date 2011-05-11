@@ -115,7 +115,12 @@ public class Token implements java.io.Serializable {
         this.image = image;
     }
 
-    public boolean kindOf(int... args) {
+    /**
+     * if the token is one of the kinds passed.
+     * @param args
+     * @return
+     */
+    public boolean is(int... args) {
         for(int kind : args) {
             if(this.kind == kind) {
                 return true;
@@ -124,8 +129,13 @@ public class Token implements java.io.Serializable {
         return false;
     }
 
-    public boolean notKindOf(int... args) {
-        return !kindOf(args);
+    /**
+     * if the token is none of the kinds passed.
+     * @param args
+     * @return
+     */
+    public boolean isNot(int... args) {
+        return !is(args);
     }
 
     /**
