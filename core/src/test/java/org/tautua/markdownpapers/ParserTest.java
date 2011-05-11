@@ -43,6 +43,7 @@ public class ParserTest {
         return Arrays.asList(new Object[][]{
                 {getStringReader("")},
                 {getAssetReader("code")},
+                {getAssetReader("comments")},
                 {getAssetReader("headers")},
                 {getAssetReader("inline")},
                 {getAssetReader("list")},

@@ -299,14 +299,14 @@ TOKEN : {
     < AMPERSAND : "&" >
     | < BACKSLASH : "\\" >
     | < BACKTICK : "`" >
+    | < BANG : "!" >
     | < COLON : ":" >
-    | < EQ : "=" >
-    | < EXCLAMATION : "!" >
     | < DOUBLE_QUOTE : "\"" >
+    | < EQ : "=" >
     | < GT : ">" >
-    | < LT : "<" >
     | < LBRACKET : "[" >
     | < LPAREN : "(" >
+    | < LT : "<" >
     | < MINUS : "-" >
     | < PLUS : "+" >
     | < RBRACKET : "]" >
@@ -318,28 +318,34 @@ TOKEN : {
 }
 
 TOKEN : {
-    < UNDERSCORE_RULER : "_" ( (" "){0,2} )? "_"  ( ( (" "){0,2} )? "_" )+ >
-    | < MINUS_RULER : "-" ( (" "){0,2} )? "-" ( ( (" "){0,2} )? "-" )+ >
+    < MINUS_RULER : "-" ( (" "){0,2} )? "-" ( ( (" "){0,2} )? "-" )+ >
     | < STAR_RULER : "*" ( (" "){0,2} )? "*" ( ( (" "){0,2} )? "*" )+ >
-    | < OP_COMMENT : "<!--" >
-    | < CL_COMMENT : "-->" >
+    | < UNDERSCORE_RULER : "_" ( (" "){0,2} )? "_"  ( ( (" "){0,2} )? "_" )+ >
 }
 
 TOKEN : {
-    < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" >
-    | < CODE_SPAN : "`" ( ~["`", "\r", "\n"] )+ "`" | "`" "`" ( ~["'", "\r", "\n"] )+ "`" "`" >
+    < COMMENT_OPEN : "<!--" >
+    | < COMMENT_CLOSE : "-->" >
+}
+
+TOKEN : {
+    < CODE_SPAN : "`" ( ~["`", "\r", "\n"] )+ "`" | "`" "`" ( ~["'", "\r", "\n"] )+ "`" "`" >
     | < EMPHASIS_ITALIC : "*" <EMP_A> ( ( ~["*"] )* <EMP_A> )? "*"
                     | "_" <EMP_U> ( ( ~["_"] )* <EMP_U> )? "_">
     | < EMPHASIS_BOLD : "**" <EMP_A> ( ( ~["*"] )* <EMP_A> )? "**"
                     | "__" <EMP_U> ( ( ~["_"] )* <EMP_U> )? "__">
     | < EMPHASIS_ITALIC_BOLD : "***" <EMP_A> ( ( ~["*"] )* <EMP_A> )? "***"
                     | "___" <EMP_U> ( ( ~["_"] )* <EMP_U> )? "___">
-    | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
     | < NUMBERING : ( ["0"-"9"] )+ "." >
-    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
-    | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n", "!"] )+ >
     | < #EMP_A : ~["*", " ", "\t", "\r", "\n"] >
     | < #EMP_U : ~["_", " ", "\t", "\r", "\n"] >
+}
+
+TOKEN : {
+    < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" >
+    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
+    | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
+    | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n", "!"] )+ >
 }
 
 void Document() #Document : {} {
@@ -461,40 +467,40 @@ void CodeText() #CodeText : {
     (
         (
             (
-                t = <SPACE>
-                | t = <AMPERSAND>
+                t = <AMPERSAND>
                 | t = <BACKTICK>
+                | t = <BACKSLASH>
+                | t = <BANG>
+                | t = <CHAR_ENTITY_REF>
+                | t = <CHAR_SEQUENCE>
+                | t = <CODE_SPAN>
+                | t = <COMMENT_OPEN>
+                | t = <COMMENT_CLOSE>
+                | t = <COLON>
+                | t = <DOUBLE_QUOTE>
                 | t = <EMPHASIS_ITALIC>
                 | t = <EMPHASIS_BOLD>
                 | t = <EMPHASIS_ITALIC_BOLD>
+                | t = <EQ>
                 | t = <ESCAPED_CHAR>
-                | t = <EXCLAMATION>
-                | t = <NUMERIC_CHAR_REF>
-                | t = <CHAR_ENTITY_REF>
-                | t = <CHAR_SEQUENCE>
-                | t = <SHARP>
-                | t = <LPAREN>
-                | t = <RPAREN>
-                | t = <LBRACKET>
-                | t = <RBRACKET>
-                | t = <CODE_SPAN>
-                | t = <COLON>
-                | t = <SLASH>
-                | t = <BACKSLASH>
                 | t = <GT>
+                | t = <NUMBERING>
+                | t = <NUMERIC_CHAR_REF>
+                | t = <LBRACKET>
+                | t = <LPAREN>
                 | t = <LT>
                 | t = <MINUS>
-                | t = <PLUS>
-                | t = <STAR>
-                | t = <UNDERSCORE_RULER>
                 | t = <MINUS_RULER>
-                | t = <NUMBERING>
-                | t = <STAR_RULER>
-                | t = <EQ>
+                | t = <PLUS>
+                | t = <RBRACKET>
+                | t = <RPAREN>
+                | t = <SHARP>
                 | t = <SINGLE_QUOTE>
-                | t = <DOUBLE_QUOTE>
-                | t = <OP_COMMENT>
-                | t = <CL_COMMENT>
+                | t = <SLASH>
+                | t = <SPACE>
+                | t = <STAR>
+                | t = <STAR_RULER>
+                | t = <UNDERSCORE_RULER>
             ) { jjtThis.append(t.image); }
             | t = <TAB> { jjtThis.append(toWhitespace(prev, t)); }
         ) { prev = t; }
@@ -580,38 +586,7 @@ void Text() #Text : {
     Token t;
     String v;
 } {
-
-    v = Anything() {jjtThis.append(v); }
-                                         /*
-        (
-            t = <AMPERSAND>
-            | t = <STAR>
-            | t = <STAR_RULER>
-            | t = <BACKSLASH>
-            | t = <BACKTICK>
-            | t = <CHAR_SEQUENCE>
-            | t = <COLON>
-            | t = <DOUBLE_QUOTE>
-            | t = <EQ>
-            | t = <ESCAPED_CHAR> { t.image = val(t); }
-            | t = <EXCLAMATION>
-            | t = <GT>
-            | t = <LBRACKET>
-            | t = <LPAREN>
-            | t = <LT>
-            | t = <MINUS>
-            | t = <MINUS_RULER>
-            | t = <NUMBERING>
-            | t = <PLUS>
-            | t = <RBRACKET>
-            | t = <RPAREN>
-            | t = <SHARP>
-            | t = <SINGLE_QUOTE>
-            | t = <SLASH>
-            | t = <SPACE>
-            | t = <TAB>
-            | t = <UNDERSCORE_RULER>
-        ) { jjtThis.append(t.image); } */
+    v = Anything() { jjtThis.append(v); }
 }
 
 void CharRef() #CharRef : {
@@ -638,34 +613,34 @@ void Comment() #Comment : {
     StringBuilder buff = new StringBuilder();
     Token t;
 } {
-    <OP_COMMENT>
+    <COMMENT_OPEN>
     (
         (
         t = <AMPERSAND>
-        | t = <SPACE>
-        | t = <TAB>
+        | t = <BACKSLASH>
         | t = <BACKTICK>
+        | t = <BANG>
         | t = <CHAR_SEQUENCE>
-        | t = <EXCLAMATION>
-        | t = <SHARP>
+        | t = <COLON>
+        | t = <EQ>
         | t = <GT>
         | t = <LT>
-        | t = <LPAREN>
-        | t = <RPAREN>
         | t = <LBRACKET>
-        | t = <RBRACKET>
-        | t = <COLON>
-        | t = <SLASH>
-        | t = <BACKSLASH>
-        | t = <EQ>
+        | t = <LPAREN>
         | t = <MINUS_RULER>
-        | t = <UNDERSCORE_RULER>
+        | t = <RBRACKET>
+        | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SLASH>
+        | t = <SPACE>
         | t = <STAR_RULER>
+        | t = <TAB>
+        | t = <UNDERSCORE_RULER>
         | t = <EOL>
         ) { buff.append(t.image); }
     )*
     { jjtThis.setText(buff.toString()); }
-    <CL_COMMENT>
+    <COMMENT_CLOSE>
 }
 
 void InlineURL() #InlineUrl : {
@@ -949,12 +924,14 @@ String Anything() : {
         t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
+        | t = <BANG>
         | t = <CHAR_SEQUENCE>
+        | t = <COMMENT_CLOSE>
+        | t = <COMMENT_OPEN>
         | t = <COLON>
         | t = <DOUBLE_QUOTE>
         | t = <EQ>
         | t = <ESCAPED_CHAR> { t.image = val(t); }
-        | t = <EXCLAMATION>
         | t = <GT>
         | t = <LBRACKET>
         | t = <LPAREN>
