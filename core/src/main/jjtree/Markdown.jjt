@@ -43,9 +43,9 @@ public class Parser {
         String i = t.image;
         if (t.kind == EMPHASIS_BOLD || (t.kind == CODE_SPAN && i.startsWith("``"))) {
             i = i.substring(2, i.length() - 2);
-        } else if (t.is(CODE_SPAN, EMPHASIS_ITALIC)) {
+        } else if (t.any(CODE_SPAN, EMPHASIS_ITALIC)) {
             i = i.substring(1, i.length() - 1);
-        } else if (t.is(EMPHASIS_ITALIC_BOLD)) {
+        } else if (t.any(EMPHASIS_ITALIC_BOLD)) {
             i = i.substring(3, i.length() - 3);
         } else if(t.kind == ESCAPED_CHAR) {
             i = String.valueOf(i.charAt(1));
@@ -83,9 +83,9 @@ public class Parser {
             } else if (t.kind == EOL) {
                 quoteLevel = 0;
             }
-        } while(t.is(EOL, SPACE, TAB, GT));
+        } while(t.any(EOL, SPACE, TAB, GT));
 
-        if (t.is(PLUS, MINUS, STAR, NUMBERING, EOF)) {
+        if (t.any(PLUS, MINUS, STAR, NUMBERING, EOF)) {
             return false;
         }
 
@@ -107,13 +107,13 @@ public class Parser {
             if(t.kind == GT) {
                 quoteLevel++;
             }
-        } while (t.is(SPACE, TAB, GT));
+        } while (t.any(SPACE, TAB, GT));
 
-        if (t.is(EOL, EOF)) {
+        if (t.any(EOL, EOF)) {
             return false;
         }
 
-        if (t.is(PLUS, MINUS, STAR, NUMBERING) && stack.peek() instanceof Item) {
+        if (t.any(PLUS, MINUS, STAR, NUMBERING) && stack.peek() instanceof Item) {
             return false;
         }
 
@@ -140,9 +140,9 @@ public class Parser {
             } else if(t.kind == TAB) {
                 _indent += 4;
             }
-        } while (t.is(SPACE, TAB, GT) && _indent < 4);
+        } while (t.any(SPACE, TAB, GT) && _indent < 4);
 
-        if (t.is(EOL, EOF)) {
+        if (t.any(EOL, EOF)) {
             return true;
         }
 
@@ -150,7 +150,7 @@ public class Parser {
     }
 
     boolean QuotedElementLookahead() {
-        if (getToken(1).isNot(EOL)) {
+        if (getToken(1).none(EOL)) {
             return false;
         }
 
@@ -160,12 +160,12 @@ public class Parser {
 
         do {
             t = getToken(i++);
-            if (t.is(GT)) {
+            if (t.any(GT)) {
                 quoteLevel++;
             }
-        } while (t.is(SPACE, TAB, GT));
+        } while (t.any(SPACE, TAB, GT));
 
-        if (t.is(EOL, EOF)) {
+        if (t.any(EOL, EOF)) {
             return true;
         }
 
@@ -173,7 +173,7 @@ public class Parser {
     }
 
     boolean LooseLookahead() {
-        if (getToken(1).isNot(EOL)) {
+        if (getToken(1).none(EOL)) {
             return false;
         }
 
@@ -183,14 +183,14 @@ public class Parser {
 
         do {
             t = getToken(i++);
-            if (t.is(EOL)) {
+            if (t.any(EOL)) {
                 newline = true;
             }
-        } while(t.is(SPACE, TAB, EOL));
+        } while(t.any(SPACE, TAB, EOL));
 
         Item item = (Item)stack.peek();
 
-        return newline && t.is(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() == t.beginColumn;
+        return newline && t.any(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() == t.beginColumn;
     }
 
     boolean TextLookahead() {
@@ -199,16 +199,16 @@ public class Parser {
             Token t;
             do {
                 t = getToken(i++);
-            } while(t.is(SHARP));
+            } while(t.any(SHARP));
 
-            return t.isNot(EOL,EOF);
+            return t.none(EOL,EOF);
         }
 
-        return getToken(1).isNot(EOL, EOF);
+        return getToken(1).none(EOL, EOF);
     }
 
     boolean ListLookahead() {
-        if (getToken(1).isNot(EOL)) {
+        if (getToken(1).none(EOL)) {
             return false;
         }
 
@@ -218,18 +218,18 @@ public class Parser {
 
         do {
             t = getToken(i++);
-            if (t.is(GT)) {
+            if (t.any(GT)) {
                 quoteLevel++;
             }
-        } while (t.is(EOL, SPACE, TAB, GT));
+        } while (t.any(EOL, SPACE, TAB, GT));
 
         Item item = (Item)stack.peek();
 
-        return t.is(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() < t.beginColumn;
+        return t.any(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() < t.beginColumn;
     }
 
     boolean ItemLookahead() {
-        if (getToken(1).isNot(EOL)) {
+        if (getToken(1).none(EOL)) {
             return false;
         }
 
@@ -239,14 +239,14 @@ public class Parser {
 
         do {
             t = getToken(i++);
-            if (t.is(GT)) {
+            if (t.any(GT)) {
                 quoteLevel++;
             }
-        } while (t.is(EOL, SPACE, TAB, GT));
+        } while (t.any(EOL, SPACE, TAB, GT));
 
         List list = (List)stack.peek();
 
-        return t.is(PLUS, MINUS, STAR, NUMBERING) && list.getIndentation() == t.beginColumn;
+        return t.any(PLUS, MINUS, STAR, NUMBERING) && list.getIndentation() == t.beginColumn;
     }
 
     boolean QuoteInsideTitleLookahead(int quoteKind) {
@@ -255,12 +255,12 @@ public class Parser {
             int i = 2;
             do {
                 t = getToken(i++);
-            } while (t.isNot(quoteKind, RPAREN, EOL, EOF));
+            } while (t.none(quoteKind, RPAREN, EOL, EOF));
 
             return t.kind == quoteKind;
         }
 
-        return getToken(1).isNot(EOL, EOF);
+        return getToken(1).none(EOL, EOF);
     }
 }
 PARSER_END(Parser)
@@ -595,7 +595,7 @@ void Comment() #Comment : {
     <COMMENT_OPEN>
     (
         (
-        LOOKAHEAD( {getToken(1).isNot(EOL,COMMENT_CLOSE)} ) v = Anything() { buff.append(v); }
+        LOOKAHEAD( {getToken(1).none(EOL,COMMENT_CLOSE)} ) v = Anything() { buff.append(v); }
         | t = <EOL> { buff.append(t.image); }
         )
     )*
@@ -634,7 +634,7 @@ void Link() #Link : {
         | LOOKAHEAD( InlineURL() ) InlineURL()
         | LOOKAHEAD( Image() ) Image()
         | LOOKAHEAD( Link() ) Link()
-        | LOOKAHEAD( {getToken(1).isNot(RBRACKET, EOL, EOF)} ) Text()
+        | LOOKAHEAD( {getToken(1).none(RBRACKET, EOL, EOF)} ) Text()
         | <EOL> #Text { ((Text)jjtree.peekNode()).append("\n"); } 
         )+
     "]"

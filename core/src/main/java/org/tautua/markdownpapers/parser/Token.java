@@ -120,7 +120,7 @@ public class Token implements java.io.Serializable {
      * @param args
      * @return
      */
-    public boolean is(int... args) {
+    public boolean any(int... args) {
         for(int kind : args) {
             if(this.kind == kind) {
                 return true;
@@ -134,8 +134,8 @@ public class Token implements java.io.Serializable {
      * @param args
      * @return
      */
-    public boolean isNot(int... args) {
-        return !is(args);
+    public boolean none(int... args) {
+        return !any(args);
     }
 
     /**
