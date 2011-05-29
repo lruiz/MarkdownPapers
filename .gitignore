@@ -7,4 +7,6 @@
 target/
 core/target/
 cli/target/
+doxia-module/target/
+www/target/
 *~
