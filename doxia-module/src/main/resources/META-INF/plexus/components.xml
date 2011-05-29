@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-set>
+    <components>
+        <component>
+            <role>org.apache.maven.doxia.parser.Parser</role>
+            <role-hint>markdown</role-hint>
+            <implementation>org.tautua.markdownpapers.doxia.MarkdownParser</implementation>
+            <description>The Markdown parser.</description>
+        </component>
+        <component>
+            <role>org.apache.maven.doxia.module.site.SiteModule</role>
+            <role-hint>markdown</role-hint>
+            <implementation>org.tautua.markdownpapers.doxia.MarkdownSiteModule</implementation>
+            <description>Markdown site module.</description>
+        </component>
+    </components>
+</component-set>

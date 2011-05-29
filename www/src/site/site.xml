@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="MarkdownPapers - markdown java implementation">
+    <skin>
+        <groupId>org.tautua.maven.skins</groupId>
+        <artifactId>tautua-default-skin</artifactId>
+        <version>1.0</version>
+    </skin>
+    <bannerLeft>
+        <name>Markdown</name>
+        <src>images/Logo.png</src>
+        <href>http://markdown.tautua.org/</href>
+    </bannerLeft>
+    <body>
+        <head>
+            <meta name="description" content="markdownpapers, markdown parser and transformer java implementation"/>
+            <meta name="keywords" content="java,parser,transformer,ast,javacc,doxia,maven"/>
+            <script type="text/javascript">
+                var _gaq = _gaq || [];
+                _gaq.push(['_setAccount', 'UA-18182963-2']);
+                _gaq.push(['_trackPageview']);
+
+                (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') +
+                '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+                })();
+            </script>
+        </head>
+
+        <menu name="Documentation" inherit="top">
+            <item name="Introduction" href="index.html" title="Introduction"/>
+            <item name="Doxia Module" href="doxia-module.html"/>
+            <item name="JavaCC Grammar" href="https://github.com/lruiz/MarkdownPapers/blob/master/core/src/main/jjtree/Markdown.jjt"/>
+            <item name="Download" href="https://github.com/lruiz/MarkdownPapers/downloads"/>
+        </menu>
+        <menu name="Development">
+            <item name="Source Code" href="https://github.com/lruiz/MarkdownPapers"/>
+            <item name="Issues" href="https://github.com/lruiz/MarkdownPapers/issues"/>
+            <item name="People" href="team-list.html"/>
+            <item name="License" href="license.html"/>
+        </menu>
+    </body>
+</project>
