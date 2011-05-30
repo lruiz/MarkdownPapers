@@ -1,13 +1,12 @@
 MarkdownPapers and doxia
 ========================
 
-[Doxia] is a content generation framework, supporting a variety of markup languages, MarkdownPapers provides a
-doxia module that enables writing content in markdown format.
+[Doxia] is a content generation framework, supporting a variety of markup languages, MarkdownPapers 
+provides a doxia module that enables writing content in markdown format.
 
 
-Write all your docs in **src/site/markdown/** with **md** as file extension, for the moment you have to built from the
-[source code][Repo] since it hasn't been released. Then you have to configure your maven-site-plugin and include
-markdownpapers-doxia-module as dependency.
+Write all your docs in **src/site/markdown/** with **md** as file extension, then configure your 
+maven-site-plugin and include markdownpapers-doxia-module as dependency.
 
     ...
     <plugin>
@@ -42,8 +41,4 @@ markdownpapers-doxia-module as dependency.
     ...
 
 
-
-
-
 [Doxia]: http://maven.apache.org/doxia/doxia/index.html
-[Repo]: http://github.com/lruiz/MarkdownPapers-doxia-module
