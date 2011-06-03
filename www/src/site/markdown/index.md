@@ -1,5 +1,3 @@
-Hello World !
-
 What is MarkdownPapers?
 =======================
 
