@@ -8,6 +8,8 @@ provides a doxia module that enables writing content in markdown format.
 Write all your docs in **src/site/markdown/** with **md** as file extension, then configure your 
 maven-site-plugin and include markdownpapers-doxia-module as dependency.
 
+Take a look at the [site source code][src].
+
     ...
     <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -42,3 +44,4 @@ maven-site-plugin and include markdownpapers-doxia-module as dependency.
 
 
 [Doxia]: http://maven.apache.org/doxia/doxia/index.html
+[src]: https://github.com/lruiz/MarkdownPapers/tree/master/www/src/site/markdown
