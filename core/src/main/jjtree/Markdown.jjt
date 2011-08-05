@@ -349,7 +349,7 @@ void BlockElement() : {} {
     | LOOKAHEAD( ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <STAR_RULER> ) ( <EOL> | <EOF> ) ) Ruler()
     | LOOKAHEAD( CodeLine() ) Code()
     | LOOKAHEAD( QuotePrefix() ) Quote()
-    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <STAR> | <NUMBERING> ) ) List()
+    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <STAR> | <NUMBERING> ) ( <SPACE> | <TAB> ) ) List()
     | LOOKAHEAD( Comment() ) Comment()
     | Paragraph()
 }
