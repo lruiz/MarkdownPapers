@@ -343,10 +343,9 @@ void DocumentElement() : {} {
 }
 
 void BlockElement() : {} {
-    Header()
-    | LOOKAHEAD( SetextHeader() ( <EOL> | <EOF> ) ) SetextHeader()
+    LOOKAHEAD( Header() ( <EOL> | <EOF> ) ) Header()
     | LOOKAHEAD( EmptyLine() ) Whitespace()
-    | LOOKAHEAD( ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <STAR_RULER> ) ( <EOL> | <EOF> ) ) Ruler()
+    | LOOKAHEAD( Ruler() ( <EOL> | <EOF> ) ) Ruler()
     | LOOKAHEAD( CodeLine() ) Code()
     | LOOKAHEAD( QuotePrefix() ) Quote()
     | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <STAR> | <NUMBERING> ) ( <SPACE> | <TAB> ) ) List()
@@ -370,31 +369,40 @@ void Header() #Header : {
     int level = 1;
     stack.push(jjtThis);
 } {
-
-    level = HeaderPrefix()
-    Line() ( "#" )*
-    {   jjtThis.setLevel(level);
-        stack.pop();    }
+    (
+        level = HeaderPrefix() Line() ( "#" )*
+        | Line() <EOL> level = HeaderSuffix()
+    ) ( Whitespace() )?
+    {
+        jjtThis.setLevel(level);
+        stack.pop();
+    }
 }
 
 int HeaderPrefix() : {
     int level = 1;
 } {
     "#" ( "#" { level++; } ( "#" { level++; } ( "#" { level++; } ( "#" { level++; } ( "#" { level++; } )? )? )? )? )?
-    { return level; }
+    {
+        return level;
+    }
 }
 
-void SetextHeader() #Header : {}{
-    Line() < EOL >
+int HeaderSuffix() : {
+    int level = 1;
+}{
     (
-        ( < EQ > )+ { jjtThis.setLevel(1); }
-        | < MINUS_RULER > { jjtThis.setLevel(2); }
-        | < MINUS > { jjtThis.setLevel(2); }
+        ( < EQ > )+ { level = 1; }
+        | < MINUS_RULER > { level = 2; }
+        | < MINUS > { level = 2; }
     )
+    {
+        return level;
+    }
 }
 
 void Ruler() #Ruler : {} {
-    ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <STAR_RULER> )
+    ( InsignificantWhitespace() )? ( <UNDERSCORE_RULER> | <MINUS_RULER> | <STAR_RULER> ) ( Whitespace() )?
 }
 
 void Quote() #Quote : {
