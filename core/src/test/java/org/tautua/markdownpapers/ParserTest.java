@@ -52,7 +52,8 @@ public class ParserTest {
                 {getAssetReader("quotes")},
                 {getAssetReader("rulers")},
                 {getAssetReader("snippets")},
-                {getAssetReader("tags")}
+                {getAssetReader("tags")},
+                {getAssetReader("underscore")},
             });
     }
 
