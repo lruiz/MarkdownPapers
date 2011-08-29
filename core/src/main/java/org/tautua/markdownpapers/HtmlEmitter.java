@@ -148,6 +148,11 @@ public class HtmlEmitter implements Visitor {
         node.childrenAccept(this);
     }
 
+    @Override
+    public void visit(LineBreak node) {
+        append("<br/>");
+    }
+
     public void visit(Link node) {
         Resource resource = node.getResource();
         if (resource == null) {
@@ -325,7 +330,7 @@ public class HtmlEmitter implements Visitor {
             } else {
                 for (int i = 1; i < node.jjtGetChild(0).jjtGetNumChildren(); i++) {
                     Node sibling = node.jjtGetChild(0).jjtGetChild(i);
-                    if (!(sibling instanceof Text && ((Text)sibling).isWhitespace())) {
+                    if (!(sibling instanceof Text && ((Text)sibling).isWhitespace()) ) {
                         return false;
                     }
                 }

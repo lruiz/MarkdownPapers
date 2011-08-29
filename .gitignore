@@ -4,6 +4,7 @@
 *.ipr
 *.iws
 .settings/
+.idea/
 target/
 core/target/
 cli/target/

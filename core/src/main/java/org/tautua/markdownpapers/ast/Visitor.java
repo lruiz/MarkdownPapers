@@ -42,17 +42,19 @@ public interface Visitor {
 
     void visit(Image node);
 
-    void visit(Link node);
+    void visit(Line node);
+    
+    void visit(LineBreak node);
 
+    void visit(Link node);
+    
+    void visit(List node);
+    
     void visit(InlineUrl node);
 
     void visit(Item node);
 
-    void visit(Line node);
-
     void visit(ResourceDefinition node);
-
-    void visit(List node);
 
     void visit(OpeningTag node);
 

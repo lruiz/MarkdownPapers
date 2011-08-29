@@ -186,7 +186,7 @@ public class Parser {
             if (t.any(EOL)) {
                 newline = true;
             }
-        } while(t.any(SPACE, TAB, EOL));
+        } while(t.any(SPACE, TAB, GT, EOL));
 
         Item item = (Item)stack.peek();
 
@@ -225,7 +225,8 @@ public class Parser {
 
         Item item = (Item)stack.peek();
 
-        return t.any(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() < t.beginColumn;
+        return t.any(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() < t.beginColumn 
+            && quoteLevel <= currentQuoteLevel;
     }
 
     boolean ItemLookahead() {
@@ -293,6 +294,7 @@ TOKEN : {
     | < SINGLE_QUOTE : "'" >
     | < SLASH : "/" >
     | < STAR : "*" >
+    | < UNDERSCORE : "_" >
 }
 
 TOKEN : {
@@ -323,7 +325,7 @@ TOKEN : {
     < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" >
     | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
     | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
-    | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n", "!"] )+ >
+    | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " ", "\\", "/", "\t", "\r", "\n", "!", "_"] )+ >
 }
 
 void Document() #Document : {} {
@@ -343,9 +345,9 @@ void DocumentElement() : {} {
 }
 
 void BlockElement() : {} {
-    LOOKAHEAD( Header() ( <EOL> | <EOF> ) ) Header()
+    LOOKAHEAD( Ruler() ( <EOL> | <EOF> ) ) Ruler()
+    | LOOKAHEAD( Header() ( <EOL> | <EOF> ) ) Header()
     | LOOKAHEAD( EmptyLine() ) Whitespace()
-    | LOOKAHEAD( Ruler() ( <EOL> | <EOF> ) ) Ruler()
     | LOOKAHEAD( CodeLine() ) Code()
     | LOOKAHEAD( QuotePrefix() ) Quote()
     | LOOKAHEAD( ( InsignificantWhitespace() )? ( <PLUS> | <MINUS> | <STAR> | <NUMBERING> ) ( <SPACE> | <TAB> ) ) List()
@@ -353,6 +355,11 @@ void BlockElement() : {} {
     | Paragraph()
 }
 
+/*
+void HtmlBlock() : {} {
+    Tag()
+}
+*/
 void Whitespace() : {} {
     ( <SPACE> | <TAB> )+
 }
@@ -486,6 +493,7 @@ void CodeText() #CodeText : {
                 | t = <SPACE>
                 | t = <STAR>
                 | t = <STAR_RULER>
+                | t = <UNDERSCORE>
                 | t = <UNDERSCORE_RULER>
             ) { jjtThis.append(t.image); }
             | t = <TAB> { jjtThis.append(toWhitespace(prev, t)); }
@@ -536,8 +544,9 @@ void Item() #Item : {
     Paragraph()
     (
         LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() { jjtThis.makeLoose(); }
-        | LOOKAHEAD( {ListLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* List()
         | LOOKAHEAD( {LooseLookahead()} ) <EOL> ( Whitespace() )? { jjtThis.makeLoose(); }
+        | LOOKAHEAD( {ListLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* List()
+        
     )*
     {
         Item item = (Item)stack.pop();
@@ -563,9 +572,14 @@ void Line() #Line : {} {
         | LOOKAHEAD( Tag() ) Tag()
         | LOOKAHEAD( Image() ) Image()
         | LOOKAHEAD( Link() ) Link()
+        | LOOKAHEAD( LineBreak() <EOL> ) LineBreak()
         | Text()
         )
     )+
+}
+
+void LineBreak() #LineBreak : {} {
+    <SPACE> <SPACE> 
 }
 
 void Text() #Text : {
@@ -830,6 +844,7 @@ String urltext() : {
         (
         t = <CHAR_SEQUENCE>
         | t = "&"
+        | t = <EQ>
         | t = "(" { parentheses++; }
         | LOOKAHEAD({parentheses > 0}) t = ")" { parentheses--; }
         | t = "["
@@ -838,7 +853,7 @@ String urltext() : {
         | t = "/"
         | t = "\\"
         | t = "#"
-        | t = "="
+        | t = <UNDERSCORE>
         ) { buff.append(t.image); }
     ) +
     { parentheses = 0; return buff.toString(); }
@@ -880,6 +895,7 @@ String titletext(int quoteType) : {
             | t = "\\"
             | t = "'"
             | t = "\""
+            | t = <UNDERSCORE>
         ) { buff.append(t.image); }
     )*
     { return buff.toString(); }
@@ -917,6 +933,7 @@ String Anything() : {
         | t = <STAR>
         | t = <STAR_RULER>
         | t = <TAB>
+        | t = <UNDERSCORE>
         | t = <UNDERSCORE_RULER>
     ) { return t.image; }
 }

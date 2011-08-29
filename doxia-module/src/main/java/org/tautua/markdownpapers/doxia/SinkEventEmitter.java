@@ -1,3 +1,19 @@
+/*
+ * Copyright 2011, TAUTUA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.tautua.markdownpapers.doxia;
 
 import org.apache.maven.doxia.sink.Sink;
@@ -106,19 +122,12 @@ public class SinkEventEmitter implements Visitor {
         Resource resource = node.getResource();
         SinkEventAttributes attr = new SinkEventAttributeSet();
         attr.addAttribute(SinkEventAttributeSet.ALT, node.getText());
-        attr.addAttribute(SinkEventAttributeSet.TITLE, resource.getHint());
-
-        if (node.jjtGetParent() instanceof Line && node.jjtGetParent().jjtGetNumChildren() == 1) {
-            sink.figure();
-            sink.figureGraphics(resource.getLocation(), attr);
-            sink.figureCaption();
-            sink.text(resource.getHint());
-            sink.figureCaption_();
-            sink.figure_();
-        } else {
-            // inline graphics
-            sink.figureGraphics(resource.getLocation(), attr);
+        if(resource.getHint() != null) {
+            attr.addAttribute(SinkEventAttributeSet.TITLE, resource.getHint());
         }
+
+        sink.figureGraphics(resource.getLocation(), attr);
+
     }
 
     public void visit(Link node) {
@@ -149,6 +158,10 @@ public class SinkEventEmitter implements Visitor {
     public void visit(Line node) {
         node.childrenAccept(this);
         sink.text("\n");
+    }
+
+    public void visit(LineBreak node) {
+        sink.lineBreak();
     }
 
     public void visit(ResourceDefinition node) {

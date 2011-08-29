@@ -1,0 +1,6 @@
+![alt](path/to/image1.png "title")
+
+[id]: path/to/image2.png "title"
+![alt][id]
+
+![alt](path/to/image.png)
