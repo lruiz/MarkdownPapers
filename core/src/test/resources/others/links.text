@@ -1,0 +1,7 @@
+[text][id]
+
+[text 2][id_2]
+ 
+[id]: http://localhost/path_to#id
+[id_2]: http://localhost/path_to_file#id
+

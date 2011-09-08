@@ -16,17 +16,37 @@
 
 package org.tautua.markdownpapers.ast;
 
+import java.util.*;
+
 /**
  * @author Larry Ruiz
  */
 public class Tag extends SimpleNode {
     protected String name;
-
+    private java.util.List<TagAttribute> attributes = new ArrayList<TagAttribute>();
+    
     public Tag(int i) {
         super(i);
     }
 
     public String getName() {
         return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public java.util.List<TagAttribute> getAttributes() {
+        return attributes;
+    }
+
+    public void addAttribute(TagAttribute attribute) {
+        attributes.add(attribute);
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

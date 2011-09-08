@@ -31,8 +31,16 @@ public class Emphasis extends SimpleNode {
         return text;
     }
 
+    public void setText(String text) {
+        this.text = text;
+    }
+
     public Type getType() {
         return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     @Override
@@ -40,19 +48,16 @@ public class Emphasis extends SimpleNode {
         visitor.visit(this);
     }
 
-    public void makeItalic(String text) {
+    public void makeItalic() {
         type = Type.ITALIC;
-        this.text = text;
     }
 
-    public void makeBold(String text) {
+    public void makeBold() {
         type = Type.BOLD;
-        this.text = text;
     }
 
-    public void makeItalicAndBold(String text) {
+    public void makeItalicAndBold() {
         type = Type.ITALIC_AND_BOLD;
-        this.text = text;
     }
 
     public static enum Type {

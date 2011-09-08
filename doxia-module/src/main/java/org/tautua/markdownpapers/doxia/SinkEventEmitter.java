@@ -20,15 +20,18 @@ import org.apache.maven.doxia.sink.Sink;
 import org.apache.maven.doxia.sink.SinkEventAttributeSet;
 import org.apache.maven.doxia.sink.SinkEventAttributes;
 import org.tautua.markdownpapers.ast.*;
+import org.tautua.markdownpapers.util.DequeStack;
+import org.tautua.markdownpapers.util.Stack;
 
-import java.util.Stack;
+
+import static org.tautua.markdownpapers.util.Utils.SPACE;
 
 /**
  * Generate doxia events that are going to be consume by a corresponding sink
  * @author Larry Ruiz, Aug 25, 2010
  */
 public class SinkEventEmitter implements Visitor {
-    private Stack<Header> stack = new Stack<Header>();
+    private Stack<Header> stack = new DequeStack<Header>();
     private Sink sink;
 
     public SinkEventEmitter(Sink sink) {
@@ -66,7 +69,7 @@ public class SinkEventEmitter implements Visitor {
     public void visit(Document node) {
         sink.body();
         node.childrenAccept(this);
-        while(!stack.isEmpty()) {
+        while(!(stack.size() == 0)) {
             sink.section_(stack.pop().getLevel());
         }
         sink.body_();
@@ -102,14 +105,14 @@ public class SinkEventEmitter implements Visitor {
     }
 
     public void visit(Header node) {
-        if(stack.isEmpty()) {
+        if(stack.size() == 0) {
             stack.push(node);
         } else if(stack.peek().getLevel() < node.getLevel()) {
             stack.push(node);
         } else {
             do {
                 sink.section_(stack.pop().getLevel());
-            } while(!stack.isEmpty() && stack.peek().getLevel() >= node.getLevel());
+            } while(!(stack.size() == 0) && stack.peek().getLevel() >= node.getLevel());
             stack.push(node);
         }
         sink.section(node.getLevel(), null);
@@ -219,6 +222,22 @@ public class SinkEventEmitter implements Visitor {
 
     public void visit(SimpleNode node) {
         throw new UnsupportedOperationException();
+    }
+
+    public void visit(Tag node) {
+        sink.rawText("<");
+        sink.rawText(node.getName());
+        appendAttributes(node.getAttributes());
+
+        if(node.jjtGetNumChildren() == 0) {
+            sink.rawText("/>");
+        } else {
+            sink.rawText(">");
+            node.childrenAccept(this);
+            sink.rawText("</");
+            sink.rawText(node.getName());
+            sink.rawText(">");
+        }
     }
 
     public void visit(Text node) {

@@ -20,6 +20,8 @@ package org.tautua.markdownpapers.ast;
  * @author Larry Ruiz
  */
 public class Line extends SimpleNode {
+    private boolean ending = false;
+    
     public Line(int id) {
         super(id);
     }
@@ -27,6 +29,14 @@ public class Line extends SimpleNode {
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+    
+    public void ending() {
+        this.ending = true;
+    }
+    
+    public boolean isEnding() {
+        return ending;
     }
 
     public boolean isEmpty() {

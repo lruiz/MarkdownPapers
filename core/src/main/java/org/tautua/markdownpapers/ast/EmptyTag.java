@@ -23,26 +23,9 @@ import java.util.List;
  * @author Larry Ruiz
  */
 public class EmptyTag extends Tag {
-    private java.util.List<TagAttribute> attributes = new ArrayList();
 
     public EmptyTag(int id) {
         super(id);
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public java.util.List<TagAttribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<TagAttribute> attributes) {
-        this.attributes = attributes;
-    }
-
-    public void addAttr(TagAttribute attribute) {
-        attributes.add(attribute);
     }
 
     @Override

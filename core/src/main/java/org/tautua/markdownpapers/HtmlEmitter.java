@@ -30,7 +30,6 @@ import static org.tautua.markdownpapers.util.Utils.*;
  */
 public class HtmlEmitter implements Visitor {
     private Appendable buffer;
-    private Document document;
     private Stack<Node> markupStack = new DequeStack<Node>();
 
     public HtmlEmitter(Appendable buffer) {
@@ -71,7 +70,6 @@ public class HtmlEmitter implements Visitor {
     }
 
     public void visit(Document node) {
-        document = node;
         visitChildrenAndAppendSeparator(node, EOL);
     }
 
@@ -150,7 +148,10 @@ public class HtmlEmitter implements Visitor {
 
     @Override
     public void visit(LineBreak node) {
-        append("<br/>");
+        Line l = (Line) node.jjtGetParent();
+        if(!l.isEnding()) {
+            append("<br/>");
+        }
     }
 
     public void visit(Link node) {
@@ -220,24 +221,17 @@ public class HtmlEmitter implements Visitor {
     }
 
     public void visit(Paragraph node) {
-        if (containsHR(node)) {
-            visitChildrenAndAppendSeparator(node, EOL);
-        } else if (isMarkup(node)) {
-            switchToMarkup(node);
-            visitChildrenAndAppendSeparator(node, EOL);
-        } else {
-            Node parent = node.jjtGetParent();
-            if(parent instanceof Item) {
-                if (!((Item)parent).isLoose()) {
-                    visitChildrenAndAppendSeparator(node, EOL);
-                    return;
-                }
+        Node parent = node.jjtGetParent();
+        if(parent instanceof Item) {
+            if (!((Item)parent).isLoose()) {
+                visitChildrenAndAppendSeparator(node, EOL);
+                return;
             }
-            append("<p>");
-            visitChildrenAndAppendSeparator(node, EOL);
-            append("</p>");
-            append(EOL);
         }
+        append("<p>");
+        visitChildrenAndAppendSeparator(node, EOL);
+        append("</p>");
+        append(EOL);
     }
 
     public void visit(Ruler node) {
@@ -255,6 +249,28 @@ public class HtmlEmitter implements Visitor {
 
     public void visit(SimpleNode node) {
         throw new IllegalArgumentException("can not process this element");
+    }
+
+    public void visit(Tag node) {
+        append("<");
+        append(node.getName());
+        for (TagAttribute attribute : node.getAttributes()) {
+            append(SPACE);
+            append(attribute.getName());
+            append("=\"");
+            append(attribute.getValue());
+            append("\"");
+        }
+
+        if(node.jjtGetNumChildren() == 0) {
+            append("/>");
+        } else {
+            append(">");
+            node.childrenAccept(this);
+            append("</");
+            append(node.getName());
+            append(">");
+        }
     }
 
     public void visit(EmptyTag node) {

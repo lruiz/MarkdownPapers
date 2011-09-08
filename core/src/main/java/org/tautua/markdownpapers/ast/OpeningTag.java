@@ -23,7 +23,6 @@ import java.util.ArrayList;
  * @author Larry Ruiz
  */
 public class OpeningTag extends Tag {
-    private java.util.List<TagAttribute> attributes = new ArrayList<TagAttribute>();
     private ClosingTag closingTag;
 
 
@@ -31,21 +30,7 @@ public class OpeningTag extends Tag {
         super(id);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
-    public java.util.List<TagAttribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<TagAttribute> attributes) {
-        this.attributes = attributes;
-    }
-
-    public void addAttr(TagAttribute attribute) {
-        attributes.add(attribute);
-    }
 
     public ClosingTag getClosingTag() {
         return closingTag;

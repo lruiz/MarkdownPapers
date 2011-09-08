@@ -25,6 +25,16 @@ public class Paragraph extends SimpleNode {
     }
 
     @Override
+    public void jjtAddChild(Node n, int i) {
+        int j = jjtGetNumChildren();
+        if(i >= j) {
+            Line l = (Line)n;
+            l.ending();
+        }
+        super.jjtAddChild(n, i);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

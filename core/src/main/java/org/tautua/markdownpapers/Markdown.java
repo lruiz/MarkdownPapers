@@ -31,6 +31,6 @@ public class Markdown {
         Parser parser = new Parser(in);
         HtmlEmitter emitter = new HtmlEmitter(out);
         Document document = parser.parse();
-        emitter.visit(document);
+        document.accept(emitter);
     }
 }

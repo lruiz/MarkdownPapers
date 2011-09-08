@@ -25,10 +25,6 @@ public class ClosingTag extends Tag {
         super(id);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
