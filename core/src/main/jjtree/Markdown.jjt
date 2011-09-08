@@ -90,7 +90,7 @@ public class Parser {
         return currentQuoteLevel == quoteLevel && stack.size() > 0 && stack.peek() instanceof Item
             && ((Item)stack.peek()).getIndentation() < t.beginColumn;
     }
-
+    
     boolean LineLookahead() {
         if (getToken(1).kind != EOL) {
             return false;
@@ -247,7 +247,26 @@ public class Parser {
         List list = (List)stack.peek();
 
         return t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
-            && list.getIndentation() == t.beginColumn;
+            && list.getIndentation() == t.beginColumn && !RulerLookahead(i);
+    }
+
+    boolean RulerLookahead(int i) {
+        Token t;
+        int whitespace = 0;
+        do {
+            t = getToken(i++);
+            if(t.kind == SPACE) {
+                whitespace++;
+            } else {
+                whitespace = 0;
+            }
+            
+            if(whitespace > 2) {
+                return false;
+            }
+        } while(t.any(STAR, MINUS, SPACE));
+        
+        return t.any(EOL, EOF);
     }
     
     boolean QuoteInsideTitleLookahead(int quoteKind) {
@@ -564,19 +583,6 @@ Token ItemPrefix() : {
     { return t; }
 }
 
-/*
-void ItemBody() : {} {
-    Paragraph()
-    (
-        (
-        LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() { jjtThis.makeLoose(); }
-        | LOOKAHEAD( {LooseLookahead()} ) <EOL> ( Whitespace() )? { jjtThis.makeLoose(); }
-        | LOOKAHEAD( {ListLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* List()
-        )
-    )*
-}
-*/
-
 void Paragraph() #Paragraph : {} {
     Line()
     ( LOOKAHEAD( {LineLookahead()} ) <EOL> ( <SPACE> | <TAB> | <GT> )* Line() )*
@@ -693,12 +699,7 @@ void Link() #Link : {
 } {
     "["
         (
-        LinkInlineElements()
-        | 
-        "[" #Text { ((Text)jjtree.peekNode()).append("["); } 
-        LinkInlineElements() 
-        "]" #Text { ((Text)jjtree.peekNode()).append("]"); }
-        | <EOL> #Text { ((Text)jjtree.peekNode()).append("\n"); } 
+        LinkBody()
         )+
     "]"
     (
@@ -969,11 +970,12 @@ Token EmphasisText() : {
     ) { return t; }
 }
 
-void LinkInlineElements() : {} {
+void LinkBody() : {} {
     CharRef()
     | CodeSpan()
     | LOOKAHEAD( Emphasis() ) Emphasis()
     | LOOKAHEAD( InlineURL() ) InlineURL()
+    | LOOKAHEAD( Link() ) Link()
     | LOOKAHEAD( Image() ) Image()
     | LinkText()
 }
@@ -991,6 +993,7 @@ void LinkText() #Text : {
         | t = <COMMENT_OPEN>
         | t = <COLON>
         | t = <DOUBLE_QUOTE>
+        | t = <EOL>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
         | t = <GT>
@@ -1062,4 +1065,10 @@ void TextNode() #Text : {
         | t = <TAB>
         | t = <UNDERSCORE>
     ) { jjtThis.append(t.image); }
+}
+
+
+JAVACODE
+void fake_production() {
+    // do nothing
 }
