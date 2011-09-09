@@ -22,8 +22,6 @@ package org.tautua.markdownpapers.ast;
 public interface Visitor {
     void visit(CharRef node);
 
-    void visit(ClosingTag node);
-
     void visit(Code node);
 
     void visit(CodeSpan node);
@@ -35,8 +33,6 @@ public interface Visitor {
     void visit(Document node);
 
     void visit(Emphasis node);
-
-    void visit(EmptyTag node);
 
     void visit(Header node);
 
@@ -54,13 +50,11 @@ public interface Visitor {
 
     void visit(Item node);
 
-    void visit(ResourceDefinition node);
-
-    void visit(OpeningTag node);
-
     void visit(Paragraph node);
 
     void visit(Quote node);
+
+    void visit(ResourceDefinition node);
 
     void visit(Ruler node);
 

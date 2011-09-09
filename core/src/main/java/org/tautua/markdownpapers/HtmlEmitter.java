@@ -30,7 +30,6 @@ import static org.tautua.markdownpapers.util.Utils.*;
  */
 public class HtmlEmitter implements Visitor {
     private Appendable buffer;
-    private Stack<Node> markupStack = new DequeStack<Node>();
 
     public HtmlEmitter(Appendable buffer) {
         this.buffer = buffer;
@@ -38,12 +37,6 @@ public class HtmlEmitter implements Visitor {
 
     public void visit(CharRef node) {
         append(node.getValue());
-    }
-
-    public void visit(ClosingTag node) {
-        append("</");
-        append(node.getName());
-        append(">");
     }
 
     public void visit(Code node) {
@@ -207,19 +200,6 @@ public class HtmlEmitter implements Visitor {
         append(EOL);
     }
 
-    public void visit(OpeningTag node) {
-        append("<");
-        append(node.getName());
-        for(TagAttribute attribute : node.getAttributes()) {
-            append(SPACE);
-            append(attribute.getName());
-            append("=\"");
-            append(attribute.getValue());
-            append("\"");
-        }
-        append(">");
-    }
-
     public void visit(Paragraph node) {
         Node parent = node.jjtGetParent();
         if(parent instanceof Item) {
@@ -273,19 +253,6 @@ public class HtmlEmitter implements Visitor {
         }
     }
 
-    public void visit(EmptyTag node) {
-        append("<");
-        append(node.getName());
-        for (TagAttribute attribute : node.getAttributes()) {
-            append(SPACE);
-            append(attribute.getName());
-            append("=\"");
-            append(attribute.getValue());
-            append("\"");
-        }
-        append("/>");
-    }
-
     public void visit(Text node) {
         escapeAndAppend(node.getValue());
     }
@@ -320,43 +287,5 @@ public class HtmlEmitter implements Visitor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void switchToMarkup(Paragraph node){
-        markupStack.push(node.jjtGetChild(0).jjtGetChild(0));
-    }
-
-    /**
-     * Find out if the paragraph starts with a balanced tag then we are in markup block.
-     * @param node
-     * @return
-     */
-    private boolean isMarkup(Paragraph node) {
-        Node grandson = node.jjtGetChild(0).jjtGetChild(0);
-        return grandson instanceof OpeningTag && ((OpeningTag)grandson).isBalanced();
-    }
-
-    private boolean containsHR(Paragraph node) {
-        Node grandson = node.jjtGetChild(0).jjtGetChild(0);
-        if (grandson instanceof Tag && ((Tag)grandson).getName().equalsIgnoreCase("hr")) {
-            if (node.jjtGetNumChildren() > 1) {
-                return false;
-            } else if (node.jjtGetChild(0).jjtGetNumChildren() == 1) {
-                return true;
-            } else {
-                for (int i = 1; i < node.jjtGetChild(0).jjtGetNumChildren(); i++) {
-                    Node sibling = node.jjtGetChild(0).jjtGetChild(i);
-                    if (!(sibling instanceof Text && ((Text)sibling).isWhitespace()) ) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isOnMarkupBlock() {
-        return markupStack.size() > 0;
     }
 }

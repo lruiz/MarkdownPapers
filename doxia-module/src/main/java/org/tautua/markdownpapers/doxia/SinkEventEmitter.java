@@ -42,12 +42,6 @@ public class SinkEventEmitter implements Visitor {
         sink.text(node.getValue());
     }
 
-    public void visit(ClosingTag node) {
-        sink.rawText("</");
-        sink.rawText(node.getName());
-        sink.rawText(">");
-    }
-
     public void visit(Code node) {
         sink.verbatim(SinkEventAttributeSet.BOXED);
         node.childrenAccept(this);
@@ -95,13 +89,6 @@ public class SinkEventEmitter implements Visitor {
                 sink.italic_();
                 break;
         }
-    }
-
-    public void visit(EmptyTag node) {
-        sink.rawText("<");
-        sink.rawText(node.getName());
-        appendAttributes(node.getAttributes());
-        sink.rawText("/>");
     }
 
     public void visit(Header node) {
@@ -181,13 +168,6 @@ public class SinkEventEmitter implements Visitor {
             node.childrenAccept(this);
             sink.list_();
         }
-    }
-
-    public void visit(OpeningTag node) {
-        sink.rawText("<");
-        sink.rawText(node.getName());
-        appendAttributes(node.getAttributes());
-        sink.rawText(">");
     }
 
     private void appendAttributes(java.util.List<TagAttribute> attributes) {

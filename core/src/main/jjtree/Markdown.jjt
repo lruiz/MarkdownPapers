@@ -909,11 +909,12 @@ String Anything() : {
     Token t;
 } {
     (
-        t = <AMPERSAND>
+        t = <CHAR_SEQUENCE>
+        | t = <SPACE>
+        | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
-        | t = <CHAR_SEQUENCE>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <COLON>
@@ -932,7 +933,6 @@ String Anything() : {
         | t = <SHARP>
         | t = <SINGLE_QUOTE>
         | t = <SLASH>
-        | t = <SPACE>
         | t = <STAR>
         | t = <TAB>
         | t = <UNDERSCORE>
@@ -943,11 +943,11 @@ Token EmphasisText() : {
     Token t;
 } {
     (
-        t = <AMPERSAND>
+        t = <CHAR_SEQUENCE>
+        | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
-        | t = <CHAR_SEQUENCE>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <COLON>
@@ -984,11 +984,12 @@ void LinkText() #Text : {
     Token t;
 } {
     (
-        t = <AMPERSAND>
+        t = <CHAR_SEQUENCE>
+        | t = <SPACE>
+        | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
-        | t = <CHAR_SEQUENCE>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <COLON>
@@ -1006,7 +1007,6 @@ void LinkText() #Text : {
         | t = <SHARP>
         | t = <SINGLE_QUOTE>
         | t = <SLASH>
-        | t = <SPACE>
         | t = <STAR>
         | t = <TAB>
         | t = <UNDERSCORE>
@@ -1017,16 +1017,16 @@ Token TagAttributeText() : {
     Token t;
 } {
     (
-        t = <CODE_SPAN>
-        | t = <ESCAPED_CHAR>
+        t = <CHAR_SEQUENCE>
         | t = <SPACE>
+        | t = <AMPERSAND>
+        | t = <CODE_SPAN>
+        | t = <ESCAPED_CHAR>
+        | t = <GT>
+        | t = <LPAREN>
+        | t = <LT>
+        | t = <RPAREN>
         | t = <TAB>
-        | t = <CHAR_SEQUENCE>
-        | t = "&"
-        | t = "("
-        | t = ")"
-        | t = "<"
-        | t = ">"
         | t = "/"
         | t = "\\"
         | t = "`"
@@ -1037,11 +1037,12 @@ void TextNode() #Text : {
     Token t;
 } {
     (
-        t = <AMPERSAND>
+        t = <CHAR_SEQUENCE>
+        | t = <SPACE>
+        | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
-        | t = <CHAR_SEQUENCE>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <COLON>
@@ -1060,15 +1061,8 @@ void TextNode() #Text : {
         | t = <SHARP>
         | t = <SINGLE_QUOTE>
         | t = <SLASH>
-        | t = <SPACE>
         | t = <STAR>
         | t = <TAB>
         | t = <UNDERSCORE>
     ) { jjtThis.append(t.image); }
-}
-
-
-JAVACODE
-void fake_production() {
-    // do nothing
 }
