@@ -12,7 +12,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author Larry Ruiz, Aug 26, 2010
  */
-public class MarkdownParserTest extends AbstractParserTest {
+public class SinkEventEmitterTest extends AbstractParserTest {
     private MarkdownParser parser;
 
     protected void setUp() throws Exception {

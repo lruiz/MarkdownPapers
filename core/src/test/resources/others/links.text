@@ -1,7 +1,13 @@
 [text][id]
 
 [text 2][id_2]
- 
-[id]: http://localhost/path_to#id
-[id_2]: http://localhost/path_to_file#id
+
+[text 3](http://localhost/path#id)  
+
+[text 4](http://localhost/path#id            )  
+
+[text 5](     http://localhost/path#id "title"           )
+
+[id]: http://localhost/path_to#id                   
+[id_2]: http://localhost/path_to_file#id "title"      
 
