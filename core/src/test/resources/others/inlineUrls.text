@@ -1,0 +1,6 @@
+<http://domain.com>
+<http://domain.com/file_path.html>
+<http://domain.com/file-path.html>
+<http://domain.com/path?p1=v1&p2=v2>
+<http://domain.com/path#section1>
+<http://domain.com:8080/path#section1>

@@ -363,7 +363,7 @@ void BlockElement() : {} {
             | LOOKAHEAD( Ruler() ( <EOL> | <EOF> ) ) Ruler()
             | LOOKAHEAD( Header() ( <EOL> | <EOF> ) ) Header()
             | LOOKAHEAD( Comment() ) Comment()
-            | HtmlBlock()
+            | LOOKAHEAD( TagOpen() ) HtmlBlock()
             | LOOKAHEAD(2) List()
             | Paragraph()
         )
@@ -685,10 +685,21 @@ void InlineURL() #InlineUrl : {
     ( "/" { buff.append("/"); } )*
     t = <CHAR_SEQUENCE> { buff.append(t.image); }
     (
-        t = <CHAR_SEQUENCE> { buff.append(t.image); }
-        | "/" { buff.append("/"); }
-        | "&" { buff.append("&"); }
-        | "=" { buff.append("="); }
+        (
+        t = <CHAR_SEQUENCE>
+        | t = <AMPERSAND>
+        | t = <BACKSLASH>
+        | t = <COLON>
+        | t = <EQ>
+        | t = <LBRACKET>
+        | t = <LPAREN>
+        | t = <MINUS>
+        | t = <RBRACKET>
+        | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SLASH>
+        | t = <UNDERSCORE>
+        ) { buff.append(t.image); }
     )*
     ">"
     { jjtThis.setUrl(buff.toString()); }
@@ -792,6 +803,10 @@ TagAttribute TagAttribute() : {
     }
 }
 
+void TagOpen() : {} {
+    "<" <CHAR_SEQUENCE> ( ( <SPACE> )+ TagAttribute() )* ( <SPACE> )* ( "/" )? ">"
+}
+
 String refname() : {
     Token t;
     StringBuilder buff = new StringBuilder();
@@ -855,6 +870,7 @@ String urltext() : {
         | t = <EQ>
         | t = <LBRACKET>
         | t = <LPAREN> { parentheses++; }
+        | t = <MINUS>
         | t = <RBRACKET>
         | LOOKAHEAD({parentheses > 0}) t = <RPAREN> { parentheses--; }
         | t = <SHARP>

@@ -48,7 +48,8 @@ public class MarkdownPapersTest extends BaseTest {
                 {"rulers"},
                 {"snippets"},
                 {"tags"},
-                {"underscore"}
+                {"underscore"},
+                {"inlineUrls"}
             });
     }
 }
