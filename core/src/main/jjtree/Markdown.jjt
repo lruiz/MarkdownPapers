@@ -1038,16 +1038,24 @@ Token TagAttributeText() : {
         t = <CHAR_SEQUENCE>
         | t = <SPACE>
         | t = <AMPERSAND>
-        | t = <CODE_SPAN>
+        | t = <BACKSLASH>
+        | t = <BACKTICK>
+        | t = <BANG>
+        | t = <COLON>
+        | t = <EOL>
+        | t = <EQ>
         | t = <ESCAPED_CHAR>
         | t = <GT>
         | t = <LPAREN>
-        | t = <LT>
+        | t = <MINUS>
+        | t = <NUMBERING>
+        | t = <PLUS>
         | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SLASH>
+        | t = <STAR>
         | t = <TAB>
-        | t = "/"
-        | t = "\\"
-        | t = "`"
+        | t = <UNDERSCORE>
     ) { return t; }
 }
 
