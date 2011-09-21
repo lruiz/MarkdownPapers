@@ -933,9 +933,9 @@ String Anything() : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <COLON>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
-        | t = <COLON>
         | t = <DOUBLE_QUOTE>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
@@ -966,9 +966,9 @@ Token EmphasisText() : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <COLON>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
-        | t = <COLON>
         | t = <DOUBLE_QUOTE>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
@@ -1008,9 +1008,9 @@ void LinkText() #Text : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <COLON>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
-        | t = <COLON>
         | t = <DOUBLE_QUOTE>
         | t = <EOL>
         | t = <EQ>
@@ -1041,6 +1041,7 @@ Token TagAttributeText() : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <CODE_SPAN>
         | t = <COLON>
         | t = <EOL>
         | t = <EQ>
@@ -1069,9 +1070,10 @@ void TextNode() #Text : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <CODE_SPAN>
+        | t = <COLON>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
-        | t = <COLON>
         | t = <DOUBLE_QUOTE>
         | t = <EQ>
         | t = <EOL>
