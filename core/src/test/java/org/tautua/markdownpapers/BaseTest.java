@@ -94,6 +94,8 @@ public abstract class BaseTest {
         File expected = new File(inputDirectory, fileName + outputExtension);
         File output = new File(outputDirectory, fileName + outputExtension);
         transform(input, output);
-        compare(expected, output);
+        if(expected.exists()) {
+            compare(expected, output);
+        }
     }
 }

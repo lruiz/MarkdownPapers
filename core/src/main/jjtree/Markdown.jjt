@@ -111,7 +111,7 @@ public class Parser {
             return false;
         }
 
-        if (t.any(PLUS, MINUS, STAR, NUMBERING) && stack.peek() instanceof Item) {
+        if ((t.any(PLUS, MINUS, STAR, NUMBERING) && getToken(i).any(SPACE, TAB)) && stack.peek() instanceof Item) {
             return false;
         }
 
