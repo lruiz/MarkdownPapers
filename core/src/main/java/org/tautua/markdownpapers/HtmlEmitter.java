@@ -254,7 +254,11 @@ public class HtmlEmitter implements Visitor {
     }
 
     public void visit(Text node) {
-        escapeAndAppend(node.getValue());
+        if(node.jjtGetParent() instanceof Tag) {
+            append(node.getValue());
+        } else {
+            escapeAndAppend(node.getValue());
+        }
     }
 
     void visitChildrenAndAppendSeparator(Node node, char separator){

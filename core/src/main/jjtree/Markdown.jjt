@@ -1041,6 +1041,7 @@ Token TagAttributeText() : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <CHAR_ENTITY_REF>
         | t = <CODE_SPAN>
         | t = <COLON>
         | t = <EOL>
@@ -1049,6 +1050,7 @@ Token TagAttributeText() : {
         | t = <GT>
         | t = <LPAREN>
         | t = <MINUS>
+        | t = <NUMERIC_CHAR_REF>
         | t = <NUMBERING>
         | t = <PLUS>
         | t = <RPAREN>
@@ -1070,6 +1072,7 @@ void TextNode() #Text : {
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
+        | t = <CHAR_ENTITY_REF>
         | t = <CODE_SPAN>
         | t = <COLON>
         | t = <COMMENT_CLOSE>
@@ -1082,6 +1085,7 @@ void TextNode() #Text : {
         | t = <LBRACKET>
         | t = <LPAREN>
         | t = <MINUS>
+        | t = <NUMERIC_CHAR_REF>
         | t = <NUMBERING>
         | t = <PLUS>
         | t = <RBRACKET>
