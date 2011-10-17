@@ -8,7 +8,7 @@
 
 [text 5](     http://localhost/path#id "title"           )
 
-[text 6](http://localhost/another-path.jpg)
+[text-6](http://localhost/another-path.jpg "title '-+/*%#$!{}()[]")
 
 [id]: http://localhost/path_to#id                   
 [id_2]: http://localhost/path_to_file#id "title"      

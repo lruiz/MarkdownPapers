@@ -817,14 +817,22 @@ String refname() : {
         | t = <SPACE>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
+        | t = <BACKTICK>
+        | t = <BANG>
         | t = <COLON>
         | t = <EQ>
         | t = <GT>
         | t = <LBRACKET>
         | t = <LPAREN>
         | t = <LT>
+        | t = <MINUS>
+        | t = <NUMBERING>
+        | t = <PLUS>
         | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SINGLE_QUOTE>
         | t = <SLASH>
+        | t = <STAR>
         | t = <TAB>
         | t = <UNDERSCORE>
         ) { buff.append(t.image); }
@@ -887,20 +895,20 @@ String title() : {
     (
         (
             "\""
-            text = titletext(DOUBLE_QUOTE)
+            text = TitleText(DOUBLE_QUOTE)
             "\""
         )
         |
         (
             "'"
-            text = titletext(SINGLE_QUOTE)
+            text = TitleText(SINGLE_QUOTE)
             "'"
         )
     )
     { return text; }
 }
 
-String titletext(int quoteType) : {
+String TitleText(int quoteType) : {
     StringBuilder buff = new StringBuilder();
     Token t;
 } {
@@ -911,11 +919,24 @@ String titletext(int quoteType) : {
             | t = <SPACE>
             | t = <AMPERSAND>
             | t = <BACKSLASH>
+            | t = <BACKTICK>
+            | t = <BANG>
+            | t = <COLON>
             | t = <DOUBLE_QUOTE>
+            | t = <EQ>
+            | t = <GT>
+            | t = <LBRACKET>
             | t = <LPAREN>
+            | t = <LT>
+            | t = <MINUS>
+            | t = <NUMBERING>
+            | t = <PLUS>
+            | t = <RBRACKET>
             | t = <RPAREN>
+            | t = <SHARP>
             | t = <SINGLE_QUOTE>
             | t = <SLASH>
+            | t = <STAR>
             | t = <TAB>
             | t = <UNDERSCORE>
         ) { buff.append(t.image); }
