@@ -28,7 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 
 /**
- * Larry Ruiz
+ * @author Larry Ruiz
  */
 public abstract class BaseTest {
 

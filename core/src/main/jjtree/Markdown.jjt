@@ -599,7 +599,7 @@ void Line() #Line : {} {
         | LOOKAHEAD( InlineURL() ) InlineURL()
         | LOOKAHEAD( Emphasis() ) Emphasis()
         | LOOKAHEAD( LineBreak() <EOL> ) LineBreak()
-        | LOOKAHEAD(4) Tag()
+        | LOOKAHEAD( TagOpen() ) Tag()
         | Text()
         )
     )+
@@ -765,7 +765,7 @@ void Tag() #Tag : {
         | 
         try {
             ">"
-            ( LOOKAHEAD(2) ( TextNode() | Tag() ) )*
+            ( LOOKAHEAD(2) ( Tag() | TextNode() ) )*
             "<" "/" <CHAR_SEQUENCE> ( <SPACE> )* ">"
         } catch (ParseException e) {
             // failsafe
