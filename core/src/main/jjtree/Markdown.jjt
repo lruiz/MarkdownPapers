@@ -874,11 +874,13 @@ String urltext() : {
         t = <CHAR_SEQUENCE>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
+        | t = <BANG>
         | t = <COLON>
         | t = <EQ>
         | t = <LBRACKET>
         | t = <LPAREN> { parentheses++; }
         | t = <MINUS>
+        | t = <PLUS>
         | t = <RBRACKET>
         | LOOKAHEAD({parentheses > 0}) t = <RPAREN> { parentheses--; }
         | t = <SHARP>

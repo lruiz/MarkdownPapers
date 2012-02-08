@@ -10,6 +10,8 @@
 
 [text-6](http://localhost/another-path.jpg "title '-+/*%#$!{}()[]")
 
+[text 7](http://localhost/#!/path)
+
 [id]: http://localhost/path_to#id                   
 [id_2]: http://localhost/path_to_file#id "title"      
 
