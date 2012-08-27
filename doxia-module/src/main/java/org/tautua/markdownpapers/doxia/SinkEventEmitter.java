@@ -205,19 +205,44 @@ public class SinkEventEmitter implements Visitor {
     }
 
     public void visit(Tag node) {
+        TagAttributeList attributes = node.getAttributeList();
+        TagBody body = node.getBody();
+
         sink.rawText("<");
         sink.rawText(node.getName());
-        appendAttributes(node.getAttributes());
 
-        if(node.jjtGetNumChildren() == 0) {
+        if(attributes != null) {
+            attributes.accept(this);
+        }
+
+        if(body == null) {
             sink.rawText("/>");
         } else {
             sink.rawText(">");
-            node.childrenAccept(this);
+            body.accept(this);
             sink.rawText("</");
             sink.rawText(node.getName());
             sink.rawText(">");
         }
+    }
+
+    @Override
+    public void visit(TagAttribute node) {
+        sink.rawText(" ");
+        sink.rawText(node.getName());
+        sink.rawText("=\"");
+        sink.rawText(node.getValue());
+        sink.rawText("\"");
+    }
+
+    @Override
+    public void visit(TagAttributeList node) {
+        node.childrenAccept(this);
+    }
+
+    @Override
+    public void visit(TagBody node) {
+        node.childrenAccept(this);
     }
 
     public void visit(Text node) {

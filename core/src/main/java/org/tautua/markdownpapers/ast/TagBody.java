@@ -16,42 +16,12 @@
 
 package org.tautua.markdownpapers.ast;
 
-import java.util.*;
-
 /**
  * @author Larry Ruiz
  */
-public class Tag extends SimpleNode {
-    protected String name;
-
-    public Tag(int i) {
-        super(i);
-    }
-
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public TagAttributeList getAttributeList() {
-        for(int i = 0; i < children.length; i++) {
-            if(children[i] instanceof TagAttributeList) {
-                return (TagAttributeList) children[i];
-            }
-        }
-        return null;
-    }
-
-    public TagBody getBody() {
-        for(int i = 0; i < children.length; i++) {
-            if(children[i] instanceof TagBody) {
-                return (TagBody) children[i];
-            }
-        }
-        return null;
+public class TagBody extends SimpleNode {
+    public TagBody(int id) {
+        super(id);
     }
 
     @Override

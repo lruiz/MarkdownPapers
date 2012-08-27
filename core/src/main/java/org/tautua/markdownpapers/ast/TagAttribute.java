@@ -19,20 +19,32 @@ package org.tautua.markdownpapers.ast;
 /**
  * @author Larry Ruiz
  */
-public class TagAttribute {
+public class TagAttribute extends SimpleNode {
     private String name;
     private String value;
 
-    public TagAttribute(String name, String value) {
-        this.name = name;
-        this.value = value;
+    public TagAttribute(int i) {
+        super(i);
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getValue() {
         return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

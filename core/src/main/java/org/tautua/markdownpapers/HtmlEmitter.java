@@ -17,8 +17,6 @@
 package org.tautua.markdownpapers;
 
 import org.tautua.markdownpapers.ast.*;
-import org.tautua.markdownpapers.util.DequeStack;
-import org.tautua.markdownpapers.util.Stack;
 
 import java.io.IOException;
 
@@ -232,36 +230,55 @@ public class HtmlEmitter implements Visitor {
     }
 
     public void visit(Tag node) {
+        TagAttributeList attributes = node.getAttributeList();
+        TagBody body = node.getBody();
+
         append("<");
         append(node.getName());
-        for (TagAttribute attribute : node.getAttributes()) {
-            append(SPACE);
-            append(attribute.getName());
-            append("=\"");
-            append(attribute.getValue());
-            append("\"");
+
+        if(attributes != null) {
+            attributes.accept(this);
         }
 
-        if(node.jjtGetNumChildren() == 0) {
+        if(body == null) {
             append("/>");
         } else {
             append(">");
-            node.childrenAccept(this);
+            body.accept(this);
             append("</");
             append(node.getName());
             append(">");
         }
     }
 
+    @Override
+    public void visit(TagAttribute node) {
+        append(SPACE);
+        append(node.getName());
+        append("=\"");
+        append(node.getValue());
+        append("\"");
+    }
+
+    @Override
+    public void visit(TagAttributeList node) {
+        node.childrenAccept(this);
+    }
+
+    @Override
+    public void visit(TagBody node) {
+        node.childrenAccept(this);
+    }
+
     public void visit(Text node) {
-        if(node.jjtGetParent() instanceof Tag) {
+        if(node.jjtGetParent() instanceof TagBody) {
             append(node.getValue());
         } else {
             escapeAndAppend(node.getValue());
         }
     }
 
-    void visitChildrenAndAppendSeparator(Node node, char separator){
+    protected void visitChildrenAndAppendSeparator(Node node, char separator){
         int count = node.jjtGetNumChildren();
         for(int i = 0; i < count; i++) {
             node.jjtGetChild(i).accept(this);
@@ -271,13 +288,19 @@ public class HtmlEmitter implements Visitor {
         }
     }
 
-    void escapeAndAppend(String val) {
+    protected void visit(Node[] nodes) {
+        for (Node n : nodes) {
+            n.accept(this);
+        }
+    }
+
+    protected void escapeAndAppend(String val) {
         for(char character : val.toCharArray()) {
             append(escape(character));
         }
     }
 
-    void append(String val) {
+    protected void append(String val) {
         try {
             buffer.append(val);
         } catch (IOException e) {
@@ -285,7 +308,7 @@ public class HtmlEmitter implements Visitor {
         }
     }
 
-    void append(char val) {
+    protected void append(char val) {
         try {
             buffer.append(val);
         } catch (IOException e) {

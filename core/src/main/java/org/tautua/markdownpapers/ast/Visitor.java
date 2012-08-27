@@ -61,6 +61,12 @@ public interface Visitor {
     void visit(SimpleNode node);
 
     void visit(Tag node);
+
+    void visit(TagAttribute node);
+
+    void visit(TagAttributeList node);
+
+    void visit(TagBody node);
     
     void visit(Text node);
 }

@@ -8,9 +8,10 @@ options {
     NODE_DEFAULT_VOID = true;
     NODE_USES_PARSER = false;
     NODE_PACKAGE = "org.tautua.markdownpapers.ast";
-    DEBUG_PARSER = false;
-    DEBUG_TOKEN_MANAGER = false;
+
     DEBUG_LOOKAHEAD = false;
+    DEBUG_TOKEN_MANAGER = false;
+    DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(Parser)
@@ -758,14 +759,14 @@ void Tag() #Tag : {
     TagAttribute attribute;
 } {
     "<" t = <CHAR_SEQUENCE> { jjtThis.setName(t.image); }
-    ( LOOKAHEAD(2) ( <SPACE> )+ attribute = TagAttribute() { jjtThis.addAttribute(attribute); } )* ( <SPACE> )*
+    ( LOOKAHEAD( ( <SPACE> )+ TagAttribute() )  TagAttributeList() )? ( <SPACE> )*
     (
         LOOKAHEAD(2)
         "/" ">"
         | 
         try {
             ">"
-            ( LOOKAHEAD(2) ( Tag() | TextNode() ) )*
+            ( LOOKAHEAD(2) TagBody() )?
             "<" "/" <CHAR_SEQUENCE> ( <SPACE> )* ">"
         } catch (ParseException e) {
             // failsafe
@@ -773,12 +774,19 @@ void Tag() #Tag : {
     )
 }
 
-TagAttribute TagAttribute() : {
+void TagAttributeList() #TagAttributeList : {}{
+    ( LOOKAHEAD( ( <SPACE> )+ TagAttribute() ) ( <SPACE> )+ TagAttribute() )+
+}
+
+void TagBody() #TagBody : {}{
+    ( LOOKAHEAD(2) ( Tag() | TextNode() ) )+
+}
+
+void TagAttribute() #TagAttribute : {
     StringBuilder buff = new StringBuilder();
-    Token name;
     Token t;
 } {
-    name = <CHAR_SEQUENCE> "="
+    t = <CHAR_SEQUENCE> "=" { jjtThis.setName(t.image); }
     (
         "\""
         (
@@ -799,7 +807,7 @@ TagAttribute TagAttribute() : {
         "'"
     )
     {
-        return new TagAttribute(name.image, buff.toString());
+        jjtThis.setValue(buff.toString());
     }
 }
 
