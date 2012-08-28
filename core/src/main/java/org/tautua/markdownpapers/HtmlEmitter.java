@@ -68,17 +68,17 @@ public class HtmlEmitter implements Visitor {
         switch (node.getType()) {
             case ITALIC:
                 append("<em>");
-                append(node.getText());
+                node.childrenAccept(this);
                 append("</em>");
                 break;
             case BOLD:
                 append("<strong>");
-                append(node.getText());
+                node.childrenAccept(this);
                 append("</strong>");
                 break;
             case ITALIC_AND_BOLD:
                 append("<strong><em>");
-                append(node.getText());
+                node.childrenAccept(this);
                 append("</em></strong>");
                 break;
         }

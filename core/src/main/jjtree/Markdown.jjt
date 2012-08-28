@@ -298,14 +298,31 @@ TOKEN : {
     | < EOL : "\r" | "\n" | "\r\n" >
 }
 
+/* LITERAL */
+TOKEN : {
+    < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" >
+    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
+    | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
+    | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ".", ":", "<", ">", "(", ")", "[", "]", " "
+                        , "\\", "/", "\t", "\r", "\n", "!", "_", "-", "+"] )+ >
+}
+
+TOKEN : {
+    < CODE_SPAN : "`" ( ~["`", "\r", "\n"] )+ "`" | "`" "`" ( ~["'", "\r", "\n"] )+ "`" "`" >
+    | < NUMBERING : ( ["0"-"9"] )+ "." >
+}
+
 /* PUNCTUATION */
 TOKEN : {
     < AMPERSAND : "&" >
     | < BACKSLASH : "\\" >
     | < BACKTICK : "`" >
     | < BANG : "!" >
+    | < COMMENT_OPEN : "<!--" >
+    | < COMMENT_CLOSE : "-->" >
     | < COLON : ":" >
     | < DOUBLE_QUOTE : "\"" >
+    | < DOT : "." >
     | < EQ : "=" >
     | < GT : ">" >
     | < LBRACKET : "[" >
@@ -320,24 +337,6 @@ TOKEN : {
     | < SLASH : "/" >
     | < STAR : "*" >
     | < UNDERSCORE : "_" >
-}
-
-TOKEN : {
-    < COMMENT_OPEN : "<!--" >
-    | < COMMENT_CLOSE : "-->" >
-}
-
-TOKEN : {
-    < CODE_SPAN : "`" ( ~["`", "\r", "\n"] )+ "`" | "`" "`" ( ~["'", "\r", "\n"] )+ "`" "`" >
-    | < NUMBERING : ( ["0"-"9"] )+ "." >
-}
-
-TOKEN : {
-    < CHAR_ENTITY_REF : "&" ( ["a"-"z", "A"-"Z"] )+ ";" >
-    | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
-    | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
-    | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ":", "<", ">", "(", ")", "[", "]", " "
-                        , "\\", "/", "\t", "\r", "\n", "!", "_", "-", "+"] )+ >
 }
 
 void Document() #Document : {} {
@@ -491,6 +490,7 @@ void CodeText() #CodeText : {
                 | t = <COMMENT_CLOSE>
                 | t = <COLON>
                 | t = <DOUBLE_QUOTE>
+                | t = <DOT>
                 | t = <EQ>
                 | t = <ESCAPED_CHAR>
                 | t = <GT>
@@ -636,22 +636,21 @@ void Emphasis() #Emphasis : {
 } {
     (
         <UNDERSCORE> ( <UNDERSCORE> { flag = 2; } ( <UNDERSCORE> { flag = 3; } )? )?
-        ( t = EmphasisText() | t = <STAR> ) { buff.append(t.image); }
+        ( CharRef() | EmphasisText() | <STAR> { jjtThis.append("*"); } #Text )
         (
-            ( <SPACE> { buff.append(" "); } )? 
-            ( t = EmphasisText() | t = <STAR> ) { buff.append(t.image); }
+            ( <SPACE> { jjtThis.append(" "); } #Text )?
+            ( CharRef() | EmphasisText() | <STAR> { jjtThis.append("*"); } #Text )
         )*
         <UNDERSCORE> ( <UNDERSCORE> ( <UNDERSCORE> )? )?
         | 
         <STAR> ( <STAR> { flag = 2; } ( <STAR> { flag = 3; } )? )?
-        ( t = EmphasisText() | t = <UNDERSCORE> ) { buff.append(t.image); }
+        ( CharRef() | EmphasisText() | <UNDERSCORE> { jjtThis.append("_"); } #Text )
         (
-            ( <SPACE> { buff.append(" "); } )? 
-            ( t = EmphasisText() | t = <UNDERSCORE> ) { buff.append(t.image); }
+            ( <SPACE> { jjtThis.append(" "); } #Text )?
+            ( CharRef() | EmphasisText() | <UNDERSCORE> { jjtThis.append("_"); } #Text )
         )*
         <STAR> ( <STAR> ( <STAR> )? )?
     ) {
-        jjtThis.setText(buff.toString());
         if (flag == 2) {
             jjtThis.makeBold();
         } else if (flag == 3) {
@@ -691,6 +690,7 @@ void InlineURL() #InlineUrl : {
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <COLON>
+        | t = <DOT>
         | t = <EQ>
         | t = <LBRACKET>
         | t = <LPAREN>
@@ -828,6 +828,7 @@ String refname() : {
         | t = <BACKTICK>
         | t = <BANG>
         | t = <COLON>
+        | t = <DOT>
         | t = <EQ>
         | t = <GT>
         | t = <LBRACKET>
@@ -884,6 +885,7 @@ String urltext() : {
         | t = <BACKSLASH>
         | t = <BANG>
         | t = <COLON>
+        | t = <DOT>
         | t = <EQ>
         | t = <LBRACKET>
         | t = <LPAREN> { parentheses++; }
@@ -933,6 +935,7 @@ String TitleText(int quoteType) : {
             | t = <BANG>
             | t = <COLON>
             | t = <DOUBLE_QUOTE>
+            | t = <DOT>
             | t = <EQ>
             | t = <GT>
             | t = <LBRACKET>
@@ -968,6 +971,7 @@ String Anything() : {
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <DOUBLE_QUOTE>
+        | t = <DOT>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
         | t = <GT>
@@ -988,7 +992,7 @@ String Anything() : {
     ) { return val(t); }
 }
 
-Token EmphasisText() : {
+void EmphasisText() #Text : {
     Token t;
 } {
     (
@@ -1001,6 +1005,7 @@ Token EmphasisText() : {
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <DOUBLE_QUOTE>
+        | t = <DOT>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
         | t = <GT>
@@ -1016,7 +1021,7 @@ Token EmphasisText() : {
         | t = <SINGLE_QUOTE>
         | t = <SLASH>
         | t = <TAB>
-    ) { return t; }
+    ) { jjtThis.append(t.image); }
 }
 
 void LinkBody() : {} {
@@ -1043,6 +1048,7 @@ void LinkText() #Text : {
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <DOUBLE_QUOTE>
+        | t = <DOT>
         | t = <EOL>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
@@ -1075,6 +1081,7 @@ Token TagAttributeText() : {
         | t = <CHAR_ENTITY_REF>
         | t = <CODE_SPAN>
         | t = <COLON>
+        | t = <DOT>
         | t = <EOL>
         | t = <EQ>
         | t = <ESCAPED_CHAR>
@@ -1109,6 +1116,7 @@ void TextNode() #Text : {
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
         | t = <DOUBLE_QUOTE>
+        | t = <DOT>
         | t = <EQ>
         | t = <EOL>
         | t = <ESCAPED_CHAR>
