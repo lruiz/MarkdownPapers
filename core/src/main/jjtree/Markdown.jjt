@@ -84,7 +84,10 @@ public class Parser {
             }
         } while(t.any(EOL, SPACE, TAB, GT));
 
-        if (t.any(PLUS, MINUS, STAR, NUMBERING, EOF)) {
+
+
+        if ((t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB))
+            || t.kind == EOF) {
             return false;
         }
 
@@ -225,8 +228,8 @@ public class Parser {
 
         Item item = (Item)stack.peek();
 
-        return t.any(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() < t.beginColumn 
-            && quoteLevel <= currentQuoteLevel;
+        return t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
+            && item.getIndentation() < t.beginColumn && quoteLevel <= currentQuoteLevel;
     }
 
     boolean ItemLookahead() {
