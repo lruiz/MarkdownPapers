@@ -31,6 +31,7 @@
         <menu name="Documentation" inherit="top">
             <item name="Introduction" href="index.html" title="Introduction"/>
             <item name="Doxia Module" href="doxia-module.html"/>
+            <item name="Tweaks" href="tweaks.html"/>
             <item name="JavaCC Grammar" href="https://github.com/lruiz/MarkdownPapers/blob/master/core/src/main/jjtree/Markdown.jjt"/>
             <item name="Download" href="https://github.com/lruiz/MarkdownPapers/downloads"/>
         </menu>
