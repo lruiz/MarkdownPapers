@@ -737,6 +737,7 @@ void InlineURL() #InlineUrl : {
         | t = <LBRACKET>
         | t = <LPAREN>
         | t = <MINUS>
+        | t = <NUMBERING>
         | t = <RBRACKET>
         | t = <RPAREN>
         | t = <SHARP>
@@ -932,6 +933,7 @@ String urltext() : {
         | t = <LBRACKET>
         | t = <LPAREN> { parentheses++; }
         | t = <MINUS>
+        | t = <NUMBERING>
         | t = <PLUS>
         | t = <RBRACKET>
         | LOOKAHEAD({parentheses > 0}) t = <RPAREN> { parentheses--; }

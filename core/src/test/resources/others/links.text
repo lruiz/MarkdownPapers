@@ -15,3 +15,8 @@
 [id]: http://localhost/path_to#id                   
 [id_2]: http://localhost/path_to_file#id "title"      
 
+[text 8](http://www.example-0.com)
+
+[text 9][id_9]
+
+[id_9]: http://www.example-0.com
