@@ -21,7 +21,6 @@ import org.tautua.markdownpapers.ast.*;
 import org.tautua.markdownpapers.util.*;
 
 public class Parser {
-    private static final String EMPTY_STRING = "";
     private static final String QUOTE = '"' + "";
 
     private Stack<Node> stack = new DequeStack<Node>();
@@ -42,11 +41,7 @@ public class Parser {
 
     String val(Token t) {
         String i = t.image;
-        if (t.kind == CODE_SPAN && i.startsWith("``")) {
-            i = i.substring(2, i.length() - 2);
-        } else if (t.kind == CODE_SPAN) {
-            i = i.substring(1, i.length() - 1);
-        } else if(t.kind == ESCAPED_CHAR) {
+        if(t.kind == ESCAPED_CHAR) {
             i = String.valueOf(i.charAt(1));
         }
         return i;
@@ -225,8 +220,8 @@ public class Parser {
 
         Item item = (Item)stack.peek();
 
-        return t.any(PLUS, MINUS, STAR, NUMBERING) && item.getIndentation() < t.beginColumn 
-            && quoteLevel <= currentQuoteLevel;
+        return t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
+            && item.getIndentation() < t.beginColumn && quoteLevel <= currentQuoteLevel;
     }
 
     boolean ItemLookahead() {
@@ -308,8 +303,7 @@ TOKEN : {
 }
 
 TOKEN : {
-    < CODE_SPAN : "`" ( ~["`", "\r", "\n"] )+ "`" | "`" "`" ( ~["'", "\r", "\n"] )+ "`" "`" >
-    | < NUMBERING : ( ["0"-"9"] )+ "." >
+    < NUMBERING : ( ["0"-"9"] )+ "." >
 }
 
 /* PUNCTUATION */
@@ -485,7 +479,6 @@ void CodeText() #CodeText : {
                 | t = <BACKSLASH>
                 | t = <BANG>
                 | t = <CHAR_ENTITY_REF>
-                | t = <CODE_SPAN>
                 | t = <COMMENT_OPEN>
                 | t = <COMMENT_CLOSE>
                 | t = <COLON>
@@ -594,7 +587,7 @@ void Line() #Line : {} {
     (LOOKAHEAD( {TextLookahead()} )
         (
         CharRef()
-        | CodeSpan()
+        | LOOKAHEAD( CodeSpan() ) CodeSpan()
         | LOOKAHEAD( Link() ) Link()
         | LOOKAHEAD( Image() ) Image()
         | LOOKAHEAD( InlineURL() ) InlineURL()
@@ -624,9 +617,55 @@ void CharRef() #CharRef : {
 }
 
 void CodeSpan() #CodeSpan : {
+    StringBuilder buff = new StringBuilder();
+} {
+    (
+        <BACKTICK>
+        (
+            CodeSpanContent(buff)
+            | <BACKTICK> CodeSpanContent(buff) ( LOOKAHEAD(2) <BACKTICK> { buff.append("`"); } CodeSpanContent(buff) )* <BACKTICK>
+        )
+        <BACKTICK>
+    ) { jjtThis.setText(buff.toString()); }
+}
+
+void CodeSpanContent(StringBuilder buff) : {
     Token t;
 } {
-    t = <CODE_SPAN> { jjtThis.setText(val(t)); }
+
+    (
+        (
+            t = <CHAR_SEQUENCE>
+            | t = <SPACE>
+            | t = <AMPERSAND>
+            | t = <BACKSLASH>
+            | t = <BANG>
+            | t = <CHAR_ENTITY_REF>
+            | t = <COLON>
+            | t = <COMMENT_CLOSE>
+            | t = <COMMENT_OPEN>
+            | t = <DOUBLE_QUOTE>
+            | t = <DOT>
+            | t = <EQ>
+            | t = <ESCAPED_CHAR>
+            | t = <GT>
+            | t = <LBRACKET>
+            | t = <LPAREN>
+            | t = <LT>
+            | t = <MINUS>
+            | t = <NUMERIC_CHAR_REF>
+            | t = <NUMBERING>
+            | t = <PLUS>
+            | t = <RBRACKET>
+            | t = <RPAREN>
+            | t = <SHARP>
+            | t = <SINGLE_QUOTE>
+            | t = <SLASH>
+            | t = <STAR>
+            | t = <TAB>
+            | t = <UNDERSCORE>
+        ) { buff.append(t.image); }
+    )+
 }
 
 void Emphasis() #Emphasis : {
@@ -791,18 +830,18 @@ void TagAttribute() #TagAttribute : {
         "\""
         (
             (
-                t = TagAttributeText()
-                | t = "'"
-            ) { buff.append(t.image); }
+                TagAttributeText(buff)
+                | t = "'" { buff.append(t.image); }
+            )
         )*
         "\""
         |
         "'"
         (
             (
-                t = TagAttributeText()
-                | t = "\""
-            ) { buff.append(t.image); }
+                TagAttributeText(buff)
+                | t = "\"" { buff.append(t.image); }
+            )
         )*
         "'"
     )
@@ -1068,7 +1107,7 @@ void LinkText() #Text : {
     ) { jjtThis.append(t.image); }
 }
 
-Token TagAttributeText() : {
+void TagAttributeText(StringBuilder buff) : {
     Token t;
 } {
     (
@@ -1079,7 +1118,6 @@ Token TagAttributeText() : {
         | t = <BACKTICK>
         | t = <BANG>
         | t = <CHAR_ENTITY_REF>
-        | t = <CODE_SPAN>
         | t = <COLON>
         | t = <DOT>
         | t = <EOL>
@@ -1097,7 +1135,7 @@ Token TagAttributeText() : {
         | t = <STAR>
         | t = <TAB>
         | t = <UNDERSCORE>
-    ) { return t; }
+    ) { buff.append(t.image); }
 }
 
 void TextNode() #Text : {
@@ -1111,7 +1149,6 @@ void TextNode() #Text : {
         | t = <BACKTICK>
         | t = <BANG>
         | t = <CHAR_ENTITY_REF>
-        | t = <CODE_SPAN>
         | t = <COLON>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
