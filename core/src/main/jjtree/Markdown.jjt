@@ -81,7 +81,7 @@ public class Parser {
 
 
 
-        if ((t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB))
+        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB))
             || t.kind == EOF) {
             return false;
         }
@@ -110,7 +110,7 @@ public class Parser {
             return false;
         }
 
-        if ((t.any(PLUS, MINUS, STAR, NUMBERING) && getToken(i).any(SPACE, TAB)) && stack.peek() instanceof Item) {
+        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && getToken(i).any(SPACE, TAB)) && stack.peek() instanceof Item) {
             return false;
         }
 
@@ -187,7 +187,7 @@ public class Parser {
 
         Item item = (Item)stack.peek();
 
-        return newline && t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
+        return newline && (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
             && item.getIndentation() == t.beginColumn;
     }
 
@@ -223,7 +223,7 @@ public class Parser {
 
         Item item = (Item)stack.peek();
 
-        return t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
+        return (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
             && item.getIndentation() < t.beginColumn && quoteLevel <= currentQuoteLevel;
     }
 
@@ -245,7 +245,7 @@ public class Parser {
 
         List list = (List)stack.peek();
 
-        return t.any(PLUS, MINUS, STAR, NUMBERING) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
+        return (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
             && list.getIndentation() == t.beginColumn && !RulerLookahead(i);
     }
 
@@ -302,11 +302,11 @@ TOKEN : {
     | < NUMERIC_CHAR_REF : "&" ( ( ["0"-"9"] ){1,4} | "x" ( ["0"-"9", "a"-"f", "A"-"F"] ){1,4} ) ";" >
     | < ESCAPED_CHAR : "\\" ["{", "}", "[", "]", "(", ")", "\\", "`", "_", ">", "#", ".", "!", "+", "-", "*"] >
     | < CHAR_SEQUENCE : ( ~["=", "#", "&", "*", "\"", "'", "`", ".", ":", "<", ">", "(", ")", "[", "]", " "
-                        , "\\", "/", "\t", "\r", "\n", "!", "_", "-", "+"] )+ >
+                        , "\\", "/", "\t", "\r", "\n", "!", "_", "-", "+", "0" - "9"] )+ >
 }
 
 TOKEN : {
-    < NUMBERING : ( ["0"-"9"] )+ "." >
+    < DIGITS : ( ["0"-"9"] )+ >
 }
 
 /* PUNCTUATION */
@@ -361,7 +361,7 @@ void BlockElement() : {} {
             | LOOKAHEAD( Header() ( <EOL> | <EOF> ) ) Header()
             | LOOKAHEAD( Comment() ) Comment()
             | LOOKAHEAD( TagOpen() ) HtmlBlock()
-            | LOOKAHEAD(2) List()
+            | LOOKAHEAD(3) List()
             | Paragraph()
         )
     )
@@ -485,12 +485,12 @@ void CodeText() #CodeText : {
                 | t = <COMMENT_OPEN>
                 | t = <COMMENT_CLOSE>
                 | t = <COLON>
-                | t = <DOUBLE_QUOTE>
+                | t = <DIGITS>
                 | t = <DOT>
+                | t = <DOUBLE_QUOTE>
                 | t = <EQ>
                 | t = <ESCAPED_CHAR>
                 | t = <GT>
-                | t = <NUMBERING>
                 | t = <NUMERIC_CHAR_REF>
                 | t = <LBRACKET>
                 | t = <LPAREN>
@@ -544,7 +544,7 @@ void Item() #Item : {
 } {
     t = ItemPrefix() 
     { 
-        if(t.kind == NUMBERING) {
+        if(t.kind == DIGITS) {
             jjtThis.makeOrdered();
         }
         jjtThis.setIndentation(t.beginColumn); 
@@ -574,7 +574,7 @@ Token ItemPrefix() : {
             t = <PLUS>
             | t = <MINUS>
             | t = <STAR>
-            | t = <NUMBERING> 
+            | t = <DIGITS> <DOT>
         )
         ( <SPACE> | <TAB> )
     ) 
@@ -647,8 +647,9 @@ void CodeSpanContent(StringBuilder buff) : {
             | t = <COLON>
             | t = <COMMENT_CLOSE>
             | t = <COMMENT_OPEN>
-            | t = <DOUBLE_QUOTE>
+            | t = <DIGITS>
             | t = <DOT>
+            | t = <DOUBLE_QUOTE>
             | t = <EQ>
             | t = <ESCAPED_CHAR>
             | t = <GT>
@@ -657,7 +658,6 @@ void CodeSpanContent(StringBuilder buff) : {
             | t = <LT>
             | t = <MINUS>
             | t = <NUMERIC_CHAR_REF>
-            | t = <NUMBERING>
             | t = <PLUS>
             | t = <RBRACKET>
             | t = <RPAREN>
@@ -732,12 +732,12 @@ void InlineURL() #InlineUrl : {
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <COLON>
+        | t = <DIGITS>
         | t = <DOT>
         | t = <EQ>
         | t = <LBRACKET>
         | t = <LPAREN>
         | t = <MINUS>
-        | t = <NUMBERING>
         | t = <RBRACKET>
         | t = <RPAREN>
         | t = <SHARP>
@@ -798,10 +798,10 @@ void Image() #Image : {
 }
 
 void Tag() #Tag : {
-    Token t;
+    StringBuilder buff = new StringBuilder();
     TagAttribute attribute;
 } {
-    "<" t = <CHAR_SEQUENCE> { jjtThis.setName(t.image); }
+    "<" TagName(buff) { jjtThis.setName(buff.toString()); }
     ( LOOKAHEAD( ( <SPACE> )+ TagAttribute() )  TagAttributeList() )? ( <SPACE> )*
     (
         LOOKAHEAD(2)
@@ -810,11 +810,23 @@ void Tag() #Tag : {
         try {
             ">"
             ( LOOKAHEAD(2) TagBody() )?
-            "<" "/" <CHAR_SEQUENCE> ( <SPACE> )* ">"
+            "<" "/" TagName(buff) ( <SPACE> )* ">"
         } catch (ParseException e) {
             // failsafe
         }
     )
+}
+
+void TagName(StringBuilder buff) : {
+    Token t;
+}{
+    t = <CHAR_SEQUENCE> { buff.append(t.image); }
+    (
+        (
+            t = <DIGITS>
+            | t = <CHAR_SEQUENCE>
+        ) { buff.append(t.image); }
+    )*
 }
 
 void TagAttributeList() #TagAttributeList : {}{
@@ -855,7 +867,7 @@ void TagAttribute() #TagAttribute : {
 }
 
 void TagOpen() : {} {
-    "<" <CHAR_SEQUENCE> ( ( <SPACE> )+ TagAttribute() )* ( <SPACE> )* ( "/" )? ">"
+    "<" <CHAR_SEQUENCE> ( <DIGITS> | <CHAR_SEQUENCE> )* ( ( <SPACE> )+ TagAttribute() )* ( <SPACE> )* ( "/" )? ">"
 }
 
 String refname() : {
@@ -871,6 +883,7 @@ String refname() : {
         | t = <BACKTICK>
         | t = <BANG>
         | t = <COLON>
+        | t = <DIGITS>
         | t = <DOT>
         | t = <EQ>
         | t = <GT>
@@ -878,7 +891,6 @@ String refname() : {
         | t = <LPAREN>
         | t = <LT>
         | t = <MINUS>
-        | t = <NUMBERING>
         | t = <PLUS>
         | t = <RPAREN>
         | t = <SHARP>
@@ -928,12 +940,12 @@ String urltext() : {
         | t = <BACKSLASH>
         | t = <BANG>
         | t = <COLON>
+        | t = <DIGITS>
         | t = <DOT>
         | t = <EQ>
         | t = <LBRACKET>
         | t = <LPAREN> { parentheses++; }
         | t = <MINUS>
-        | t = <NUMBERING>
         | t = <PLUS>
         | t = <RBRACKET>
         | LOOKAHEAD({parentheses > 0}) t = <RPAREN> { parentheses--; }
@@ -978,6 +990,7 @@ String TitleText(int quoteType) : {
             | t = <BACKTICK>
             | t = <BANG>
             | t = <COLON>
+            | t = <DIGITS>
             | t = <DOUBLE_QUOTE>
             | t = <DOT>
             | t = <EQ>
@@ -986,7 +999,6 @@ String TitleText(int quoteType) : {
             | t = <LPAREN>
             | t = <LT>
             | t = <MINUS>
-            | t = <NUMBERING>
             | t = <PLUS>
             | t = <RBRACKET>
             | t = <RPAREN>
@@ -1023,7 +1035,7 @@ String Anything() : {
         | t = <LPAREN>
         | t = <LT>
         | t = <MINUS>
-        | t = <NUMBERING>
+        | t = <DIGITS>
         | t = <PLUS>
         | t = <RBRACKET>
         | t = <RPAREN>
@@ -1057,7 +1069,7 @@ void EmphasisText() #Text : {
         | t = <LPAREN>
         | t = <LT>
         | t = <MINUS>
-        | t = <NUMBERING>
+        | t = <DIGITS>
         | t = <PLUS>
         | t = <RBRACKET>
         | t = <RPAREN>
@@ -1100,7 +1112,7 @@ void LinkText() #Text : {
         | t = <LPAREN>
         | t = <LT>
         | t = <MINUS>
-        | t = <NUMBERING>
+        | t = <DIGITS>
         | t = <PLUS>
         | t = <RPAREN>
         | t = <SHARP>
@@ -1132,7 +1144,7 @@ void TagAttributeText(StringBuilder buff) : {
         | t = <LPAREN>
         | t = <MINUS>
         | t = <NUMERIC_CHAR_REF>
-        | t = <NUMBERING>
+        | t = <DIGITS>
         | t = <PLUS>
         | t = <RPAREN>
         | t = <SHARP>
@@ -1167,7 +1179,7 @@ void TextNode() #Text : {
         | t = <LPAREN>
         | t = <MINUS>
         | t = <NUMERIC_CHAR_REF>
-        | t = <NUMBERING>
+        | t = <DIGITS>
         | t = <PLUS>
         | t = <RBRACKET>
         | t = <RPAREN>
