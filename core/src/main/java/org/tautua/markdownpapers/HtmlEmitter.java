@@ -241,7 +241,13 @@ public class HtmlEmitter implements Visitor {
         }
 
         if(body == null) {
-            append("/>");
+            if(isEmptyTag(node.getName())) {
+                append("/>");
+            } else {
+                append("></");
+                append(node.getName());
+                append(">");
+            }
         } else {
             append(">");
             body.accept(this);

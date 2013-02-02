@@ -16,16 +16,16 @@
 
 package org.tautua.markdownpapers;
 
-import org.custommonkey.xmlunit.HTMLDocumentBuilder;
-import org.custommonkey.xmlunit.TolerantSaxDocumentBuilder;
-import org.custommonkey.xmlunit.XMLAssert;
-import org.custommonkey.xmlunit.XMLUnit;
+import org.custommonkey.xmlunit.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Larry Ruiz
@@ -66,19 +66,25 @@ public abstract class BaseTest {
     /**
      * <p>Compare two xml files, whitespace and attribute order are ignored.</p>
      * @param expected
-     * @param output
+     * @param actual
      * @throws java.io.IOException
      * @throws org.xml.sax.SAXException
      * @throws javax.xml.parsers.ParserConfigurationException
      */
-    protected static void compare(File expected, File output) throws IOException, SAXException, ParserConfigurationException {
+    protected static void compare(File expected, File actual) throws IOException, SAXException, ParserConfigurationException {
         XMLUnit.setIgnoreWhitespace(true);
         XMLUnit.setIgnoreAttributeOrder(true);
-        TolerantSaxDocumentBuilder tolerantSaxDocumentBuilder = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
-        HTMLDocumentBuilder htmlDocumentBuilder = new HTMLDocumentBuilder(tolerantSaxDocumentBuilder);
-        org.w3c.dom.Document e = htmlDocumentBuilder.parse(new FileReader(expected));
-        org.w3c.dom.Document o = htmlDocumentBuilder.parse(new FileReader(output));
-        XMLAssert.assertXMLEqual(e, o);
+        XMLUnit.setNormalizeWhitespace(true);
+        XMLUnit.setNormalize(true);
+
+        TolerantSaxDocumentBuilder saxBuilder = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
+        HTMLDocumentBuilder builder = new HTMLDocumentBuilder(saxBuilder);
+
+        org.w3c.dom.Document e = builder.parse(new FileReader(expected));
+        org.w3c.dom.Document a = builder.parse(new FileReader(actual));
+        DetailedDiff diff = new DetailedDiff(new Diff(e, a));
+
+        assertThat(diff.toString(), diff.getAllDifferences().size(), equalTo(0));
     }
     
     @Before
