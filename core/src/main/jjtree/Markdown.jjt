@@ -799,7 +799,6 @@ void Image() #Image : {
 
 void Tag() #Tag : {
     StringBuilder buff = new StringBuilder();
-    TagAttribute attribute;
 } {
     "<" TagName(buff) { jjtThis.setName(buff.toString()); }
     ( LOOKAHEAD( ( <SPACE> )+ TagAttribute() )  TagAttributeList() )? ( <SPACE> )*
@@ -841,7 +840,7 @@ void TagAttribute() #TagAttribute : {
     StringBuilder buff = new StringBuilder();
     Token t;
 } {
-    t = <CHAR_SEQUENCE> "=" { jjtThis.setName(t.image); }
+    TagAttributeName(buff) "=" { jjtThis.setName(buff.toString()); buff = new StringBuilder(); }
     (
         "\""
         (
@@ -864,6 +863,20 @@ void TagAttribute() #TagAttribute : {
     {
         jjtThis.setValue(buff.toString());
     }
+}
+
+void TagAttributeName(StringBuilder buff) : {
+    Token t;
+} {
+    t = <CHAR_SEQUENCE> { buff.append(t.image); }
+    (
+        (
+            t = <DIGITS>
+            | t = <CHAR_SEQUENCE>
+            | t = <MINUS>
+            | t = <UNDERSCORE>
+        ) { buff.append(t.image); }
+    )*
 }
 
 void TagOpen() : {} {

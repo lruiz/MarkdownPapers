@@ -77,8 +77,8 @@ public abstract class BaseTest {
         XMLUnit.setNormalizeWhitespace(true);
         XMLUnit.setNormalize(true);
 
-        TolerantSaxDocumentBuilder saxBuilder = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
-        HTMLDocumentBuilder builder = new HTMLDocumentBuilder(saxBuilder);
+        TolerantSaxDocumentBuilder sax = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
+        HTMLDocumentBuilder builder = new HTMLDocumentBuilder(sax);
 
         org.w3c.dom.Document e = builder.parse(new FileReader(expected));
         org.w3c.dom.Document a = builder.parse(new FileReader(actual));
