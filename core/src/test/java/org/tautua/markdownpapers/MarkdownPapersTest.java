@@ -27,7 +27,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class MarkdownPapersTest extends BaseTest {
 
     public MarkdownPapersTest(String fileName) {
-        super(fileName, new File("target/test-classes/others"), new File("target/output/others"));
+        super(fileName, new File("target/test-classes/others"), new File("target/generated-test-sources/others"));
     }
 
     @Parameters

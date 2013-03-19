@@ -27,7 +27,7 @@ import java.util.List;
  */
 @RunWith(LabelledParameterized.class)
 public class Markdown_1_1_Test extends BaseTest {
-    private static final File OUTPUT_DIR = new File("target/output/1.1/basics");
+    private static final File OUTPUT_DIR = new File("target/generated-test-sources/1.1/basics");
     private static final File INPUT_DIR = new File("target/test-classes/1.1/basics");
 
     public Markdown_1_1_Test(String fileName) {

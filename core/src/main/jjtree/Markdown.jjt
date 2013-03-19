@@ -61,6 +61,41 @@ public class Parser {
         }
     }
 
+    boolean CodeLookahead(){
+        if (getToken(1).kind != EOL) {
+            return false;
+        }
+
+        int i = 2;
+        int quoteLevel = 0;
+        int indent = 0;
+        Token t;
+
+        do {
+            t = getToken(i++);
+            if (t.kind == GT) {
+                quoteLevel++;
+            } else if (t.kind == EOL) {
+                quoteLevel = 0;
+                indent = 0;
+            } else if (t.kind == SPACE) {
+                indent++;
+            } else if (t.kind == TAB) {
+                indent += 4;
+            }
+        } while(t.any(EOL, SPACE, TAB, GT));
+
+
+
+        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB))
+            || t.kind == EOF) {
+            return false;
+        }
+
+        return currentQuoteLevel == quoteLevel && stack.size() > 0 && stack.peek() instanceof Item
+            && ((Item)stack.peek()).getIndentation() < t.beginColumn && t.beginColumn - ((Item)stack.peek()).getIndentation() >= 8;
+    }
+
     boolean ParagraphLookahead() {
         if (getToken(1).kind != EOL) {
             return false;
@@ -552,7 +587,8 @@ void Item() #Item : {
     Paragraph()
     (
         (
-        LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() { jjtThis.makeLoose(); }
+        LOOKAHEAD( {CodeLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Code() { jjtThis.makeLoose(); }
+        | LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() { jjtThis.makeLoose(); }
         | LOOKAHEAD( {LooseLookahead()} ) <EOL> ( Whitespace() )? { jjtThis.makeLoose(); }
         | LOOKAHEAD( {ListLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* List()
         )
