@@ -37,7 +37,7 @@ public class Link extends SimpleNode implements ResourceReference {
             if (child instanceof Text) {
                 String val = ((Text) child).getValue();
                 if ("\n".equals(val)) {
-                    if (' ' !=  buff.charAt(buff.length() - 1)) {
+                    if (buff.length() > 0 && ' ' !=  buff.charAt(buff.length() - 1)) {
                         buff.append(" ");
                     }
                 } else {
