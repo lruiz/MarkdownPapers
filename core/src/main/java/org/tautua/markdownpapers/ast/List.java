@@ -20,7 +20,7 @@ package org.tautua.markdownpapers.ast;
  * @author Larry Ruiz
  */
 public class List extends SimpleNode {
-    private int indentation;
+    private int indentation = -1;
 
     public List(int id) {
         super(id);

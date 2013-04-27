@@ -47,8 +47,12 @@ public class Parser {
         return i;
     }
 
+    int getTabLength(Token prev, Token tab) {
+        return (4 - ((prev == null ? 1 : prev.endColumn + 1) % 4)) + 1;
+    }
+
     String toWhitespace(Token prev, Token tab) {
-        int x = (4 - ((prev == null ? 1 : prev.endColumn + 1) % 4)) + 1;
+        int x = getTabLength(prev, tab);
         switch(x) {
             case 1:
                 return " ";
@@ -61,83 +65,83 @@ public class Parser {
         }
     }
 
-    boolean CodeLookahead(){
+    boolean ListContinuesLookahead(){
         if (getToken(1).kind != EOL) {
             return false;
         }
 
-        int i = 2;
-        int quoteLevel = 0;
-        int indent = 0;
+        int offset = 2;
+        int quotes = 0;
+        boolean emptyLine = false;
         Token t;
 
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if (t.kind == GT) {
-                quoteLevel++;
+                quotes++;
             } else if (t.kind == EOL) {
-                quoteLevel = 0;
-                indent = 0;
-            } else if (t.kind == SPACE) {
-                indent++;
-            } else if (t.kind == TAB) {
-                indent += 4;
+                quotes = 0;
+                emptyLine = true;
             }
         } while(t.any(EOL, SPACE, TAB, GT));
 
-
-
-        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB))
-            || t.kind == EOF) {
+        if (t.kind == EOF) {
             return false;
         }
 
-        return currentQuoteLevel == quoteLevel && stack.size() > 0 && stack.peek() instanceof Item
-            && ((Item)stack.peek()).getIndentation() < t.beginColumn && t.beginColumn - ((Item)stack.peek()).getIndentation() >= 8;
+        Item item = (Item)stack.peek();
+
+        return (item.getIndentation() < t.beginColumn && currentQuoteLevel == quotes) ||
+            (emptyLine && (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(offset++).kind == DOT)) && (getToken(offset).any(SPACE,TAB))
+                && item.getIndentation() == t.beginColumn);
     }
 
-    boolean ParagraphLookahead() {
-        if (getToken(1).kind != EOL) {
-            return false;
-        }
-
-        int i = 2;
-        int quoteLevel = 0;
+    boolean OnListLookahead(Class expected){
+        int offset = 1;
+        int quotes = 0;
         Token t;
 
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if (t.kind == GT) {
-                quoteLevel++;
-            } else if (t.kind == EOL) {
-                quoteLevel = 0;
+                quotes++;
             }
-        } while(t.any(EOL, SPACE, TAB, GT));
+        } while(t.any(SPACE, TAB, GT));
 
-
-
-        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB))
-            || t.kind == EOF) {
+        if (t.any(EOL,EOF)) {
             return false;
         }
 
-        return currentQuoteLevel == quoteLevel && stack.size() > 0 && stack.peek() instanceof Item
-            && ((Item)stack.peek()).getIndentation() < t.beginColumn;
+        Item item = (Item)stack.peek();
+
+        if(item.getIndentation() < t.beginColumn && currentQuoteLevel == quotes) {
+            if((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(offset++).kind == DOT)) && (getToken(offset).any(SPACE, TAB))) {
+                return List.class.equals(expected);
+            }
+
+            if(t.beginColumn - item.getIndentation() >= 8) {
+                return Code.class.equals(expected);
+            }
+
+            return Paragraph.class.equals(expected);
+        }
+
+        return false;
     }
-    
+
     boolean LineLookahead() {
         if (getToken(1).kind != EOL) {
             return false;
         }
 
-        int i = 2;
-        int quoteLevel = 0;
+        int offset = 2;
+        int quotes = 0;
         Token t;
 
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if(t.kind == GT) {
-                quoteLevel++;
+                quotes++;
             }
         } while (t.any(SPACE, TAB, GT));
 
@@ -145,11 +149,11 @@ public class Parser {
             return false;
         }
 
-        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && getToken(i).any(SPACE, TAB)) && stack.peek() instanceof Item) {
+        if (((t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(offset++).kind == DOT)) && getToken(offset).any(SPACE, TAB)) && stack.peek() instanceof Item) {
             return false;
         }
 
-        return currentQuoteLevel >= quoteLevel;
+        return currentQuoteLevel >= quotes;
     }
 
     boolean CodeLineLookahead() {
@@ -157,43 +161,43 @@ public class Parser {
             return false;
         }
 
-        int i = 2;
-        int quoteLevel = 0;
-        int _indent = 0;
+        int offset = 2;
+        int quotes = 0;
+        int indent = 0;
         Token t;
         
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if(t.kind == GT) {
-                quoteLevel++;
-                _indent = 0;
+                quotes++;
+                indent = 0;
             } else if(t.kind == SPACE) {
-                _indent++;
+                indent++;
             } else if(t.kind == TAB) {
-                _indent += 4;
+                indent += 4;//getTabLength(getToken(offset - 2),t);
             }
-        } while (t.any(SPACE, TAB, GT) && _indent < 4);
+        } while (t.any(SPACE, TAB, GT) && indent < 4);
 
         if (t.any(EOL, EOF)) {
             return true;
         }
 
-        return currentQuoteLevel >= quoteLevel && _indent >= 4;
+        return currentQuoteLevel >= quotes && indent >= 4;
     }
 
     boolean QuotedElementLookahead() {
-        if (getToken(1).none(EOL)) {
+        if (getToken(1).kind != EOL) {
             return false;
         }
 
-        int i = 2;
-        int quoteLevel = 0;
+        int offset = 2;
+        int quotes = 0;
         Token t;
 
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if (t.any(GT)) {
-                quoteLevel++;
+                quotes++;
             }
         } while (t.any(SPACE, TAB, GT));
 
@@ -201,37 +205,15 @@ public class Parser {
             return true;
         }
 
-        return currentQuoteLevel <= quoteLevel;
-    }
-
-    boolean LooseLookahead() {
-        if (getToken(1).none(EOL)) {
-            return false;
-        }
-
-        int i = 2;
-        boolean newline = false;
-        Token t;
-
-        do {
-            t = getToken(i++);
-            if (t.any(EOL)) {
-                newline = true;
-            }
-        } while(t.any(SPACE, TAB, GT, EOL));
-
-        Item item = (Item)stack.peek();
-
-        return newline && (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
-            && item.getIndentation() == t.beginColumn;
+        return currentQuoteLevel <= quotes;
     }
 
     boolean TextLookahead() {
         if (stack.size() > 0 && stack.peek() instanceof Header) {
-            int i = 1;
+            int offset = 1;
             Token t;
             do {
-                t = getToken(i++);
+                t = getToken(offset++);
             } while(t.any(SHARP));
 
             return t.none(EOL,EOF);
@@ -240,55 +222,33 @@ public class Parser {
         return getToken(1).none(EOL, EOF);
     }
 
-    boolean ListLookahead() {
-        if (getToken(1).none(EOL)) {
-            return false;
-        }
-
-        int i = 2;
-        int quoteLevel = 0;
-        Token t;
-
-        do {
-            t = getToken(i++);
-            if (t.any(GT)) {
-                quoteLevel++;
-            }
-        } while (t.any(EOL, SPACE, TAB, GT));
-
-        Item item = (Item)stack.peek();
-
-        return (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
-            && item.getIndentation() < t.beginColumn && quoteLevel <= currentQuoteLevel;
-    }
-
     boolean ItemLookahead() {
         if (getToken(1).none(EOL)) {
             return false;
         }
 
         int i = 2;
-        int quoteLevel = 0;
+        int quotes = 0;
         Token t;
 
         do {
             t = getToken(i++);
             if (t.any(GT)) {
-                quoteLevel++;
+                quotes++;
             }
         } while (t.any(EOL, SPACE, TAB, GT));
 
         List list = (List)stack.peek();
 
-        return (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).kind == SPACE || getToken(i).kind == TAB)
+        return (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).any(SPACE, TAB))
             && list.getIndentation() == t.beginColumn && !RulerLookahead(i);
     }
 
-    boolean RulerLookahead(int i) {
+    boolean RulerLookahead(int offset) {
         Token t;
         int whitespace = 0;
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if(t.kind == SPACE) {
                 whitespace++;
             } else {
@@ -306,9 +266,9 @@ public class Parser {
     boolean QuoteInsideTitleLookahead(int quoteKind) {
         if (getToken(1).kind == quoteKind) {
             Token t;
-            int i = 2;
+            int offset = 2;
             do {
-                t = getToken(i++);
+                t = getToken(offset++);
             } while (t.none(quoteKind, RPAREN, EOL, EOF));
 
             return t.kind == quoteKind;
@@ -586,19 +546,52 @@ void Item() #Item : {
     }
     Paragraph()
     (
+        LOOKAHEAD( {ListContinuesLookahead()} )
         (
-        LOOKAHEAD( {CodeLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Code() { jjtThis.makeLoose(); }
-        | LOOKAHEAD( {ParagraphLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* Paragraph() { jjtThis.makeLoose(); }
-        | LOOKAHEAD( {LooseLookahead()} ) <EOL> ( Whitespace() )? { jjtThis.makeLoose(); }
-        | LOOKAHEAD( {ListLookahead()} ) <EOL> ( LOOKAHEAD( EmptyLine() ) ( Whitespace() )? <EOL> )* List()
+            <EOL>
+            (
+                LOOKAHEAD ( EmptyLine() ) ( Whitespace() )? { jjtThis.makeLoose(); }
+                | LOOKAHEAD( {OnListLookahead(Code.class)} ) trim() Code() { jjtThis.makeLoose(); }
+                | LOOKAHEAD( {OnListLookahead(Paragraph.class)} ) Paragraph() { jjtThis.makeLoose(); }
+                | LOOKAHEAD( {OnListLookahead(List.class)} ) List()
+            )
         )
     )*
     {
         Item item = (Item)stack.pop();
         List list = (List)stack.peek();
-        if (list.getIndentation() == 0) {
+        if (list.getIndentation() == -1) {
             list.setIndentation(item.getIndentation());
         } 
+    }
+}
+
+JAVACODE
+void trim() {
+
+    Token t;
+    int offset = 0;
+    do {
+        t = getToken(++offset);
+    } while(t.any(SPACE, TAB, GT));
+
+    int indent = 0;
+    while (offset > 0) {
+        t = getToken(--offset);
+        if (t.kind == SPACE) {
+            indent++;
+        } else if (t.kind == TAB) {
+            indent += getTabLength(getToken(offset - 1),t);
+        }
+
+        if(indent >= 4) {
+            break;
+        }
+    }
+
+    while(offset > 1) {
+        offset--;
+        getNextToken();
     }
 }
 
