@@ -48,7 +48,7 @@ public class Parser {
     }
 
     int getTabLength(Token prev, Token tab) {
-        return (4 - ((prev == null ? 1 : prev.endColumn + 1) % 4)) + 1;
+        return (4 - ((prev == null || prev.kind == EOL ? 1 : prev.endColumn + 1) % 4)) + 1;
     }
 
     String toWhitespace(Token prev, Token tab) {
@@ -551,7 +551,7 @@ void Item() #Item : {
             <EOL>
             (
                 LOOKAHEAD ( EmptyLine() ) ( Whitespace() )? { jjtThis.makeLoose(); }
-                | LOOKAHEAD( {OnListLookahead(Code.class)} ) trim() Code() { jjtThis.makeLoose(); }
+                | LOOKAHEAD( {OnListLookahead(Code.class)} ) TrimItemWhitespace() Code() { jjtThis.makeLoose(); }
                 | LOOKAHEAD( {OnListLookahead(Paragraph.class)} ) Paragraph() { jjtThis.makeLoose(); }
                 | LOOKAHEAD( {OnListLookahead(List.class)} ) List()
             )
@@ -567,27 +567,26 @@ void Item() #Item : {
 }
 
 JAVACODE
-void trim() {
-
+void TrimItemWhitespace() {
     Token t;
+    int indent = 0;
     int offset = 0;
+    Item item = (Item)stack.peek();
+
     do {
         t = getToken(++offset);
-    } while(t.any(SPACE, TAB, GT));
-
-    int indent = 0;
-    while (offset > 0) {
-        t = getToken(--offset);
-        if (t.kind == SPACE) {
+        if(t.kind == GT) {
+            indent = 0;
+        } else if(t.kind == SPACE) {
             indent++;
-        } else if (t.kind == TAB) {
+        } else if(t.kind == TAB) {
             indent += getTabLength(getToken(offset - 1),t);
         }
 
-        if(indent >= 4) {
+        if((indent - item.getIndentation()) >= 4) {
             break;
         }
-    }
+    } while(t.any(SPACE, TAB, GT));
 
     while(offset > 1) {
         offset--;
