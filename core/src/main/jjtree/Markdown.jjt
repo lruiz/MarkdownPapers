@@ -65,7 +65,7 @@ public class Parser {
         }
     }
 
-    boolean ListContinuesLookahead(){
+    boolean ItemContinuesLookahead(){
         if (getToken(1).kind != EOL) {
             return false;
         }
@@ -96,7 +96,7 @@ public class Parser {
                 && item.getIndentation() == t.beginColumn);
     }
 
-    boolean OnListLookahead(Class expected){
+    boolean BlockLookahead(Class expected){
         int offset = 1;
         int quotes = 0;
         Token t;
@@ -227,12 +227,12 @@ public class Parser {
             return false;
         }
 
-        int i = 2;
+        int offset = 2;
         int quotes = 0;
         Token t;
 
         do {
-            t = getToken(i++);
+            t = getToken(offset++);
             if (t.any(GT)) {
                 quotes++;
             }
@@ -240,18 +240,22 @@ public class Parser {
 
         List list = (List)stack.peek();
 
-        return (t.any(PLUS, MINUS, STAR) || (t.kind == DIGITS && getToken(i++).kind == DOT)) && (getToken(i).any(SPACE, TAB))
-            && list.getIndentation() == t.beginColumn && !RulerLookahead(i);
+        return list.getIndentation() == t.beginColumn
+            && ((t.any(PLUS, MINUS, STAR) && !RulerLookahead(offset)) || (t.kind == DIGITS && getToken(offset++).kind == DOT)) && getToken(offset).any(SPACE, TAB);
     }
 
     boolean RulerLookahead(int offset) {
         Token t;
         int whitespace = 0;
+        int count = 0;
         do {
             t = getToken(offset++);
             if(t.kind == SPACE) {
                 whitespace++;
             } else {
+                if(t.any(STAR, MINUS)) {
+                    count++;
+                }
                 whitespace = 0;
             }
             
@@ -260,7 +264,7 @@ public class Parser {
             }
         } while(t.any(STAR, MINUS, SPACE));
         
-        return t.any(EOL, EOF);
+        return count >= 2 && t.any(EOL, EOF);
     }
     
     boolean QuoteInsideTitleLookahead(int quoteKind) {
@@ -544,19 +548,21 @@ void Item() #Item : {
         }
         jjtThis.setIndentation(t.beginColumn); 
     }
-    Paragraph()
     (
-        LOOKAHEAD( {ListContinuesLookahead()} )
+        Paragraph()
         (
-            <EOL>
+            LOOKAHEAD( {ItemContinuesLookahead()} )
             (
-                LOOKAHEAD ( EmptyLine() ) ( Whitespace() )? { jjtThis.makeLoose(); }
-                | LOOKAHEAD( {OnListLookahead(Code.class)} ) TrimItemWhitespace() Code() { jjtThis.makeLoose(); }
-                | LOOKAHEAD( {OnListLookahead(Paragraph.class)} ) Paragraph() { jjtThis.makeLoose(); }
-                | LOOKAHEAD( {OnListLookahead(List.class)} ) List()
+                <EOL>
+                (
+                    LOOKAHEAD ( EmptyLine() ) ( Whitespace() )? { jjtThis.makeLoose(); }
+                    | LOOKAHEAD( {BlockLookahead(Code.class)} ) TrimItemWhitespace() Code() { jjtThis.makeLoose(); }
+                    | LOOKAHEAD( {BlockLookahead(Paragraph.class)} ) Paragraph() { jjtThis.makeLoose(); }
+                    | LOOKAHEAD( {BlockLookahead(List.class)} ) List()
+                )
             )
-        )
-    )*
+        )*
+    )?
     {
         Item item = (Item)stack.pop();
         List list = (List)stack.peek();
