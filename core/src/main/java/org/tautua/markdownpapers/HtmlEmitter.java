@@ -84,6 +84,23 @@ public class HtmlEmitter implements Visitor {
         }
     }
 
+    public void visit(EmptyTag node) {
+        TagAttributeList attributes = node.getAttributeList();
+        append("<");
+        append(node.getName());
+
+        if(attributes != null) {
+            attributes.accept(this);
+        }
+        append("/>");
+    }
+
+    public void visit(EndTag node) {
+        append("</");
+        append(node.getName());
+        append(">");
+    }
+
     public void visit(Header node) {
         String level = String.valueOf(node.getLevel());
         append("<h");
@@ -282,6 +299,18 @@ public class HtmlEmitter implements Visitor {
         } else {
             escapeAndAppend(node.getValue());
         }
+    }
+
+    @Override
+    public void visit(StartTag node) {
+        TagAttributeList attributes = node.getAttributeList();
+        append("<");
+        append(node.getName());
+
+        if(attributes != null) {
+            attributes.accept(this);
+        }
+        append(">");
     }
 
     protected void visitChildrenAndAppendSeparator(Node node, char separator){

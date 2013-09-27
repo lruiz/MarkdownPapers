@@ -1,2 +1,5 @@
-[a link](http://wikipedia.org/wiki_(computing) "wikipedia"), **emp**, __emp__, \*escapedchar\*
- 
+**markdown** syntax parsed within <i>*inline elements*</i>.
+
+<div>
+but not within *block elements*
+</div>

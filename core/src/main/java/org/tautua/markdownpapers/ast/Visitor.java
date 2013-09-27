@@ -34,6 +34,10 @@ public interface Visitor {
 
     void visit(Emphasis node);
 
+    void visit(EmptyTag node);
+
+    void visit(EndTag node);
+
     void visit(Header node);
 
     void visit(Image node);
@@ -69,4 +73,6 @@ public interface Visitor {
     void visit(TagBody node);
     
     void visit(Text node);
+
+    void visit(StartTag node);
 }

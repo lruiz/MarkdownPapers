@@ -91,6 +91,14 @@ public class SinkEventEmitter implements Visitor {
         }
     }
 
+    public void visit(EmptyTag node) {
+        //do nothing
+    }
+
+    public void visit(EndTag node) {
+        //do nothing
+    }
+
     public void visit(Header node) {
         if(stack.size() == 0) {
             stack.push(node);
@@ -117,7 +125,6 @@ public class SinkEventEmitter implements Visitor {
         }
 
         sink.figureGraphics(resource.getLocation(), attr);
-
     }
 
     public void visit(Link node) {
@@ -226,7 +233,6 @@ public class SinkEventEmitter implements Visitor {
         }
     }
 
-    @Override
     public void visit(TagAttribute node) {
         sink.rawText(" ");
         sink.rawText(node.getName());
@@ -235,17 +241,19 @@ public class SinkEventEmitter implements Visitor {
         sink.rawText("\"");
     }
 
-    @Override
     public void visit(TagAttributeList node) {
         node.childrenAccept(this);
     }
 
-    @Override
     public void visit(TagBody node) {
         node.childrenAccept(this);
     }
 
     public void visit(Text node) {
         sink.text(node.getValue());
+    }
+
+    public void visit(StartTag node) {
+        //do nothing
     }
 }

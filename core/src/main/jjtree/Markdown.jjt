@@ -630,7 +630,7 @@ void Line() #Line : {} {
         | LOOKAHEAD( InlineURL() ) InlineURL()
         | LOOKAHEAD( Emphasis() ) Emphasis()
         | LOOKAHEAD( LineBreak() <EOL> ) LineBreak()
-        | LOOKAHEAD( TagOpen() ) Tag()
+        | LOOKAHEAD( Markup() ) Markup()
         | Text()
         )
     )+
@@ -915,6 +915,24 @@ void TagAttributeName(StringBuilder buff) : {
 
 void TagOpen() : {} {
     "<" <CHAR_SEQUENCE> ( <DIGITS> | <CHAR_SEQUENCE> )* ( ( <SPACE> )+ TagAttribute() )* ( <SPACE> )* ( "/" )? ">"
+}
+
+void Markup() : {
+    StringBuilder buff = new StringBuilder();
+    int ch = 0;
+} {
+    "<"
+    (
+        TagName(buff)
+        ( LOOKAHEAD( ( <SPACE> )+ TagAttribute() )  TagAttributeList() { ch++; } )? ( <SPACE> )*
+        (
+            LOOKAHEAD(2)
+            "/" ">" { jjtThis.setName(buff.toString()); } #EmptyTag(ch)
+            |
+            ">" { jjtThis.setName(buff.toString()); } #StartTag(ch)
+        )
+        | "/" TagName(buff) ( <SPACE> )* ">" { jjtThis.setName(buff.toString()); } #EndTag
+    )
 }
 
 String refname() : {
