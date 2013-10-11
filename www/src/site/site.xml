@@ -33,7 +33,7 @@
             <item name="Doxia Module" href="doxia-module.html"/>
             <item name="Tweaks" href="tweaks.html"/>
             <item name="JavaCC Grammar" href="https://github.com/lruiz/MarkdownPapers/blob/master/core/src/main/jjtree/Markdown.jjt"/>
-            <item name="Download" href="https://github.com/lruiz/MarkdownPapers/downloads"/>
+            <item name="Download" href="https://github.com/lruiz/MarkdownPapers/releases"/>
         </menu>
         <menu name="Development">
             <item name="Source Code" href="https://github.com/lruiz/MarkdownPapers"/>
