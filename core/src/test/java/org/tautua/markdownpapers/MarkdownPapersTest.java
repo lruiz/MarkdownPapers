@@ -35,6 +35,7 @@ public class MarkdownPapersTest extends BaseTest {
         return Arrays.asList(new Object[][]{
                 {"code"},
                 {"comments"},
+                {"codespan"},
                 {"emphasis"},
                 {"headers"},
                 {"images"},

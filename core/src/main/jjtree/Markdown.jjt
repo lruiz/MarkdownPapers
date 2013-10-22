@@ -28,6 +28,7 @@ public class Parser {
     private int currentQuoteLevel = 0;
     private int parentheses;
     private int brackets;
+    private int codespanPrefix;
 
     public Document parse() throws ParseException {
         jj_input_stream.setTabSize(4);
@@ -280,10 +281,81 @@ public class Parser {
 
         return getToken(1).none(EOL, EOF);
     }
-    
-    boolean NotClosingTag() {
-        return !(getToken(1).kind == LT && getToken(2).kind == SLASH 
-            && getToken(3).kind == CHAR_SEQUENCE && getToken(4).kind == GT);
+
+    boolean BacktickInsideCodeSpanLookahead(){
+        if(codespanPrefix == 0) {
+            return false;
+        }
+        int offset = 1;
+        int suffix = 0;
+        Token t;
+        do {
+            t = getToken(offset++);
+            if(t.kind == BACKTICK) {
+                suffix++;
+            }
+        } while(t.kind == BACKTICK);
+
+        return suffix < codespanPrefix;
+    }
+
+    boolean CodeSpanLookahead() {
+        int offset = 1;
+        int prefix = 0;
+        boolean empty = true;
+
+        Token t;
+        do {
+            t = getToken(offset++);
+            if(t.kind == BACKTICK){
+                prefix++;
+            }
+        } while(t.kind == BACKTICK);
+
+        if(prefix == 0) {
+            return false;
+        }
+
+        do {
+            do {
+                t = getToken(offset++);
+                if(t.none(SPACE, TAB, EOL)) {
+                    empty = false;
+                }
+            } while(t.kind != BACKTICK && t.kind != EOL && t.kind != EOF);
+
+            if(t.kind == EOL) {
+                if(empty) {
+                    return false;
+                } else {
+                    empty = true;
+                    continue;
+                }
+            }
+
+            if(t.kind != EOF) {
+                int countdown = prefix;
+                do {
+                    countdown--;
+                    t = getToken(offset++);
+                } while(t.kind == BACKTICK);
+                if(countdown <= 0) {
+                    return true;
+                }
+            }
+        } while(t.kind != EOF);
+
+        return false;
+    }
+
+    boolean CodeSpanTextLookahead() {
+        int offset = 1;
+        Token t;
+        do {
+            t = getToken(offset++);
+        } while(t.any(EOL,SPACE,TAB));
+
+        return t.kind != EOF && t.kind != BACKTICK;
     }
 }
 PARSER_END(Parser)
@@ -624,7 +696,7 @@ void Line() #Line : {} {
     (LOOKAHEAD( {TextLookahead()} )
         (
         CharRef()
-        | LOOKAHEAD( CodeSpan() ) CodeSpan()
+        | LOOKAHEAD( {CodeSpanLookahead()} ) CodeSpan()
         | LOOKAHEAD( Link() ) Link()
         | LOOKAHEAD( Image() ) Image()
         | LOOKAHEAD( InlineURL() ) InlineURL()
@@ -655,54 +727,54 @@ void CharRef() #CharRef : {
 
 void CodeSpan() #CodeSpan : {
     StringBuilder buff = new StringBuilder();
+    int prefix = 0;
 } {
+    ( <BACKTICK> {codespanPrefix++;})+ ( Whitespace() )? ( <EOL> )?
     (
-        <BACKTICK>
         (
             CodeSpanContent(buff)
-            | <BACKTICK> CodeSpanContent(buff) ( LOOKAHEAD(2) <BACKTICK> { buff.append("`"); } CodeSpanContent(buff) )* <BACKTICK>
-        )
-        <BACKTICK>
-    ) { jjtThis.setText(buff.toString()); }
+            | LOOKAHEAD( (<SPACE> | <TAB>) (CodeSpanContent(buff)) ) ( <SPACE> | <TAB> )
+            | <EOL>
+            | LOOKAHEAD( {BacktickInsideCodeSpanLookahead()} ) <BACKTICK> { buff.append("`"); }
+        )+
+    )
+    ( Whitespace() )? ( <BACKTICK> )+ { jjtThis.setText(buff.toString()); codespanPrefix = 0; }
 }
 
 void CodeSpanContent(StringBuilder buff) : {
     Token t;
 } {
-
     (
-        (
-            t = <CHAR_SEQUENCE>
-            | t = <SPACE>
-            | t = <AMPERSAND>
-            | t = <BACKSLASH>
-            | t = <BANG>
-            | t = <CHAR_ENTITY_REF>
-            | t = <COLON>
-            | t = <COMMENT_CLOSE>
-            | t = <COMMENT_OPEN>
-            | t = <DIGITS>
-            | t = <DOT>
-            | t = <DOUBLE_QUOTE>
-            | t = <EQ>
-            | t = <ESCAPED_CHAR>
-            | t = <GT>
-            | t = <LBRACKET>
-            | t = <LPAREN>
-            | t = <LT>
-            | t = <MINUS>
-            | t = <NUMERIC_CHAR_REF>
-            | t = <PLUS>
-            | t = <RBRACKET>
-            | t = <RPAREN>
-            | t = <SHARP>
-            | t = <SINGLE_QUOTE>
-            | t = <SLASH>
-            | t = <STAR>
-            | t = <TAB>
-            | t = <UNDERSCORE>
-        ) { buff.append(t.image); }
-    )+
+        t = <CHAR_SEQUENCE>
+        | t = <SPACE>
+        | t = <AMPERSAND>
+        | t = <BACKSLASH>
+        | t = <BANG>
+        | t = <CHAR_ENTITY_REF>
+        | t = <COLON>
+        | t = <COMMENT_CLOSE>
+        | t = <COMMENT_OPEN>
+        | t = <DIGITS>
+        | t = <DOT>
+        | t = <DOUBLE_QUOTE>
+        | t = <EQ>
+        | t = <ESCAPED_CHAR>
+        | t = <GT>
+        | t = <LBRACKET>
+        | t = <LPAREN>
+        | t = <LT>
+        | t = <MINUS>
+        | t = <NUMERIC_CHAR_REF>
+        | t = <PLUS>
+        | t = <RBRACKET>
+        | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SINGLE_QUOTE>
+        | t = <SLASH>
+        | t = <STAR>
+        | t = <TAB>
+        | t = <UNDERSCORE>
+    ) { buff.append(t.image); }
 }
 
 void Emphasis() #Emphasis : {
@@ -1147,7 +1219,7 @@ void EmphasisText() #Text : {
 
 void LinkBody() : {} {
     CharRef()
-    | CodeSpan()
+    | LOOKAHEAD( {CodeSpanLookahead()} ) CodeSpan()
     | LOOKAHEAD( Emphasis() ) Emphasis()
     | LOOKAHEAD( InlineURL() ) InlineURL()
     | LOOKAHEAD( Link() ) Link()
