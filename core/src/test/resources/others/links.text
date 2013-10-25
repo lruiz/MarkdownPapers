@@ -23,3 +23,5 @@ no_link]
 [text 9][id_9]
 
 [id_9]: http://www.example-0.com
+
+[text 10](http://localhost/space url)

@@ -176,11 +176,13 @@ public class Parser {
                 indent++;
             } else if(t.kind == TAB) {
                 indent += 4;//getTabLength(getToken(offset - 2),t);
+            } else if(t.kind == EOL) {
+                indent = 0;
             }
-        } while (t.any(SPACE, TAB, GT) && indent < 4);
+        } while (t.any(SPACE, TAB, GT, EOL) && indent < 4);
 
-        if (t.any(EOL, EOF)) {
-            return true;
+        if (t.any(EOF)) {
+            return false;
         }
 
         return currentQuoteLevel >= quotes && indent >= 4;
@@ -267,19 +269,25 @@ public class Parser {
         
         return count >= 2 && t.any(EOL, EOF);
     }
-    
-    boolean QuoteInsideTitleLookahead(int quoteKind) {
-        if (getToken(1).kind == quoteKind) {
-            Token t;
-            int offset = 2;
-            do {
-                t = getToken(offset++);
-            } while (t.none(quoteKind, RPAREN, EOL, EOF));
 
-            return t.kind == quoteKind;
+    boolean HeaderLookahead() {
+        if(getToken(1).kind == SHARP) {
+            return true;
         }
+        int offset = 1;
+        Token t;
+        boolean notempty = false;
+        do {
+            t = getToken(offset++);
+            if(t.none(SPACE, TAB, EOL, EOF)) {
+                notempty = true;
+            }
+        } while(t.none(EOL, EOF));
 
-        return getToken(1).none(EOL, EOF);
+        if(notempty) {
+            return getToken(offset).any(EQ, MINUS);
+        }
+        return false;
     }
 
     boolean BacktickInsideCodeSpanLookahead(){
@@ -548,6 +556,7 @@ void CodeText() #CodeText : {
             (
                 t = <CHAR_SEQUENCE>
                 | t = <SPACE>
+                | t = <DIGITS>
                 | t = <AMPERSAND>
                 | t = <BACKTICK>
                 | t = <BACKSLASH>
@@ -556,7 +565,6 @@ void CodeText() #CodeText : {
                 | t = <COMMENT_OPEN>
                 | t = <COMMENT_CLOSE>
                 | t = <COLON>
-                | t = <DIGITS>
                 | t = <DOT>
                 | t = <DOUBLE_QUOTE>
                 | t = <EQ>
@@ -732,8 +740,8 @@ void CodeSpan() #CodeSpan : {
     ( <BACKTICK> {codespanPrefix++;})+ ( Whitespace() )? ( <EOL> )?
     (
         (
-            CodeSpanContent(buff)
-            | LOOKAHEAD( (<SPACE> | <TAB>) (CodeSpanContent(buff)) ) ( <SPACE> | <TAB> )
+            CodeSpanText(buff)
+            | LOOKAHEAD( (<SPACE> | <TAB>) (CodeSpanText(buff)) ) ( <SPACE> | <TAB> )
             | <EOL>
             | LOOKAHEAD( {BacktickInsideCodeSpanLookahead()} ) <BACKTICK> { buff.append("`"); }
         )+
@@ -741,12 +749,13 @@ void CodeSpan() #CodeSpan : {
     ( Whitespace() )? ( <BACKTICK> )+ { jjtThis.setText(buff.toString()); codespanPrefix = 0; }
 }
 
-void CodeSpanContent(StringBuilder buff) : {
+void CodeSpanText(StringBuilder buff) : {
     Token t;
 } {
     (
         t = <CHAR_SEQUENCE>
         | t = <SPACE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BANG>
@@ -754,7 +763,6 @@ void CodeSpanContent(StringBuilder buff) : {
         | t = <COLON>
         | t = <COMMENT_CLOSE>
         | t = <COMMENT_OPEN>
-        | t = <DIGITS>
         | t = <DOT>
         | t = <DOUBLE_QUOTE>
         | t = <EQ>
@@ -835,10 +843,10 @@ void InlineURL() #InlineUrl : {
     (
         (
         t = <CHAR_SEQUENCE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <COLON>
-        | t = <DIGITS>
         | t = <DOT>
         | t = <EQ>
         | t = <LBRACKET>
@@ -856,30 +864,119 @@ void InlineURL() #InlineUrl : {
 }
 
 void Link() #Link : {
-    String text, reference = "";
+    String text, reference;
     Resource resource = null;
 } {
     "["
         (
-        LinkBody()
-        )+
-    "]"
-    (
-        LOOKAHEAD(3)
-        (
-            ( <SPACE> { jjtThis.setWhitespaceAtMiddle(); } )? ( <EOL> )?
-            "["
-                ( reference = refname() )?
-                { jjtThis.setReference(reference); }
+            LOOKAHEAD( LinkBodyText() "]" )
+            LinkBodyText()
             "]"
-            |
-            "("
-                ( Whitespace() )?
-                ( resource = Resource() ( Whitespace() )? )?
+            (
+                LOOKAHEAD( LinkReference() | LinkResource() )
+                (
+                resource = LinkResource()
                 { jjtThis.setResource(resource); }
-            ")"
+                |
+                reference = LinkReference(jjtThis)
+                { jjtThis.setReference(reference); }
+                )
+            )?
+            |
+            LinkBodyComposite()
+            "]"
+            (
+            resource = LinkResource()
+            { jjtThis.setResource(resource); }
+            |
+            reference = LinkReference(jjtThis)
+            { jjtThis.setReference(reference); }
+            )
         )
-    )?
+}
+
+void LinkBodyText() : {
+    StringBuilder buff;
+} {
+    (
+        CharRef()
+        | { buff = new StringBuilder(); } LinkText(buff) { jjtThis.append(buff.toString()); } #Text
+    ) +
+}
+
+void LinkBodyComposite() : {
+    StringBuilder buff = new StringBuilder();
+} {
+    (
+        CharRef()
+        | LOOKAHEAD( {CodeSpanLookahead()} ) CodeSpan()
+        | LOOKAHEAD( Emphasis() ) Emphasis()
+        | LOOKAHEAD( InlineURL() ) InlineURL()
+        | LOOKAHEAD( Image() ) Image()
+        |
+            { buff = new StringBuilder("["); }
+            "[" ( LinkText(buff) )* "]"
+            { buff.append("]"); jjtThis.append(buff.toString()); } #Text
+        |
+            { buff = new StringBuilder(); }
+            LinkText(buff)
+            { jjtThis.append(buff.toString()); } #Text
+    )+
+}
+
+String LinkReference(Link node) : {
+    String reference = "";
+} {
+    ( <SPACE> { node.setWhitespaceAtMiddle(); } )?
+    ( <EOL> ( Whitespace() )? )?
+    "["
+        ( reference = refname() )?
+    "]"
+    { return reference; }
+}
+
+Resource LinkResource() : {
+    Resource resource = null;
+} {
+    "("
+        ( Whitespace() )?
+        ( resource = Resource() ( Whitespace() )? )?
+    ")"
+    { return resource; }
+}
+
+void LinkText(StringBuilder buff) : {
+    Token t;
+} {
+    (
+        t = <CHAR_SEQUENCE>
+        | t = <SPACE>
+        | t = <DIGITS>
+        | t = <AMPERSAND>
+        | t = <BACKSLASH>
+        | t = <BACKTICK>
+        | t = <BANG>
+        | t = <COLON>
+        | t = <COMMENT_CLOSE>
+        | t = <COMMENT_OPEN>
+        | t = <DOUBLE_QUOTE>
+        | t = <DOT>
+        | t = <EOL>
+        | t = <EQ>
+        | t = <ESCAPED_CHAR>
+        | t = <GT>
+        | t = <LPAREN>
+        | t = <LT>
+        | t = <MINUS>
+        | t = <PLUS>
+        | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SINGLE_QUOTE>
+        | t = <SLASH>
+        | t = <STAR>
+        | t = <TAB>
+        | t = <UNDERSCORE>
+    ) { buff.append(t.image); }
 }
 
 void Image() #Image : {
@@ -1015,12 +1112,12 @@ String refname() : {
         (
         t = <CHAR_SEQUENCE>
         | t = <SPACE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
         | t = <BANG>
         | t = <COLON>
-        | t = <DIGITS>
         | t = <DOT>
         | t = <EQ>
         | t = <GT>
@@ -1042,112 +1139,112 @@ String refname() : {
 }
 
 Resource Resource() : {
-    String url;
+    StringBuilder buff = new StringBuilder();
     String hint = null;
 } {
-    url = url()
+    (
+    "<" url(buff) ">"
+    | url(buff)
+    )
     (
         Whitespace()
-        ( hint = title() )?
+        (hint = Title() )?
     )?
-    { return new Resource(url, hint); }
+    { return new Resource(buff.toString(), hint); }
 }
 
-String url() : {
-    String text;
+void url(StringBuilder buff) : {
 } {
     (
-        "<"
-        text = urltext()
-        ">"
-        |
-        text = urltext()
-    )
-    { return text; }
+        LOOKAHEAD( <LPAREN> url(buff) <RPAREN> | ( <SPACE> )? UrlText(buff) )
+        (
+        <LPAREN> { buff.append("("); } url(buff) <RPAREN> { buff.append(")"); }
+        | ( <SPACE> { buff.append(" "); } )? UrlText(buff)
+        )
+    )+
 }
 
-String urltext() : {
+void UrlText(StringBuilder buff) : {
     Token t;
-    StringBuilder buff = new StringBuilder();
 } {
     (
         (
         t = <CHAR_SEQUENCE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BANG>
         | t = <COLON>
-        | t = <DIGITS>
         | t = <DOT>
         | t = <EQ>
         | t = <LBRACKET>
-        | t = <LPAREN> { parentheses++; }
         | t = <MINUS>
         | t = <PLUS>
         | t = <RBRACKET>
-        | LOOKAHEAD({parentheses > 0}) t = <RPAREN> { parentheses--; }
         | t = <SHARP>
         | t = <SLASH>
         | t = <UNDERSCORE>
         ) { buff.append(t.image); }
-    ) +
-    { parentheses = 0; return buff.toString(); }
+    )
 }
 
-String title() : {
-    String text;
+String Title() : {
+    StringBuilder buff = new StringBuilder();
 } {
     (
         (
             "\""
-            text = TitleText(DOUBLE_QUOTE)
-            "\""
+            (
+                LOOKAHEAD( ( TitleText() | <SINGLE_QUOTE> )* <DOUBLE_QUOTE> )
+                ( TitleText(buff) | <SINGLE_QUOTE> { buff.append("'"); } )*
+                "\"" { buff.append('"'); }
+            )+
+
         )
         |
         (
             "'"
-            text = TitleText(SINGLE_QUOTE)
-            "'"
+            (
+                LOOKAHEAD( ( TitleText() | <DOUBLE_QUOTE> )* <SINGLE_QUOTE> )
+                ( TitleText(buff) | <DOUBLE_QUOTE> { buff.append('"'); } )*
+                "'" { buff.append("'"); }
+            )+
         )
     )
-    { return text; }
+    {
+        buff.deleteCharAt(buff.length() - 1);
+        return buff.toString();
+    }
 }
 
-String TitleText(int quoteType) : {
-    StringBuilder buff = new StringBuilder();
+void TitleText(StringBuilder buff) : {
     Token t;
 } {
     (
-        LOOKAHEAD( {QuoteInsideTitleLookahead(quoteType)} )
-        (
-            t = <CHAR_SEQUENCE>
-            | t = <SPACE>
-            | t = <AMPERSAND>
-            | t = <BACKSLASH>
-            | t = <BACKTICK>
-            | t = <BANG>
-            | t = <COLON>
-            | t = <DIGITS>
-            | t = <DOUBLE_QUOTE>
-            | t = <DOT>
-            | t = <EQ>
-            | t = <GT>
-            | t = <LBRACKET>
-            | t = <LPAREN>
-            | t = <LT>
-            | t = <MINUS>
-            | t = <PLUS>
-            | t = <RBRACKET>
-            | t = <RPAREN>
-            | t = <SHARP>
-            | t = <SINGLE_QUOTE>
-            | t = <SLASH>
-            | t = <STAR>
-            | t = <TAB>
-            | t = <UNDERSCORE>
-        ) { buff.append(t.image); }
-    )*
-    { return buff.toString(); }
+        t = <CHAR_SEQUENCE>
+        | t = <SPACE>
+        | t = <DIGITS>
+        | t = <AMPERSAND>
+        | t = <BACKSLASH>
+        | t = <BACKTICK>
+        | t = <BANG>
+        | t = <COLON>
+        | t = <DOT>
+        | t = <EQ>
+        | t = <GT>
+        | t = <LBRACKET>
+        | t = <LPAREN>
+        | t = <LT>
+        | t = <MINUS>
+        | t = <PLUS>
+        | t = <RBRACKET>
+        | t = <RPAREN>
+        | t = <SHARP>
+        | t = <SLASH>
+        | t = <STAR>
+        | t = <TAB>
+        | t = <UNDERSCORE>
+    ) { buff.append(t.image); }
 }
 
 String Anything() : {
@@ -1156,6 +1253,7 @@ String Anything() : {
     (
         t = <CHAR_SEQUENCE>
         | t = <SPACE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
@@ -1172,7 +1270,6 @@ String Anything() : {
         | t = <LPAREN>
         | t = <LT>
         | t = <MINUS>
-        | t = <DIGITS>
         | t = <PLUS>
         | t = <RBRACKET>
         | t = <RPAREN>
@@ -1190,6 +1287,7 @@ void EmphasisText() #Text : {
 } {
     (
         t = <CHAR_SEQUENCE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
@@ -1206,7 +1304,6 @@ void EmphasisText() #Text : {
         | t = <LPAREN>
         | t = <LT>
         | t = <MINUS>
-        | t = <DIGITS>
         | t = <PLUS>
         | t = <RBRACKET>
         | t = <RPAREN>
@@ -1217,56 +1314,13 @@ void EmphasisText() #Text : {
     ) { jjtThis.append(t.image); }
 }
 
-void LinkBody() : {} {
-    CharRef()
-    | LOOKAHEAD( {CodeSpanLookahead()} ) CodeSpan()
-    | LOOKAHEAD( Emphasis() ) Emphasis()
-    | LOOKAHEAD( InlineURL() ) InlineURL()
-    | LOOKAHEAD( Link() ) Link()
-    | LOOKAHEAD( Image() ) Image()
-    | LinkText()
-}
-
-void LinkText() #Text : {
-    Token t;
-} {
-    (
-        t = <CHAR_SEQUENCE>
-        | t = <SPACE>
-        | t = <AMPERSAND>
-        | t = <BACKSLASH>
-        | t = <BACKTICK>
-        | t = <BANG>
-        | t = <COLON>
-        | t = <COMMENT_CLOSE>
-        | t = <COMMENT_OPEN>
-        | t = <DOUBLE_QUOTE>
-        | t = <DOT>
-        | t = <EOL>
-        | t = <EQ>
-        | t = <ESCAPED_CHAR>
-        | t = <GT>
-        | t = <LPAREN>
-        | t = <LT>
-        | t = <MINUS>
-        | t = <DIGITS>
-        | t = <PLUS>
-        | t = <RPAREN>
-        | t = <SHARP>
-        | t = <SINGLE_QUOTE>
-        | t = <SLASH>
-        | t = <STAR>
-        | t = <TAB>
-        | t = <UNDERSCORE>
-    ) { jjtThis.append(t.image); }
-}
-
 void TagAttributeText(StringBuilder buff) : {
     Token t;
 } {
     (
         t = <CHAR_SEQUENCE>
         | t = <SPACE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
@@ -1281,7 +1335,6 @@ void TagAttributeText(StringBuilder buff) : {
         | t = <LPAREN>
         | t = <MINUS>
         | t = <NUMERIC_CHAR_REF>
-        | t = <DIGITS>
         | t = <PLUS>
         | t = <RPAREN>
         | t = <SHARP>
@@ -1298,6 +1351,7 @@ void TextNode() #Text : {
     (
         t = <CHAR_SEQUENCE>
         | t = <SPACE>
+        | t = <DIGITS>
         | t = <AMPERSAND>
         | t = <BACKSLASH>
         | t = <BACKTICK>
@@ -1316,7 +1370,6 @@ void TextNode() #Text : {
         | t = <LPAREN>
         | t = <MINUS>
         | t = <NUMERIC_CHAR_REF>
-        | t = <DIGITS>
         | t = <PLUS>
         | t = <RBRACKET>
         | t = <RPAREN>
