@@ -217,7 +217,7 @@ public class Parser {
             Token t;
             do {
                 t = getToken(offset++);
-            } while(t.any(SHARP));
+            } while(t.kind == SHARP);
 
             return t.none(EOL,EOF);
         }
@@ -268,26 +268,6 @@ public class Parser {
         } while(t.any(STAR, MINUS, SPACE));
         
         return count >= 2 && t.any(EOL, EOF);
-    }
-
-    boolean HeaderLookahead() {
-        if(getToken(1).kind == SHARP) {
-            return true;
-        }
-        int offset = 1;
-        Token t;
-        boolean notempty = false;
-        do {
-            t = getToken(offset++);
-            if(t.none(SPACE, TAB, EOL, EOF)) {
-                notempty = true;
-            }
-        } while(t.none(EOL, EOF));
-
-        if(notempty) {
-            return getToken(offset).any(EQ, MINUS);
-        }
-        return false;
     }
 
     boolean BacktickInsideCodeSpanLookahead(){
