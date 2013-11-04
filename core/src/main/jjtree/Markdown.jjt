@@ -721,8 +721,8 @@ void CodeSpan() #CodeSpan : {
     (
         (
             CodeSpanText(buff)
-            | LOOKAHEAD( (<SPACE> | <TAB>) (CodeSpanText(buff)) ) ( <SPACE> | <TAB> )
-            | <EOL>
+            | LOOKAHEAD( (<SPACE> | <TAB>) CodeSpanText() ) ( <SPACE> | <TAB> )
+            | <EOL> { buff.append("\n"); }
             | LOOKAHEAD( {BacktickInsideCodeSpanLookahead()} ) <BACKTICK> { buff.append("`"); }
         )+
     )
