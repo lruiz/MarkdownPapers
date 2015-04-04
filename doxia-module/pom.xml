@@ -37,6 +37,6 @@
     </dependencies>
 
     <properties>
-        <doxia.version>1.1.4</doxia.version>
+        <doxia.version>1.6</doxia.version>
     </properties>
 </project>
