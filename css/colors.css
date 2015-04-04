@@ -1,0 +1,63 @@
+html, body {
+  color: #7C7C7C;
+  background-color: #CED8D8;
+}
+
+a:link {
+  background-color:#E0ECFF;
+  color:#206CFF;
+}
+
+a:visited {
+  background-color:#FADCB3;
+  color:#B36D00;
+}
+
+#Content h1, #Content h2, #Content h3 {
+  color: #00A4C4;
+}
+
+#Content th, #Content td {
+  border-color: #f2f2f2;
+}
+
+#Footer {
+  background: #5D5D5D url(../images/grayfade.gif) top left repeat-y;
+  color: #FFFFFF;
+}
+
+#Footer a {
+  background-color: transparent;
+  color: #FFFFFF;
+}
+
+#Logo a {
+  background-color: transparent;
+}
+
+#Nav, #Nav a {
+  color: #7C7C7C;
+}
+
+#Nav a {
+  background-color: transparent;
+}
+
+#Nav ul a:hover, #Nav ul strong {
+  background-color:#FDE9F4;
+  color:#854F61;
+}
+
+#Nav h5 {
+  border-bottom: 2px solid #F5F6F7;
+}
+
+#publishDate, #projectVersion {
+  background-color:#FDE9F4;
+  color:#854F61;
+}
+
+.source {
+  background-color:#FFF2CC;
+  color:#7F6000;
+}

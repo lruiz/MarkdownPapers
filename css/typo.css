@@ -1,0 +1,45 @@
+body {
+  font-family: arial, sans-serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+pre {
+  font-size: 1.05em;
+}
+
+#Breadcrumbs {
+  font-size: 0.7em;
+}
+
+#Content h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+#Content h3 {
+  font-size: 1.2em;
+}
+
+#Content th {
+  font-weight: bold;
+}
+
+#Footer {
+  font-size: 0.8em;
+}
+
+#Frame {
+  font-size: 1.1em;
+  line-height: 1.4em;
+}
+
+#Nav h5, #Nav strong {
+  font-weight: bold;
+}
