@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.tautua.markdownpapers</groupId>
     <artifactId>markdownpapers-parent</artifactId>
-    <version>1.4.2</version>
+    <version>1.4.3</version>
     <name>MarkdownPapers Parent POM</name>
     <description>Markdown parser and transformer</description>
     <url>http://markdown.tautua.org</url>
@@ -122,11 +122,14 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.1</version>
+                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
