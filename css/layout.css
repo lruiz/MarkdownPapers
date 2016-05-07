@@ -22,7 +22,7 @@ ol li {
   list-style: decimal inside;
 }
 
-a, #Nav strong, #publishDate, #projectVersion {
+#Main p a, #Nav a, #Nav strong, #publishDate, #projectVersion {
   padding: 2px 4px;
   border-radius: 4px;
   -moz-border-radius: 4px;
