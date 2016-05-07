@@ -3,7 +3,7 @@
     <skin>
         <groupId>org.tautua.maven.skins</groupId>
         <artifactId>tautua-default-skin</artifactId>
-        <version>1.0</version>
+        <version>1.0.1</version>
     </skin>
     <bannerLeft>
         <name>Markdown</name>
