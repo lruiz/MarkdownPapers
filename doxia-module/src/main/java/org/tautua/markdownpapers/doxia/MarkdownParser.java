@@ -28,6 +28,10 @@ import java.io.Reader;
  *
  */
 public class MarkdownParser extends AbstractParser {
+    /**
+     * The role hint for the {@link MarkdownParser} Plexus component.
+     */
+    public static final String ROLE_HINT = "markdown";
 
     public void parse(Reader reader, Sink sink) throws ParseException {
         Parser parser = new Parser(reader);

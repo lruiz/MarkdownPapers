@@ -16,10 +16,20 @@
 
 package org.tautua.markdownpapers.doxia;
 
-import org.apache.maven.doxia.module.site.AbstractSiteModule;
+import org.apache.maven.doxia.parser.module.AbstractParserModule;
 
-public class MarkdownSiteModule extends AbstractSiteModule {
-    public MarkdownSiteModule() {
-        super("markdown", "md", "markdown");
+public class MarkdownParserModule extends AbstractParserModule {
+    /**
+     * The extension for Markdown files.
+     */
+    public static final String FILE_EXTENSION = "md";
+
+    /**
+     * Alternate extension for Markdown files.
+     */
+    public static final String ALTERNATE_FILE_EXTENSION = "markdown";
+
+    public MarkdownParserModule() {
+        super(MarkdownParser.ROLE_HINT, FILE_EXTENSION);
     }
 }

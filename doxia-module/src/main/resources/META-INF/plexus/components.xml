@@ -8,9 +8,9 @@
             <description>The Markdown parser.</description>
         </component>
         <component>
-            <role>org.apache.maven.doxia.module.site.SiteModule</role>
+            <role>org.apache.maven.doxia.parser.module.ParserModule</role>
             <role-hint>markdown</role-hint>
-            <implementation>org.tautua.markdownpapers.doxia.MarkdownSiteModule</implementation>
+            <implementation>org.tautua.markdownpapers.doxia.MarkdownParserModule</implementation>
             <description>Markdown site module.</description>
         </component>
     </components>
