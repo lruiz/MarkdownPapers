@@ -20,19 +20,10 @@ package org.tautua.markdownpapers.ast;
  * @author Larry Ruiz
  */
 public class Emphasis extends SimpleNode {
-    private String text;
     private Type type = Type.ITALIC;
 
     public Emphasis(int id) {
         super(id);
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
     }
 
     public Type getType() {
@@ -60,7 +51,7 @@ public class Emphasis extends SimpleNode {
         type = Type.ITALIC_AND_BOLD;
     }
 
-    public static enum Type {
+    public enum Type {
         ITALIC,
         BOLD,
         ITALIC_AND_BOLD,
