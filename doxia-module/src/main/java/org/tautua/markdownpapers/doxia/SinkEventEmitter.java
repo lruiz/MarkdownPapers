@@ -73,18 +73,18 @@ public class SinkEventEmitter implements Visitor {
         switch (node.getType()) {
             case BOLD:
                 sink.bold();
-                sink.text(node.getText());
+                node.childrenAccept(this);
                 sink.bold_();
                 break;
             case ITALIC:
                 sink.italic();
-                sink.text(node.getText());
+                node.childrenAccept(this);
                 sink.italic_();
                 break;
             case ITALIC_AND_BOLD:
                 sink.italic();
                 sink.bold();
-                sink.text(node.getText());
+                node.childrenAccept(this);
                 sink.bold_();
                 sink.italic_();
                 break;
