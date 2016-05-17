@@ -960,11 +960,12 @@ void LinkText(StringBuilder buff) : {
 }
 
 void Image() #Image : {
-    String text, reference;
+    String text = null;
+    String reference;
     Resource resource = null;
 } {
     "!" "["
-    text = refname() { jjtThis.setText(text); }
+    ( text = refname() )? { jjtThis.setText(text); }
     "]"
     (
         ( <SPACE> )?

@@ -6,3 +6,7 @@
 ![alt](path/to/image.png)
 
 ![alt text](path/to/my-photo.png)
+
+![](http://some.url)
+
+![alt][idnotfound]

@@ -116,15 +116,27 @@ public class HtmlEmitter implements Visitor {
     public void visit(Image node) {
         Resource resource = node.getResource();
         if (resource == null) {
-            append("<img src=\"\" alt=\"");
-            escapeAndAppend(node.getText());
-            append("\"/>");
+            if(node.getReference() != null){
+                append("![");
+                if (node.getText() != null) {
+                    escapeAndAppend(node.getText());
+                }
+                append("][");
+                escapeAndAppend(node.getReference());
+                append("]");
+            } else {
+                append("<img src=\"\" alt=\"");
+                if (node.getText() != null) {
+                    escapeAndAppend(node.getText());
+                }
+                append("\"/>");
+            }
         } else {
             append("<img");
             append(" src=\"");
             escapeAndAppend(resource.getLocation());
+            append("\" alt=\"");
             if (node.getText() != null) {
-                append("\" alt=\"");
                 escapeAndAppend(node.getText());
             }
             if (resource.getHint() != null) {
