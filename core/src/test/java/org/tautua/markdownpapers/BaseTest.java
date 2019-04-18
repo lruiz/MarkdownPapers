@@ -17,15 +17,17 @@
 package org.tautua.markdownpapers;
 
 import org.custommonkey.xmlunit.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Larry Ruiz
@@ -35,18 +37,16 @@ public abstract class BaseTest {
     private static final String DEFAULT_OUTPUT_EXTENSION = ".html";
     private static final String DEFAULT_INPUT_EXTENSION = ".text";
     
-    protected String fileName;
     private String inputExtension;
     private String outputExtension; 
     private File inputDirectory;
     private File outputDirectory;
 
-    protected BaseTest(String fileName, File inputDirectory, File outputDirectory) {
-        this(fileName, inputDirectory, outputDirectory, DEFAULT_INPUT_EXTENSION, DEFAULT_OUTPUT_EXTENSION);
+    protected BaseTest(File inputDirectory, File outputDirectory) {
+        this(inputDirectory, outputDirectory, DEFAULT_INPUT_EXTENSION, DEFAULT_OUTPUT_EXTENSION);
     }
     
-    protected BaseTest(String fileName, File inputDirectory, File outputDirectory, String inputExtension, String outputExtension) {
-        this.fileName = fileName;
+    protected BaseTest(File inputDirectory, File outputDirectory, String inputExtension, String outputExtension) {
         this.inputDirectory = inputDirectory;
         this.outputDirectory = outputDirectory;
         this.inputExtension = inputExtension;
@@ -84,18 +84,19 @@ public abstract class BaseTest {
         org.w3c.dom.Document a = builder.parse(new FileReader(actual));
         DetailedDiff diff = new DetailedDiff(new Diff(e, a));
 
-        assertThat(diff.toString(), diff.getAllDifferences().size(), equalTo(0));
+        assertThat(diff.getAllDifferences()).as(diff.toString()).isEmpty();
     }
     
-    @Before
+    @BeforeEach
     public void setup() {
         if (!outputDirectory.exists()) {
             outputDirectory.mkdirs();
         }
     }
 
-    @Test
-    public void execute() throws Exception {
+    @ParameterizedTest
+    @MethodSource("getArguments")
+    public void execute(String fileName) throws Exception {
         File input = new File(inputDirectory, fileName + inputExtension);
         File expected = new File(inputDirectory, fileName + outputExtension);
         File output = new File(outputDirectory, fileName + outputExtension);

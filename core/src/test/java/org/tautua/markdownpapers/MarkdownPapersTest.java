@@ -17,40 +17,38 @@
 package org.tautua.markdownpapers;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.provider.Arguments;
 
-@RunWith(LabelledParameterized.class)
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
 public class MarkdownPapersTest extends BaseTest {
 
-    public MarkdownPapersTest(String fileName) {
-        super(fileName, new File("target/test-classes/others"), new File("target/generated-test-sources/others"));
+    public MarkdownPapersTest() {
+        super(new File("target/test-classes/others"), new File("target/generated-test-sources/others"));
     }
 
-    @Parameters
-    public static List<Object[]> data() throws FileNotFoundException {
-        return Arrays.asList(new Object[][]{
-                {"code"},
-                {"comments"},
-                {"codespan"},
-                {"emphasis"},
-                {"headers"},
-                {"images"},
-                {"inline"},
-                {"linebreak"},
-                {"links"},
-                {"list"},
-                {"paragraphs"},
-                {"quoteAndList"},
-                {"quotes"},
-                {"rulers"},
-                {"snippets"},
-                {"tags"},
-                {"underscore"},
-                {"inlineUrls"}
-            });
+    public static Stream<Arguments> getArguments() {
+        return Stream.of(
+                arguments("code"),
+                arguments("comments"),
+                arguments("codespan"),
+                arguments("emphasis"),
+                arguments("headers"),
+                arguments("images"),
+                arguments("inline"),
+                arguments("linebreak"),
+                arguments("links"),
+                arguments("list"),
+                arguments("paragraphs"),
+                arguments("quoteAndList"),
+                arguments("quotes"),
+                arguments("rulers"),
+                arguments("snippets"),
+                arguments("tags"),
+                arguments("underscore"),
+                arguments("inlineUrls")
+            );
     }
 }

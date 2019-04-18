@@ -16,46 +16,44 @@
 
 package org.tautua.markdownpapers;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized.Parameters;
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.provider.Arguments;
+
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /**
  * @author Larry Ruiz
  */
-@RunWith(LabelledParameterized.class)
 public class Markdown_1_0_Test extends BaseTest {
     private static final File OUTPUT_DIR = new File("target/generated-test-sources/1.0");
     private static final File INPUT_DIR = new File("target/test-classes/1.0");
 
-    public Markdown_1_0_Test(String fileName) {
-        super(fileName, INPUT_DIR, OUTPUT_DIR);
+    public Markdown_1_0_Test() {
+        super(INPUT_DIR, OUTPUT_DIR);
     }
 
-    @Parameters
-    public static List<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                {"Amps and angle encoding"},
-                {"Auto links"},
-                {"Backslash escapes"},
-                {"Blockquotes with code blocks"},
-                {"Hard-wrapped paragraphs with list-like lines"},
-                {"Horizontal rules"},
-                {"Inline HTML (Advanced)"},
-                {"Inline HTML (Simple)"},
-                {"Inline HTML comments"},
-                {"Links, inline style"},
-                {"Links, reference style"},
-                {"Literal quotes in titles"},
-                {"Markdown Documentation - Basics"},
-                {"Markdown Documentation - Syntax"},
-                {"Nested blockquotes"},
-                {"Ordered and unordered lists"},
-                {"Strong and em together"},
-                {"Tabs"},
-                {"Tidyness"}
-            });
+    public static Stream<Arguments> getArguments() {
+        return Stream.of(
+                arguments("Amps and angle encoding"),
+                arguments("Auto links"),
+                arguments("Backslash escapes"),
+                arguments("Blockquotes with code blocks"),
+                arguments("Hard-wrapped paragraphs with list-like lines"),
+                arguments("Horizontal rules"),
+                arguments("Inline HTML (Advanced)"),
+                arguments("Inline HTML (Simple)"),
+                arguments("Inline HTML comments"),
+                arguments("Links, inline style"),
+                arguments("Links, reference style"),
+                arguments("Literal quotes in titles"),
+                arguments("Markdown Documentation - Basics"),
+                arguments("Markdown Documentation - Syntax"),
+                arguments("Nested blockquotes"),
+                arguments("Ordered and unordered lists"),
+                arguments("Strong and em together"),
+                arguments("Tabs"),
+                arguments("Tidyness")
+            );
     }
 }
