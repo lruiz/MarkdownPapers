@@ -16,13 +16,18 @@
 
 package org.tautua.markdownpapers;
 
-import org.custommonkey.xmlunit.*;
+import org.apache.commons.io.IOUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Entities;
+import org.jsoup.safety.Whitelist;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.xml.sax.SAXException;
+import org.xmlunit.assertj.XmlAssert;
 
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 
@@ -72,19 +77,18 @@ public abstract class BaseTest {
      * @throws javax.xml.parsers.ParserConfigurationException
      */
     protected static void compare(File expected, File actual) throws IOException, SAXException, ParserConfigurationException {
-        XMLUnit.setIgnoreWhitespace(true);
-        XMLUnit.setIgnoreAttributeOrder(true);
-        XMLUnit.setNormalizeWhitespace(true);
-        XMLUnit.setNormalize(true);
+        XmlAssert.assertThat(toHtml(actual)).and(toHtml(expected))
+                .ignoreComments()
+                .ignoreWhitespace()
+                .ignoreElementContentWhitespace()
+                .normalizeWhitespace()
+                .areSimilar();
+    }
 
-        TolerantSaxDocumentBuilder sax = new TolerantSaxDocumentBuilder(XMLUnit.newTestParser());
-        HTMLDocumentBuilder builder = new HTMLDocumentBuilder(sax);
-
-        org.w3c.dom.Document e = builder.parse(new FileReader(expected));
-        org.w3c.dom.Document a = builder.parse(new FileReader(actual));
-        DetailedDiff diff = new DetailedDiff(new Diff(e, a));
-
-        assertThat(diff.getAllDifferences()).as(diff.toString()).isEmpty();
+    protected static String toHtml(File file) throws IOException {
+        Document doc = Jsoup.parse(file, "UTF-8");
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml).escapeMode(Entities.EscapeMode.xhtml);
+        return doc.toString();
     }
     
     @BeforeEach
