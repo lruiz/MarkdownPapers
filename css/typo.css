@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono&display=swap');
+
 body {
-  font-family: arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
 
 a {
@@ -10,17 +12,28 @@ a:hover {
   text-decoration: underline;
 }
 
-pre {
-  font-size: 1.05em;
+b {
+  font-size:1em;
+  font-weight:500;
+}
+
+pre, code, kbd, samp, tt {
+  font-family:'Roboto Mono', monospace;
+  font-size: 1em;
+  font-weight:300;
 }
 
 #Breadcrumbs {
   font-size: 0.7em;
 }
 
+#Content h2, #Content h3 {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 400;
+}
+
 #Content h2 {
   font-size: 1.5em;
-  font-weight: bold;
 }
 
 #Content h3 {
@@ -28,7 +41,13 @@ pre {
 }
 
 #Content th {
-  font-weight: bold;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.1em;
+  font-weight: 400;
+}
+
+#Content td b {
+    font-weight: 400;
 }
 
 #Footer {
@@ -37,9 +56,14 @@ pre {
 
 #Frame {
   font-size: 1.1em;
-  line-height: 1.4em;
 }
 
-#Nav h5, #Nav strong {
-  font-weight: bold;
+#Nav h5 {
+  font-family:'Roboto Condensed', sans-serif;
+  font-size: 1.3em;
+  font-weight: 400;
+}
+
+#Nav strong {
+  font-weight: 400;
 }
