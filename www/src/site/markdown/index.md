@@ -1,9 +1,9 @@
 What is MarkdownPapers?
 =======================
 
-MarkdownPapers is a java implementation of Markdown language created by [John Gruber] which provides
-an easy-to-read, easy-to-write plain text format that takes many cues from existing conventions for
-marking up plain text in email.
+MarkdownPapers is a java implementation of Markdown language created by [John Gruber] in collaboration 
+with [Aaron Swartz], which provides an easy-to-read, easy-to-write plain text format that takes many cues from 
+existing conventions for marking up plain text in email.
 
 This implementation consist in parser built from a [JAVACC] grammar definition that produces an
 abstract syntax tree ([AST]) where transformations are performed following the [Visitor Pattern].
@@ -42,6 +42,7 @@ You can add markdonwpapers to your project as dependency for immediate use :).
 
 
 [John Gruber]: http://daringfireball.net/projects/markdown
+[Aaron Swartz]: https://en.wikipedia.org/wiki/Aaron_Swartz
 [JAVACC]: http://javacc.java.net
 [AST]: http://en.wikipedia.org/wiki/Abstract_syntax_tree
 [Visitor Pattern]: http://en.wikipedia.org/wiki/Visitor_pattern
