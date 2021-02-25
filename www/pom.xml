@@ -29,9 +29,9 @@
     <name>MarkdownPapers Site</name>
     <distributionManagement>
         <site>
-            <id>MarkdownPapers.site</id>
-            <name>MarkdownPapers Site</name>
-            <url>git:ssh://git@github.com/lruiz/MarkdownPapers.git?gh-pages#</url>
+            <id>github</id>
+            <name>Github</name>
+            <url>git:https://github.com/lruiz/MarkdownPapers.git?gh-pages#</url>
         </site>
     </distributionManagement>
 
@@ -40,7 +40,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.9.0</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.tautua.markdownpapers</groupId>
@@ -50,7 +50,7 @@
                     <dependency>
                         <groupId>net.trajano.wagon</groupId>
                         <artifactId>wagon-git</artifactId>
-                        <version>2.0.2</version>
+                        <version>2.0.4</version>
                     </dependency>
                 </dependencies>
             </plugin>
