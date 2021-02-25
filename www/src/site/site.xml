@@ -1,33 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="MarkdownPapers - markdown java implementation">
+<project xmlns="http://maven.apache.org/DECORATION/1.8.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 http://maven.apache.org/xsd/decoration-1.8.0.xsd"
+         name="MarkdownPapers - markdown java implementation">
     <skin>
         <groupId>org.tautua.maven.skins</groupId>
         <artifactId>tautua-default-skin</artifactId>
-        <version>1.0.1</version>
+        <version>1.1.0</version>
     </skin>
     <bannerLeft>
         <name>Markdown</name>
-        <src>images/Logo.png</src>
+        <src>images/logo.svg</src>
         <href>http://markdown.tautua.org/</href>
     </bannerLeft>
+    <googleAnalyticsAccountId>UA-18182963-2</googleAnalyticsAccountId>
     <body>
-        <head>
-            <meta name="description" content="markdownpapers, markdown parser and transformer java implementation"/>
-            <meta name="keywords" content="java,parser,transformer,ast,javacc,doxia,maven"/>
-            <script type="text/javascript">
-                var _gaq = _gaq || [];
-                _gaq.push(['_setAccount', 'UA-18182963-2']);
-                _gaq.push(['_trackPageview']);
-
-                (function() {
-                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') +
-                '.google-analytics.com/ga.js';
-                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-                })();
-            </script>
-        </head>
-
         <menu name="Documentation" inherit="top">
             <item name="Introduction" href="index.html" title="Introduction"/>
             <item name="Doxia Module" href="doxia-module.html"/>
